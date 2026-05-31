@@ -545,15 +545,16 @@
             } catch(e) { alert('❌ حدث خطأ'); }
         };
         
-        // ============= RANKINGS =============
-        async function loadRankingsAdmin() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch('/api/rankings', { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) { allRankings = await res.json(); displayRankingsAdmin(); updateAvgRating(); }
-            } catch(e) { console.error(e); }
-        }
+// ============= RANKINGS =============
+async function loadRankingsAdmin() {
+    const token = getToken();
+    if (!token) return;
+    try {
+        // Rankings endpoint is public, no token needed
+        const res = await fetch('/api/rankings');
+        if (res.ok) { allRankings = await res.json(); displayRankingsAdmin(); updateAvgRating(); }
+    } catch(e) { console.error(e); }
+}
         
         function displayRankingsAdmin() {
             const container = document.getElementById('rankingsAdminContainer');
