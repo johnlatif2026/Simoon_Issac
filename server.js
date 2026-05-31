@@ -132,7 +132,7 @@ app.post('/api/tours', verifyToken, async (req, res) => {
       days: parseInt(days),
       priceEgyptian: parseFloat(priceEgyptian),
       priceForeign: parseFloat(priceForeign),
-      image: image || 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80',
+      image: image && image.trim() !== '' ? image : '',  // ← تعديل: لو مفيش صورة، تخليها فارغة
       createdAt: new Date().toISOString()
     };
     
