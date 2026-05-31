@@ -12,7 +12,7 @@
   ],
   "routes": [
     {
-      "src": "/sitemap.txt",
+      "src": "/sitemap.xml",
       "dest": "/public/sitemap.txt",
       "headers": {
         "Content-Type": "application/xml"
