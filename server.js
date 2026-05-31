@@ -510,6 +510,63 @@ app.post('/api/confirm-payment', async (req, res) => {
   }
 });
 
+// ============= ADD THIS AFTER THE CONFIRM PAYMENT ENDPOINT =============
+// Update tour with full details (itinerary, includes, excludes, faq, gallery)
+app.put('/api/tours/:id/full', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      name, description, days, priceEgyptian, priceForeign, image,
+      itinerary, includes, excludes, faq, gallery 
+    } = req.body;
+    
+    const updates = {
+      name,
+      description,
+      days: parseInt(days),
+      priceEgyptian: parseFloat(priceEgyptian),
+      priceForeign: parseFloat(priceForeign),
+      image: image || '',
+      itinerary: itinerary || [],
+      includes: includes || [],
+      excludes: excludes || [],
+      faq: faq || [],
+      gallery: gallery || [],
+      updatedAt: new Date().toISOString()
+    };
+    
+    if (db) {
+      await db.collection('tours').doc(id).update(updates);
+      res.json({ success: true, id, ...updates });
+    } else {
+      const index = memoryStorage.tours.findIndex(t => t.id === id);
+      if (index === -1) return res.status(404).json({ error: 'Tour not found' });
+      memoryStorage.tours[index] = { ...memoryStorage.tours[index], ...updates };
+      res.json({ success: true, id, ...updates });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get full tour details
+app.get('/api/tours/:id/full', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (db) {
+      const doc = await db.collection('tours').doc(id).get();
+      if (!doc.exists) return res.status(404).json({ error: 'Tour not found' });
+      res.json({ id: doc.id, ...doc.data() });
+    } else {
+      const tour = memoryStorage.tours.find(t => t.id === id);
+      if (!tour) return res.status(404).json({ error: 'Tour not found' });
+      res.json(tour);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
