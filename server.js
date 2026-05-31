@@ -84,7 +84,7 @@ app.post('/api/verify-token', verifyToken, (req, res) => {
 });
 
 // ============= TOURS MANAGEMENT ENDPOINTS (CRUD) =============
-// Get all tours (public - for website)
+// Get all tours (public - no auth needed for viewing)
 app.get('/api/tours', async (req, res) => {
   try {
     if (db) {
@@ -99,7 +99,7 @@ app.get('/api/tours', async (req, res) => {
   }
 });
 
-// Get single tour
+// Get single tour (public - no auth needed)
 app.get('/api/tours/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -117,7 +117,7 @@ app.get('/api/tours/:id', async (req, res) => {
   }
 });
 
-// Create tour (admin only)
+// Create tour (admin only - requires JWT)
 app.post('/api/tours', verifyToken, async (req, res) => {
   try {
     const { name, description, days, priceEgyptian, priceForeign, image } = req.body;
@@ -149,7 +149,7 @@ app.post('/api/tours', verifyToken, async (req, res) => {
   }
 });
 
-// Update tour (admin only)
+// Update tour (admin only - requires JWT)
 app.put('/api/tours/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -169,7 +169,7 @@ app.put('/api/tours/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Delete tour (admin only)
+// Delete tour (admin only - requires JWT)
 app.delete('/api/tours/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -271,6 +271,7 @@ app.post('/api/bookings', async (req, res) => {
   }
 });
 
+// Get all bookings (admin only - requires JWT)
 app.get('/api/bookings', verifyToken, async (req, res) => {
   try {
     if (db) {
@@ -285,6 +286,7 @@ app.get('/api/bookings', verifyToken, async (req, res) => {
   }
 });
 
+// Delete booking (admin only - requires JWT)
 app.delete('/api/bookings/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -328,6 +330,7 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
+// Get all contacts (admin only - requires JWT)
 app.get('/api/contacts', verifyToken, async (req, res) => {
   try {
     if (db) {
@@ -342,6 +345,7 @@ app.get('/api/contacts', verifyToken, async (req, res) => {
   }
 });
 
+// Delete contact (admin only - requires JWT)
 app.delete('/api/contacts/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -373,6 +377,7 @@ app.post('/api/rankings', async (req, res) => {
   }
 });
 
+// Get all rankings (public)
 app.get('/api/rankings', async (req, res) => {
   try {
     if (db) {
@@ -387,6 +392,7 @@ app.get('/api/rankings', async (req, res) => {
   }
 });
 
+// Delete ranking (admin only - requires JWT)
 app.delete('/api/rankings/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -422,171 +428,6 @@ app.post('/api/send-email', verifyToken, async (req, res) => {
     res.status(500).json({ error: 'فشل إرسال البريد: ' + error.message });
   }
 });
-
-// ============= CONFIRM PAYMENT ENDPOINT =============
-app.post('/api/confirm-payment', async (req, res) => {
-  try {
-    const { bookingId, email, name, tour, persons, date, totalAmount, currency, transferNumber } = req.body;
-    
-    console.log('📥 Received payment confirmation:', { bookingId, email, name, tour, persons, date, totalAmount, currency, transferNumber });
-    
-    // Validate required fields
-    if (!email || !name || !tour) {
-      console.log('❌ Missing required fields');
-      return res.status(400).json({ error: 'بيانات ناقصة، يرجى المحاولة مرة أخرى' });
-    }
-    
-    // Update or create booking record
-    let savedBooking = null;
-    
-    if (db) {
-      // Firebase mode
-      try {
-        if (bookingId) {
-          const bookingRef = db.collection('bookings').doc(bookingId);
-          const bookingDoc = await bookingRef.get();
-          
-          if (bookingDoc.exists) {
-            await bookingRef.update({
-              paymentStatus: 'completed',
-              paymentConfirmedAt: new Date().toISOString(),
-              transferNumber: transferNumber || null
-            });
-            savedBooking = { id: bookingId, ...bookingDoc.data() };
-            console.log(`✅ Updated booking ${bookingId} with payment status`);
-          } else {
-            // Create new if not found
-            const newBooking = {
-              name, email, phone: req.body.phone || '',
-              tourName: tour, persons: parseInt(persons) || 1,
-              date: date || new Date().toISOString().split('T')[0],
-              totalAmount: totalAmount || 0, currency: currency || 'USD',
-              transferNumber: transferNumber || null,
-              paymentStatus: 'completed',
-              paymentConfirmedAt: new Date().toISOString(),
-              createdAt: new Date().toISOString()
-            };
-            const docRef = await db.collection('bookings').add(newBooking);
-            savedBooking = { id: docRef.id, ...newBooking };
-            console.log(`✅ Created new booking ${docRef.id} with payment`);
-          }
-        } else {
-          // Create new booking
-          const newBooking = {
-            name, email, phone: req.body.phone || '',
-            tourName: tour, persons: parseInt(persons) || 1,
-            date: date || new Date().toISOString().split('T')[0],
-            totalAmount: totalAmount || 0, currency: currency || 'USD',
-            transferNumber: transferNumber || null,
-            paymentStatus: 'completed',
-            paymentConfirmedAt: new Date().toISOString(),
-            createdAt: new Date().toISOString()
-          };
-          const docRef = await db.collection('bookings').add(newBooking);
-          savedBooking = { id: docRef.id, ...newBooking };
-          console.log(`✅ Created new booking ${docRef.id} (no ID provided)`);
-        }
-      } catch (firebaseError) {
-        console.error('Firebase error:', firebaseError.message);
-        // Fall back to memory storage
-        db = null;
-      }
-    }
-    
-    // Memory storage mode (or fallback)
-    if (!db) {
-      const newMemoryBooking = {
-        id: bookingId || Date.now().toString(),
-        name, email, phone: req.body.phone || '',
-        tourName: tour, persons: parseInt(persons) || 1,
-        date: date || new Date().toISOString().split('T')[0],
-        totalAmount: totalAmount || 0, currency: currency || 'USD',
-        transferNumber: transferNumber || null,
-        paymentStatus: 'completed',
-        paymentConfirmedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-      };
-      
-      const existingIndex = memoryStorage.bookings.findIndex(b => b.id === newMemoryBooking.id);
-      if (existingIndex !== -1) {
-        memoryStorage.bookings[existingIndex] = { ...memoryStorage.bookings[existingIndex], ...newMemoryBooking };
-        console.log(`✅ Updated memory booking ${newMemoryBooking.id}`);
-      } else {
-        memoryStorage.bookings.push(newMemoryBooking);
-        console.log(`✅ Created new memory booking ${newMemoryBooking.id}`);
-      }
-      savedBooking = newMemoryBooking;
-    }
-    
-    // Send confirmation email (don't let email failure break the payment)
-    try {
-      if (transporter && process.env.SMTP_USER) {
-        const customerEmailHtml = `
-          <!DOCTYPE html>
-          <html dir="rtl" lang="ar">
-          <head><meta charset="UTF-8"><title>تأكيد الدفع - رحلة في مصر</title></head>
-          <body style="font-family: 'Cairo', Tahoma, sans-serif; direction: rtl; padding: 20px;">
-            <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-              <div style="background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 30px; text-align: center;">
-                <h1>🇪🇬 رحلة في مصر مع سيمون</h1>
-              </div>
-              <div style="padding: 30px;">
-                <h3>✅ تم تأكيد دفعك بنجاح!</h3>
-                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #D4AF37;">
-                  <p><strong>🏝️ الرحلة:</strong> ${escapeHtml(tour)}</p>
-                  <p><strong>👤 الاسم:</strong> ${escapeHtml(name)}</p>
-                  <p><strong>📧 البريد:</strong> ${escapeHtml(email)}</p>
-                  <p><strong>👥 عدد الأفراد:</strong> ${persons || 1}</p>
-                  <p><strong>📅 التاريخ:</strong> ${date || '-'}</p>
-                  <p><strong>💰 المبلغ المدفوع:</strong> ${totalAmount || 0} ${currency === 'EGP' ? 'جنيه' : '$'}</p>
-                  <p><strong>🔢 رقم التحويل:</strong> ${transferNumber || 'غير محدد'}</p>
-                </div>
-                <p>شكراً لثقتكم بنا. سيتم إرسال تفاصيل الرحلة النهائية خلال 24 ساعة.</p>
-                <p>مع تحيات فريق <strong>رحلة في مصر مع سيمون</strong></p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `;
-        
-        await transporter.sendMail({
-          from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-          to: email,
-          subject: '✅ تم تأكيد دفعة رحلتك - رحلة في مصر مع سيمون',
-          html: customerEmailHtml
-        });
-        console.log(`📧 Payment email sent to ${email}`);
-      } else {
-        console.log('⚠️ Email not configured, skipping email send');
-      }
-    } catch (emailError) {
-      // Don't fail the payment if email fails
-      console.error('Email error (non-critical):', emailError.message);
-    }
-    
-    // Send success response
-    res.json({ success: true, message: 'تم تأكيد الدفع بنجاح', booking: savedBooking });
-    
-  } catch (error) {
-    console.error('❌ Confirm payment error:', error);
-    // Send detailed error for debugging (remove in production)
-    res.status(500).json({ 
-      error: 'حدث خطأ داخلي في الخادم', 
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined 
-    });
-  }
-});
-
-// Helper function for escaping HTML (add this at the top of your file with other helpers)
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
-}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
