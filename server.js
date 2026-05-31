@@ -10,6 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// Initialize Firebase Admin
 let db;
 try {
   if (process.env.FIREBASE_CONFIG) {
@@ -28,6 +29,7 @@ try {
   db = null;
 }
 
+// In-memory storage fallback
 const memoryStorage = {
   tours: [],
   packages: [],
@@ -36,6 +38,7 @@ const memoryStorage = {
   rankings: []
 };
 
+// Email transporter
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT),
@@ -46,6 +49,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// Middleware: Verify JWT
 const verifyToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'No token provided' });
@@ -59,6 +63,7 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+// ============= AUTH ENDPOINTS =============
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   
@@ -78,6 +83,8 @@ app.post('/api/verify-token', verifyToken, (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
+// ============= TOURS MANAGEMENT ENDPOINTS (CRUD) =============
+// Get all tours (public - for website)
 app.get('/api/tours', async (req, res) => {
   try {
     if (db) {
@@ -92,6 +99,7 @@ app.get('/api/tours', async (req, res) => {
   }
 });
 
+// Get single tour
 app.get('/api/tours/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -109,9 +117,10 @@ app.get('/api/tours/:id', async (req, res) => {
   }
 });
 
+// Create tour (admin only)
 app.post('/api/tours', verifyToken, async (req, res) => {
   try {
-    const { name, description, days, priceEgyptian, priceForeign, image, itinerary, included, excluded } = req.body;
+    const { name, description, days, priceEgyptian, priceForeign, image } = req.body;
     
     if (!name || !description || !days || !priceEgyptian || !priceForeign) {
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
@@ -124,9 +133,6 @@ app.post('/api/tours', verifyToken, async (req, res) => {
       priceEgyptian: parseFloat(priceEgyptian),
       priceForeign: parseFloat(priceForeign),
       image: image || 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80',
-      itinerary: itinerary || '',
-      included: included || '',
-      excluded: excluded || '',
       createdAt: new Date().toISOString()
     };
     
@@ -143,6 +149,7 @@ app.post('/api/tours', verifyToken, async (req, res) => {
   }
 });
 
+// Update tour (admin only)
 app.put('/api/tours/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -162,6 +169,7 @@ app.put('/api/tours/:id', verifyToken, async (req, res) => {
   }
 });
 
+// Delete tour (admin only)
 app.delete('/api/tours/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -177,9 +185,10 @@ app.delete('/api/tours/:id', verifyToken, async (req, res) => {
   }
 });
 
+// ============= BOOKINGS ENDPOINTS =============
 app.post('/api/bookings', async (req, res) => {
   try {
-    const { tourId, tourName, name, email, phone, persons, date, nationality, totalPrice, currency, message, transferNumber, paymentMethod, paymentStatus } = req.body;
+    const { tourId, tourName, name, email, phone, persons, date, nationality, totalPrice, currency } = req.body;
     
     const booking = { 
       tourId,
@@ -192,24 +201,19 @@ app.post('/api/bookings', async (req, res) => {
       nationality,
       totalAmount: totalPrice,
       currency,
-      message: message || '',
-      transferNumber: transferNumber || 'TR-' + Date.now(),
-      paymentMethod: paymentMethod || 'pending',
-      paymentStatus: paymentStatus || 'pending',
+      transferNumber: 'TR-' + Date.now(),
       createdAt: new Date().toISOString() 
     };
     
-    let bookingId;
     if (db) {
       const docRef = await db.collection('bookings').add(booking);
-      bookingId = docRef.id;
       booking.id = docRef.id;
     } else {
-      bookingId = Date.now().toString();
-      booking.id = bookingId;
+      booking.id = Date.now().toString();
       memoryStorage.bookings.push(booking);
     }
     
+    // Send email notification...
     try {
       const emailHtml = `
         <!DOCTYPE html>
@@ -261,7 +265,7 @@ app.post('/api/bookings', async (req, res) => {
       console.log('Email error:', emailError.message);
     }
     
-    res.json({ success: true, booking, id: bookingId });
+    res.json({ success: true, booking });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -296,69 +300,7 @@ app.delete('/api/bookings/:id', verifyToken, async (req, res) => {
   }
 });
 
-app.post('/api/confirm-payment', async (req, res) => {
-  try {
-    const { bookingId, email, name, tour, persons, date, totalAmount, currency, transferNumber } = req.body;
-    
-    if (bookingId && db) {
-      await db.collection('bookings').doc(bookingId).update({
-        paymentStatus: 'confirmed',
-        paymentConfirmedAt: new Date().toISOString()
-      });
-    }
-    
-    const confirmationHtml = `
-      <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
-      <head>
-        <meta charset="UTF-8">
-        <title>تأكيد الدفع - رحلة في مصر</title>
-        <style>
-          body { font-family: 'Cairo', sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
-          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 30px; text-align: center; }
-          .content { padding: 30px; }
-          .success-icon { font-size: 60px; color: #4caf50; text-align: center; margin-bottom: 20px; }
-          .details { background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; }
-          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header"><h1>🇪🇬 رحلة في مصر مع سيمون</h1></div>
-          <div class="content">
-            <div class="success-icon">✅</div>
-            <h3 style="text-align:center;">تم تأكيد دفعة حجزك بنجاح!</h3>
-            <div class="details">
-              <p><strong>🏝️ الرحلة:</strong> ${tour}</p>
-              <p><strong>👤 الاسم:</strong> ${name}</p>
-              <p><strong>👥 عدد الأشخاص:</strong> ${persons}</p>
-              <p><strong>📅 التاريخ:</strong> ${date}</p>
-              <p><strong>💰 المبلغ المدفوع:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه' : '$'}</p>
-              <p><strong>🔢 رقم التحويل:</strong> ${transferNumber}</p>
-            </div>
-            <p>شكراً لثقتكم بنا. سيتم إرسال تفاصيل الرحلة الكاملة قريباً.</p>
-            <p>مع تحيات فريق <strong>رحلة في مصر مع سيمون</strong></p>
-          </div>
-          <div class="footer"><p>© 2026 رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p></div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    await transporter.sendMail({
-      from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: '✅ تم تأكيد دفعة حجزك - رحلة في مصر مع سيمون',
-      html: confirmationHtml
-    });
-    
-    res.json({ success: true, message: 'Payment confirmed successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
+// ============= CONTACT ENDPOINTS =============
 app.post('/api/contact', async (req, res) => {
   try {
     const contact = { ...req.body, createdAt: new Date().toISOString(), status: 'unread' };
@@ -414,6 +356,7 @@ app.delete('/api/contacts/:id', verifyToken, async (req, res) => {
   }
 });
 
+// ============= RANKINGS ENDPOINTS =============
 app.post('/api/rankings', async (req, res) => {
   try {
     const ranking = { ...req.body, createdAt: new Date().toISOString() };
@@ -458,6 +401,7 @@ app.delete('/api/rankings/:id', verifyToken, async (req, res) => {
   }
 });
 
+// ============= ADMIN SEND EMAIL ENDPOINT =============
 app.post('/api/send-email', verifyToken, async (req, res) => {
   try {
     const { to, subject, message } = req.body;
