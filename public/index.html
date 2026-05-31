@@ -95,15 +95,47 @@
       --transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
     }
     
+    /* Dark Mode - محسن بشكل كبير */
     body.dark-mode {
-      --gradient-bg: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
-      --card-bg: rgba(30, 30, 50, 0.96);
-      --text-primary: #f0e6d2;
-      --text-secondary: #d4a373;
-      --border-gold: rgba(212, 175, 55, 0.4);
-      --navbar-bg: rgba(10, 10, 20, 0.98);
+      --gradient-bg: linear-gradient(135deg, #0a0a15 0%, #151525 100%);
+      --card-bg: rgba(25, 25, 45, 0.98);
+      --text-primary: #f5efdc;
+      --text-secondary: #e8d5b5;
+      --border-gold: rgba(212, 175, 55, 0.5);
+      --navbar-bg: rgba(8, 8, 18, 0.98);
       --footer-bg: #05050a;
-      --shadow-md: 0 20px 40px rgba(0,0,0,0.3);
+      --shadow-md: 0 20px 40px rgba(0,0,0,0.4);
+      --shadow-sm: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    body.dark-mode .tour-card {
+      background: linear-gradient(135deg, #1a1a30, #151528);
+      border-color: var(--gold-primary);
+    }
+    
+    body.dark-mode .tour-info h3 {
+      color: var(--gold-light) !important;
+    }
+    
+    body.dark-mode .tour-details {
+      color: var(--text-secondary);
+    }
+    
+    body.dark-mode .achievement {
+      background: rgba(30, 30, 55, 0.95);
+    }
+    
+    body.dark-mode .contact-info,
+    body.dark-mode .booking-form {
+      background: rgba(25, 25, 45, 0.98);
+    }
+    
+    body.dark-mode .form-group input,
+    body.dark-mode .form-group select,
+    body.dark-mode .form-group textarea {
+      background: rgba(20, 20, 40, 0.95);
+      color: var(--text-primary);
+      border-color: var(--gold-primary);
     }
     
     /* ==================== RESET & BASE ==================== */
@@ -122,7 +154,7 @@
       scroll-behavior: smooth;
     }
     
-    /* إخفاء المحتوى تماماً أثناء ظهور شاشة الدخلة */
+    /* إخفاء المحتوى أثناء شاشة الدخلة */
     body.splash-active {
       overflow: hidden;
     }
@@ -140,7 +172,7 @@
     ::-webkit-scrollbar-thumb { background: var(--gold-primary); border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--gold-dark); }
     
-    /* ==================== SPLASH SCREEN (EGYPTIAN HERITAGE) ==================== */
+    /* ==================== SPLASH SCREEN ==================== */
     .egypt-splash {
       position: fixed;
       top: 0;
@@ -515,14 +547,14 @@
       transition: var(--transition);
     }
     
-    /* ==================== TOURS CARDS ==================== */
+    /* ==================== TOURS CARDS - محسنة ==================== */
     .tours {
       background: rgba(212, 175, 55, 0.03);
     }
     
     .tours-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 2.5rem;
     }
     
@@ -532,7 +564,9 @@
       overflow: hidden;
       box-shadow: var(--shadow-sm);
       transition: var(--transition);
-      border: 1px solid var(--border-gold);
+      border: 2px solid var(--border-gold);
+      display: flex;
+      flex-direction: column;
     }
     
     .tour-card:hover {
@@ -545,6 +579,7 @@
       height: 260px;
       overflow: hidden;
       position: relative;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
     }
     
     .tour-image img {
@@ -568,24 +603,44 @@
       border-radius: 50px;
       font-size: 0.85rem;
       font-weight: 800;
+      z-index: 2;
     }
     
     .tour-info {
       padding: 1.8rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
     
     .tour-info h3 {
       font-size: 1.5rem;
       margin-bottom: 0.8rem;
       color: var(--gold-dark);
+      font-weight: 800;
+    }
+    
+    .tour-info p {
+      line-height: 1.6;
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
     }
     
     .tour-details {
       display: flex;
       justify-content: space-between;
-      margin: 1.2rem 0;
+      margin: 1rem 0 1.5rem 0;
       color: var(--text-secondary);
-      font-weight: 600;
+      font-weight: 700;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .tour-details span {
+      background: rgba(212, 175, 55, 0.1);
+      padding: 0.3rem 0.8rem;
+      border-radius: 50px;
+      font-size: 0.9rem;
     }
     
     .book-btn {
@@ -602,11 +657,33 @@
       text-align: center;
       text-decoration: none;
       font-size: 1rem;
+      margin-top: auto;
     }
     
     .book-btn:hover {
       transform: scale(0.98);
       box-shadow: var(--shadow-gold);
+    }
+    
+    /* رسالة عدم وجود جولات */
+    .no-tours-message {
+      text-align: center;
+      padding: 4rem;
+      background: var(--card-bg);
+      border-radius: 28px;
+      border: 2px dashed var(--gold-primary);
+      width: 100%;
+    }
+    
+    .no-tours-message i {
+      font-size: 4rem;
+      color: var(--gold-primary);
+      margin-bottom: 1rem;
+    }
+    
+    .no-tours-message h3 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
     }
     
     /* ==================== PORTFOLIO & GALLERY ==================== */
@@ -852,6 +929,7 @@
         transition: 0.4s;
         padding: 2rem 0;
         gap: 1.5rem;
+        z-index: 999;
       }
       .nav-menu.active { right: 0; }
       .hero-title { font-size: 2rem; }
@@ -862,6 +940,7 @@
       .tours-grid { grid-template-columns: 1fr; }
       .achievements { flex-direction: column; }
       .section-title { font-size: 1.8rem; }
+      .tour-image { height: 220px; }
     }
     
     @media (max-width: 480px) {
@@ -890,7 +969,7 @@
 </head>
 <body>
 
-<!-- Egyptian Heritage Splash Screen with Sphinx Image - تظهر لمدة ثانيتين -->
+<!-- Egyptian Heritage Splash Screen -->
 <div id="egyptSplash" class="egypt-splash">
   <div class="splash-content">
     <img src="https://arablite.com/wp-content/uploads/2019/03/The-Great-Sphinx-at-Giza.jpg" alt="أبو الهول" class="splash-image">
@@ -1068,28 +1147,30 @@
 </footer>
 
 <script>
-  // ==================== SPLASH SCREEN - ثانيتين بالضبط ====================
+  // ==================== SPLASH SCREEN ====================
   (function initSplashScreen() {
     const splash = document.getElementById('egyptSplash');
     const body = document.body;
     
-    // إضافة كلاس لمنع ظهور المحتوى
-    body.classList.add('splash-active');
+    if (sessionStorage.getItem('splashShown')) {
+      if (splash) splash.style.display = 'none';
+      return;
+    }
     
-    // منع التمرير أثناء ظهور شاشة الدخلة
-    document.documentElement.style.overflow = 'hidden';
-    
-    // إخفاء شاشة الدخلة بعد ثانيتين بالضبط
-    setTimeout(() => {
-      splash.style.opacity = '0';
+    if (splash) {
+      body.classList.add('splash-active');
+      document.documentElement.style.overflow = 'hidden';
+      sessionStorage.setItem('splashShown', 'true');
+      
       setTimeout(() => {
-        splash.style.display = 'none';
-        splash.remove();
-        // إزالة كلاس منع المحتوى
-        body.classList.remove('splash-active');
-        document.documentElement.style.overflow = '';
-      }, 600);
-    }, 2000); // 2000 ميلي ثانية = ثانيتين بالضبط
+        splash.style.opacity = '0';
+        setTimeout(() => {
+          splash.style.display = 'none';
+          body.classList.remove('splash-active');
+          document.documentElement.style.overflow = '';
+        }, 600);
+      }, 2000);
+    }
   })();
 
   // Mobile Menu Toggle
@@ -1139,7 +1220,7 @@
         alert('✅ تم إرسال رسالتك بنجاح!');
         contactForm.reset();
       } catch (error) {
-        alert('❌ حدث خطأ');
+        alert('❌ حدث خطأ في الإرسال');
       } finally {
         btn.disabled = false;
         btn.textContent = 'إرسال الرسالة';
@@ -1174,8 +1255,7 @@
   const translations = {
     ar: {
       logo: "رحلة في مصر", nav_home: "الرئيسية", nav_about: "نبذة عنا", nav_tours: "الجولات",
-      nav_portfolio:"مَلَفّ",
-      nav_gallery: "المعرض", nav_testimonials: "آراء العملاء", nav_contact: "اتصل بنا",
+      nav_portfolio:"مَلَفّ", nav_gallery: "المعرض", nav_testimonials: "آراء العملاء", nav_contact: "اتصل بنا",
       hero_title: "اكتشف جمال مصر", hero_subtitle: "مع مرشدة سياحية وممثلة محترفة، رحلة لا تُنسى في قلب التاريخ والثقافة المصرية",
       hero_btn: "احجز رحلتك الآن", about_title: "نبذة عنا", about_welcome: "مرحبا بكم في رحلة في مصر",
       about_p1: "أنا سيمون، مرشدة سياحية وممثلة مصرية محترفة. شغفي هو إظهار جمال مصر الحقيقي من خلال عيون فنانة.",
@@ -1191,8 +1271,7 @@
     },
     en: {
       logo: "Journey in Egypt", nav_home: "Home", nav_about: "About", nav_tours: "Tours",
-      nav_portfolio:"portfolio",
-      nav_gallery: "Gallery", nav_testimonials: "Testimonials", nav_contact: "Contact",
+      nav_portfolio:"Portfolio", nav_gallery: "Gallery", nav_testimonials: "Testimonials", nav_contact: "Contact",
       hero_title: "Discover Egypt's Beauty", hero_subtitle: "With a professional tour guide and actress, an unforgettable journey into Egyptian history",
       hero_btn: "Book Your Trip Now", about_title: "About Us", about_welcome: "Welcome to Journey in Egypt",
       about_p1: "I'm Simon, a professional Egyptian tour guide and actress. My passion is to show Egypt's true beauty.",
@@ -1264,29 +1343,99 @@
   function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
 
-  // Tours API Loader
+  // ==================== TOURS API LOADER (Live Update - بدون ريفرش) ====================
+  function escapeHtml(str) { 
+    if (!str) return ''; 
+    return str.replace(/[&<>]/g, function(m){ 
+      if(m==='&') return '&amp;'; 
+      if(m==='<') return '&lt;'; 
+      if(m==='>') return '&gt;'; 
+      return m;
+    }); 
+  }
+  
+  // التحقق من صحة بيانات الرحلة
+  function isValidTour(tour) {
+    return tour && tour.name && tour.description && tour.priceForeign && tour.priceEgyptian;
+  }
+  
   async function loadToursFromAPI() {
     const container = document.getElementById('toursContainer');
     if (!container) return;
-    container.innerHTML = '<div style="text-align:center; padding:3rem;"><i class="fas fa-spinner fa-spin"></i> جاري تحميل الجولات...</div>';
+    
     try {
       const response = await fetch('/api/tours');
       if (!response.ok) throw new Error('API Error');
       const tours = await response.json();
-      if (!tours || tours.length === 0) { container.innerHTML = '<div style="text-align:center;">📭 لا توجد جولات</div>'; return; }
+      
+      // تصفية الرحلات - إزالة أي رحلة غير مكتملة البيانات أو مخفية
+      const validTours = tours.filter(tour => isValidTour(tour));
+      
+      if (!validTours || validTours.length === 0) {
+        container.innerHTML = `
+          <div class="no-tours-message">
+            <i class="fas fa-map-marked-alt"></i>
+            <h3>📭 لا توجد جولات حالياً</h3>
+            <p>سيتم إضافة جولات جديدة قريباً، تابعونا!</p>
+          </div>
+        `;
+        return;
+      }
+      
       let html = '';
-      tours.forEach(tour => {
-        const imgHtml = tour.image && tour.image !== 'null' ? `<img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" loading="lazy">` : `<div style="height:100%; background:var(--gradient-gold); display:flex; align-items:center; justify-content:center;"><i class="fas fa-pyramid" style="font-size:3rem; color:#2c1810;"></i></div>`;
-        html += `<div class="tour-card reveal"><div class="tour-image">${imgHtml}<div class="tour-badge">${tour.days} أيام</div></div><div class="tour-info"><h3>${escapeHtml(tour.name)}</h3><p>${escapeHtml(tour.description.substring(0, 80))}...</p><div class="tour-details"><span><i class="fas fa-dollar-sign"></i> الأجنبي: ${tour.priceForeign}$</span><span><i class="fas fa-pound-sign"></i> المصري: ${tour.priceEgyptian} ج</span></div><a href="tour-details?id=${tour.id}" class="book-btn">احجز الآن</a></div></div>`;
+      validTours.forEach(tour => {
+        const imgHtml = (tour.image && tour.image !== 'null' && tour.image !== 'undefined') 
+          ? `<img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" loading="lazy" onerror="this.parentElement.style.background='var(--gradient-gold)'; this.style.display='none'">` 
+          : `<div style="width:100%; height:100%; background:var(--gradient-gold); display:flex; align-items:center; justify-content:center;"><i class="fas fa-pyramid" style="font-size:3rem; color:#2c1810;"></i></div>`;
+        
+        html += `
+          <div class="tour-card reveal">
+            <div class="tour-image">
+              ${imgHtml}
+              <div class="tour-badge">⭐ ${tour.days || 3} أيام</div>
+            </div>
+            <div class="tour-info">
+              <h3>${escapeHtml(tour.name)}</h3>
+              <p>${escapeHtml(tour.description.substring(0, 100))}${tour.description.length > 100 ? '...' : ''}</p>
+              <div class="tour-details">
+                <span><i class="fas fa-dollar-sign"></i> الأجنبي: ${tour.priceForeign}$</span>
+                <span><i class="fas fa-pound-sign"></i> المصري: ${tour.priceEgyptian} ج</span>
+              </div>
+              <a href="tour-details?id=${tour.id}" class="book-btn">✨ احجز الآن</a>
+            </div>
+          </div>
+        `;
       });
+      
       container.innerHTML = html;
-      checkReveal();
+      
+      // إعادة تفعيل تأثير الظهور
+      const newRevealElements = document.querySelectorAll('.reveal');
+      newRevealElements.forEach(el => {
+        if (el.getBoundingClientRect().top < window.innerHeight - 150) {
+          el.classList.add('active');
+        }
+      });
+      
     } catch (error) {
-      container.innerHTML = '<div style="text-align:center; padding:2rem;">❌ حدث خطأ في تحميل الجولات</div>';
+      console.error('Error loading tours:', error);
+      container.innerHTML = `
+        <div class="no-tours-message">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>⚠️ حدث خطأ</h3>
+          <p>لم نتمكن من تحميل الجولات، يرجى تحديث الصفحة</p>
+        </div>
+      `;
     }
   }
-  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+  
+  // تحميل أولي للرحلات
   document.addEventListener('DOMContentLoaded', loadToursFromAPI);
+  
+  // تحديث تلقائي كل 30 ثانية (بدون ريفرش للصفحة)
+  setInterval(() => {
+    loadToursFromAPI();
+  }, 30000);
   
   // Smooth Scroll for anchor links
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
