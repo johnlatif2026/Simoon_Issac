@@ -1108,11 +1108,20 @@
         <a href="https://www.facebook.com/simoon.issac" target="_blank"><i class="fab fa-facebook"></i> <span data-key="facebook">فيسبوك</span></a>
       </div>
       <form id="contactForm" class="booking-form reveal">
-        <h3 data-key="send_message">أرسل رسالتك</h3>
-        <input type="text" id="contactName" data-key="name_placeholder">
-        <input type="text" id="contactInfo" data-key="contact_placeholder">
-        <textarea id="contactMessage" data-key="message_placeholder"></textarea>
-        <button type="submit" class="submit-btn" data-key="send_btn">إرسال الرسالة</button>
+        <h3><i class="fas fa-paper-plane"></i> <span data-key="send_message">أرسل رسالتك</span></h3>
+        <div class="form-group">
+          <input type="text" id="contactName" placeholder=" " required>
+          <label for="contactName" class="floating-label" data-key="name_placeholder">الاسم الكامل</label>
+        </div>
+        <div class="form-group">
+          <input type="text" id="contactInfo" placeholder=" " required>
+          <label for="contactInfo" class="floating-label" data-key="contact_placeholder">البريد الإلكتروني أو رقم الهاتف</label>
+        </div>
+        <div class="form-group">
+          <textarea id="contactMessage" placeholder=" " rows="4" required></textarea>
+          <label for="contactMessage" class="floating-label" data-key="message_placeholder">رسالتك</label>
+        </div>
+        <button type="submit" class="submit-btn"><i class="fas fa-envelope"></i> <span data-key="send_btn">إرسال الرسالة</span></button>
       </form>
     </div>
   </div>
@@ -1145,6 +1154,104 @@
 <footer>
   <div class="container"><p data-key="copyright">© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة</p></div>
 </footer>
+
+<style>
+  /* Floating label styles */
+  .booking-form .form-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+  
+  .booking-form input,
+  .booking-form textarea {
+    width: 100%;
+    padding: 1rem 1rem 0.5rem 1rem;
+    border: 2px solid var(--border-gold);
+    border-radius: 16px;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    transition: var(--transition);
+  }
+  
+  .booking-form .floating-label {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    pointer-events: none;
+    transition: 0.2s ease all;
+  }
+  
+  .booking-form input:focus ~ .floating-label,
+  .booking-form input:not(:placeholder-shown) ~ .floating-label,
+  .booking-form textarea:focus ~ .floating-label,
+  .booking-form textarea:not(:placeholder-shown) ~ .floating-label {
+    top: -0.5rem;
+    right: 0.8rem;
+    font-size: 0.75rem;
+    background: var(--card-bg);
+    padding: 0 0.3rem;
+    color: var(--gold-primary);
+  }
+  
+  .booking-form input:focus,
+  .booking-form textarea:focus {
+    border-color: var(--gold-primary);
+    outline: none;
+  }
+  
+  html[dir="ltr"] .booking-form .floating-label {
+    right: auto;
+    left: 1rem;
+  }
+  
+  html[dir="ltr"] .booking-form input:focus ~ .floating-label,
+  html[dir="ltr"] .booking-form input:not(:placeholder-shown) ~ .floating-label,
+  html[dir="ltr"] .booking-form textarea:focus ~ .floating-label,
+  html[dir="ltr"] .booking-form textarea:not(:placeholder-shown) ~ .floating-label {
+    right: auto;
+    left: 0.8rem;
+  }
+  
+  .booking-form input::placeholder,
+  .booking-form textarea::placeholder {
+    opacity: 0;
+  }
+  
+  .rate-btn {
+    display: inline-block;
+    background: var(--gradient-sunset);
+    color: var(--brown-deep);
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 700;
+    margin-top: 1rem;
+    transition: var(--transition);
+  }
+  
+  .rate-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .testimonials-empty {
+    text-align: center;
+    padding: 3rem;
+    background: var(--card-bg);
+    border-radius: 28px;
+    border: 1px solid var(--border-gold);
+  }
+  
+  .testimonials-empty i {
+    font-size: 3rem;
+    color: var(--gold-primary);
+    margin-bottom: 1rem;
+  }
+</style>
 
 <script>
   // ==================== SPLASH SCREEN ====================
