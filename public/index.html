@@ -961,6 +961,21 @@
 .nav-menu a {
   color: #faf6e9;
 }
+.image-caption {
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+  margin-top: 8px;
+  font-weight: 500;
+  font-family: 'Tajawal', sans-serif;
+}
+
+/* لو عايز شكل مختلف للهواتف */
+@media (max-width: 768px) {
+  .image-caption {
+    font-size: 12px;
+  }
+}
   </style>
 </head>
 <body>
@@ -1074,10 +1089,27 @@
   <div class="container">
     <h2 class="section-title reveal" data-key="gallery_title">معرض الصور</h2>
     <div class="gallery-grid">
-      <div class="gallery-item reveal"><img src="https://i.postimg.cc/YqP1NSC1/1.webp" loading="lazy" alt="منظر سياحي" onclick="openLightbox(this.src)"></div>
-      <div class="gallery-item reveal"><img src="https://i.postimg.cc/d1ddJMMb/2.webp" loading="lazy" alt="معبد مصري" onclick="openLightbox(this.src)"></div>
-      <div class="gallery-item reveal"><img src="https://i.postimg.cc/7Yq7rQKt/3.webp" loading="lazy" alt="سفاري" onclick="openLightbox(this.src)"></div>
-      <div class="gallery-item reveal"><img src="https://i.postimg.cc/c4T3xMjZ/4.webp" loading="lazy" alt="بحر أحمر" onclick="openLightbox(this.src)"></div>
+      
+      <div class="gallery-item reveal">
+        <img src="https://i.postimg.cc/YqP1NSC1/1.webp" loading="lazy" alt="منظر سياحي" onclick="openLightbox(this.src)">
+        <p class="image-caption">هدوء الطبيعة وسحر الصخور وسط المياه الصافية، مشهد يبعث على الراحة والتأمل.</p>
+      </div>
+      
+      <div class="gallery-item reveal">
+        <img src="https://i.postimg.cc/d1ddJMMb/2.webp" loading="lazy" alt="معبد مصري" onclick="openLightbox(this.src)">
+        <p class="image-caption">نقوش فرعونية تحكي تاريخًا قديمًا وحضارة عظيمة لا تزال آثارها شاهدة حتى اليوم.</p>
+      </div>
+      
+      <div class="gallery-item reveal">
+        <img src="https://i.postimg.cc/7Yq7rQKt/3.webp" loading="lazy" alt="سفاري" onclick="openLightbox(this.src)">
+        <p class="image-caption">صليب محفور بتفاصيل دقيقة يعكس طابعًا دينيًا وروحانيًا في تصميمه.</p>
+      </div>
+      
+      <div class="gallery-item reveal">
+        <img src="https://i.postimg.cc/c4T3xMjZ/4.webp" loading="lazy" alt="بحر أحمر" onclick="openLightbox(this.src)">
+        <p class="image-caption">معبد أثري ضخم على ضفاف النهر، يجمع بين عظمة العمارة القديمة وجمال الموقع الطبيعي.</p>
+      </div>
+      
     </div>
   </div>
 </section>
