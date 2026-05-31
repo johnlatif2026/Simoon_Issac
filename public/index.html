@@ -823,52 +823,89 @@
         });
     }
 
-    // ============= LOAD TOURS FROM API =============
-    async function loadToursFromAPI() {
-        const container = document.getElementById('toursContainer');
-        if (!container) return;
-        
-        try {
-            const response = await fetch('/api/tours');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const tours = await response.json();
-            
-            if (!tours || tours.length === 0) {
-                container.innerHTML = '<div style="text-align:center; width:100%; padding: 3rem;">📭 لا توجد جولات حالياً</div>';
-                return;
-            }
-            
-            container.innerHTML = tours.map(tour => `
-                <div class="tour-card reveal">
-                    <div class="tour-image">
-                        <img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'">
-                        <div class="tour-badge">${tour.days} أيام</div>
-                    </div>
-                    <div class="tour-info">
-                        <h3>${escapeHtml(tour.name)}</h3>
-                        <p>${escapeHtml(tour.description.substring(0, 80))}${tour.description.length > 80 ? '...' : ''}</p>
-                        <div class="tour-details">
-                            <span><i class="fas fa-dollar-sign"></i> الأجنبي: ${tour.priceForeign}$</span>
-                            <span><i class="fas fa-pound-sign"></i> المصري: ${tour.priceEgyptian} جنيه</span>
-                        </div>
-                        <a href="tour-details?id=${tour.id}" class="book-btn">احجز الآن</a>
-                    </div>
-                </div>
-            `).join('');
-            
-            // Re-trigger reveal animations
-            document.querySelectorAll('.reveal:not(.active)').forEach(el => {
-                const windowHeight = window.innerHeight;
-                const revealTop = el.getBoundingClientRect().top;
-                const revealPoint = 150;
-                if (revealTop < windowHeight - revealPoint) el.classList.add('active');
-            });
-            
-        } catch (error) {
-            console.error('Error loading tours:', error);
-            container.innerHTML = '<div style="text-align:center; padding: 3rem;">❌ حدث خطأ في تحميل الجولات</div>';
+// ============= LOAD TOURS FROM STATIC DATA =============
+async function loadToursFromAPI() {
+    const container = document.getElementById('toursContainer');
+    if (!container) return;
+    
+    // بيانات تجريبية ثابتة للجولات
+    const tours = [
+        {
+            id: 1,
+            name: "رحلة الأهرامات وأبو الهول",
+            description: "استمتع بزيارة أهرامات الجيزة وأبو الهول مع مرشدة محترفة. تشمل الرحلة الدخول إلى المنطقة الأثرية وتذوق الطعام المصري الأصيل.",
+            image: "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
+            days: 1,
+            priceForeign: 120,
+            priceEgyptian: 1500
+        },
+        {
+            id: 2,
+            name: "رحلة الأقصر - وادي الملوك",
+            description: "جولة في مدينة الأقصر تشمل وادي الملوك ومعابد الكرنك والأقصر. مرشدة سياحية خاصة مع نخبة من أفضل المرشدين.",
+            image: "https://images.unsplash.com/photo-1566930579274-10c2b8e9e2d4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
+            days: 2,
+            priceForeign: 250,
+            priceEgyptian: 3000
+        },
+        {
+            id: 3,
+            name: "رحلة أسوان والمعابد",
+            description: "اكتشف جمال أسوان ومعابد أبو سمبل. رحلة نيلية مميزة مع فندق 5 نجوم ووجبات فاخرة.",
+            image: "https://images.unsplash.com/photo-1583422409519-91e0f978a4d3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
+            days: 3,
+            priceForeign: 380,
+            priceEgyptian: 4500
+        },
+        {
+            id: 4,
+            name: "الغردقة - سفاري وبحر",
+            description: "مغامرة سفاري في الصحراء مع الغوص في البحر الأحمر. تشمل الرحلة الغوص والتعرف على الشعاب المرجانية.",
+            image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
+            days: 4,
+            priceForeign: 450,
+            priceEgyptian: 5500
         }
-    }
+    ];
+    
+    container.innerHTML = tours.map(tour => `
+        <div class="tour-card reveal">
+            <div class="tour-image">
+                <img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'">
+                <div class="tour-badge">${tour.days} أيام</div>
+            </div>
+            <div class="tour-info">
+                <h3>${escapeHtml(tour.name)}</h3>
+                <p>${escapeHtml(tour.description.substring(0, 80))}${tour.description.length > 80 ? '...' : ''}</p>
+                <div class="tour-details">
+                    <span><i class="fas fa-dollar-sign"></i> الأجنبي: ${tour.priceForeign}$</span>
+                    <span><i class="fas fa-pound-sign"></i> المصري: ${tour.priceEgyptian} جنيه</span>
+                </div>
+                <button class="book-btn" onclick="openBookingModal(${tour.id}, '${escapeHtml(tour.name)}')">احجز الآن</button>
+            </div>
+        </div>
+    `).join('');
+    
+    // تفعيل الرسوم المتحركة
+    document.querySelectorAll('.reveal:not(.active)').forEach(el => {
+        const windowHeight = window.innerHeight;
+        const revealTop = el.getBoundingClientRect().top;
+        const revealPoint = 150;
+        if (revealTop < windowHeight - revealPoint) el.classList.add('active');
+    });
+}
+
+// إضافة دالة فتح المودال المدمجة
+function openBookingModal(tourId, tourName) {
+    const modal = document.getElementById('bookingModal');
+    const modalTour = document.getElementById('modalTour');
+    const modalTourId = document.getElementById('modalTourId');
+    
+    if (modalTour) modalTour.value = tourName;
+    if (modalTourId) modalTourId.value = tourId;
+    
+    modal.style.display = 'block';
+}
 
     // Load tours on page load
     document.addEventListener('DOMContentLoaded', loadToursFromAPI);
