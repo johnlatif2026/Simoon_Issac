@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   
-  <!-- SEO Optimized Title -->
   <title>رحلة في مصر مع سيمون | اكتشف عظمة الفراعنة | عروض سياحية فاخرة 2026</title>
   <link rel="apple-touch-icon" href="https://i.postimg.cc/d0Pfc81d/Logo.jpg">
   <link rel="icon" type="image/jpeg" href="https://i.postimg.cc/d0Pfc81d/Logo.jpg">
@@ -17,22 +16,18 @@
   
   <link rel="canonical" href="https://simoon-issac.vercel.app/" />
   
-  <!-- Open Graph for Social Media -->
   <meta property="og:title" content="اكتشف سحر مصر | عروض سياحية مميزة 2026" />
   <meta property="og:description" content="رحلات سياحية فاخرة بأفضل الأسعار. احجز مغامرتك في مصر الآن واحصل على خصم 30%!" />
   <meta property="og:image" content="https://i.postimg.cc/d0Pfc81d/Logo.jpg" />
-  <meta property="og:image:alt" content="شعار رحلة في مصر - السياحة في مصر" />
   <meta property="og:url" content="https://simoon-issac.vercel.app/" />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="ar_AR" />
   
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="اكتشف سحر مصر | عروض سياحية مميزة" />
   <meta name="twitter:description" content="أفضل العروض السياحية في مصر. حجز آمن، دعم فوري!" />
   <meta name="twitter:image" content="https://i.postimg.cc/d0Pfc81d/Logo.jpg" />
   
-  <!-- Schema.org Structured Data Enhanced -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -63,19 +58,10 @@
   }
   </script>
   
-  <!-- Preconnect & Font Optimization -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
-  
-  <!-- Font Awesome - Optimized loading -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'" />
-  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" /></noscript>
-  
-  <!-- Google Fonts -->
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'" />
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" /></noscript>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   
   <style>
     :root {
@@ -103,11 +89,7 @@
       --footer-bg: #0a0a15;
     }
     
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
       font-family: 'Cairo', sans-serif;
@@ -144,9 +126,7 @@
       animation: spin 1s linear infinite;
     }
     
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     
     .navbar {
       position: fixed;
@@ -160,10 +140,7 @@
       border-bottom: 1px solid var(--border-color);
     }
     
-    .navbar.scrolled {
-      padding: 0.5rem 0;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-    }
+    .navbar.scrolled { padding: 0.5rem 0; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
     
     .nav-container {
       max-width: 1400px;
@@ -174,121 +151,23 @@
       padding: 0 2rem;
     }
     
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
+    .nav-logo { display: flex; align-items: center; gap: 0.8rem; }
+    .logo-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #D4AF37; transition: transform 0.3s; }
+    .logo-img:hover { transform: scale(1.05); }
+    .logo-text { font-size: 1.3rem; font-weight: 800; background: linear-gradient(135deg, #D4AF37, #FFD700); -webkit-background-clip: text; background-clip: text; color: transparent; }
     
-    .logo-img {
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #D4AF37;
-      transition: transform 0.3s;
-    }
+    .nav-menu { display: flex; list-style: none; gap: 2rem; }
+    .nav-menu a { color: var(--text-primary); text-decoration: none; font-size: 1rem; font-weight: 500; transition: all 0.3s; position: relative; }
+    .nav-menu a::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 0; height: 2px; background: linear-gradient(90deg, #D4AF37, #FFD700); transition: width 0.3s; }
+    .nav-menu a:hover::after, .nav-menu a.active::after { width: 100%; }
     
-    .logo-img:hover {
-      transform: scale(1.05);
-    }
-    
-    .logo-text {
-      font-size: 1.3rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #D4AF37, #FFD700);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    
-    .nav-menu {
-      display: flex;
-      list-style: none;
-      gap: 2rem;
-    }
-    
-    .nav-menu a {
-      color: var(--text-primary);
-      text-decoration: none;
-      font-size: 1rem;
-      font-weight: 500;
-      transition: all 0.3s;
-      position: relative;
-    }
-    
-    .nav-menu a::after {
-      content: '';
-      position: absolute;
-      bottom: -5px;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background: linear-gradient(90deg, #D4AF37, #FFD700);
-      transition: width 0.3s;
-    }
-    
-    .nav-menu a:hover::after,
-    .nav-menu a.active::after {
-      width: 100%;
-    }
-    
-    .nav-controls {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-    }
-    
-    .icon-btn {
-      background: rgba(212, 175, 55, 0.2);
-      border: 1px solid var(--border-color);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--text-primary);
-      transition: all 0.3s;
-    }
-    
-    .icon-btn:hover {
-      background: #D4AF37;
-      color: #2c1810;
-      transform: scale(1.05);
-    }
-    
-    .lang-btn {
-      background: rgba(212, 175, 55, 0.2);
-      border: 1px solid var(--border-color);
-      border-radius: 25px;
-      padding: 0.3rem 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      color: var(--text-primary);
-      transition: all 0.3s;
-    }
-    
-    .lang-btn:hover {
-      background: #D4AF37;
-      color: #2c1810;
-    }
-    
-    .nav-toggle {
-      display: none;
-      cursor: pointer;
-    }
-    
-    .nav-toggle span {
-      display: block;
-      width: 25px;
-      height: 3px;
-      background: #D4AF37;
-      margin: 5px 0;
-      transition: 0.3s;
-    }
-    
+    .nav-controls { display: flex; gap: 1rem; align-items: center; }
+    .icon-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--border-color); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-primary); transition: all 0.3s; }
+    .icon-btn:hover { background: #D4AF37; color: #2c1810; transform: scale(1.05); }
+    .lang-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--border-color); border-radius: 25px; padding: 0.3rem 1rem; font-weight: 600; cursor: pointer; color: var(--text-primary); transition: all 0.3s; }
+    .lang-btn:hover { background: #D4AF37; color: #2c1810; }
+    .nav-toggle { display: none; cursor: pointer; }
+    .nav-toggle span { display: block; width: 25px; height: 3px; background: #D4AF37; margin: 5px 0; transition: 0.3s; }
     .nav-toggle.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
     .nav-toggle.active span:nth-child(2) { opacity: 0; }
     .nav-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(7px, -6px); }
@@ -305,66 +184,13 @@
       position: relative;
     }
     
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: radial-gradient(circle, transparent 0%, rgba(0,0,0,0.3) 100%);
-    }
-    
-    .hero-content {
-      text-align: center;
-      color: #fff;
-      z-index: 1;
-      padding: 2rem;
-      animation: fadeInUp 1s ease;
-    }
-    
-    .hero-title {
-      font-size: 4rem;
-      margin-bottom: 1rem;
-      text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-      font-weight: 800;
-    }
-    
-    .hero-subtitle {
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-      opacity: 0.95;
-    }
-    
-    .hero-stats {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      margin: 2rem 0;
-      flex-wrap: wrap;
-    }
-    
-    .hero-stat {
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(10px);
-      padding: 1rem 1.5rem;
-      border-radius: 50px;
-      border: 1px solid rgba(212, 175, 55, 0.5);
-    }
-    
-    .hero-stat-number {
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: #D4AF37;
-    }
-    
-    .hero-stat-text {
-      font-size: 0.9rem;
-      margin-right: 0.5rem;
-    }
+    .hero-content { text-align: center; color: #fff; z-index: 1; padding: 2rem; animation: fadeInUp 1s ease; }
+    .hero-title { font-size: 4rem; margin-bottom: 1rem; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); font-weight: 800; }
+    .hero-subtitle { font-size: 1.2rem; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto; opacity: 0.95; }
+    .hero-stats { display: flex; justify-content: center; gap: 2rem; margin: 2rem 0; flex-wrap: wrap; }
+    .hero-stat { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 1rem 1.5rem; border-radius: 50px; border: 1px solid rgba(212, 175, 55, 0.5); }
+    .hero-stat-number { font-size: 1.8rem; font-weight: 800; color: #D4AF37; }
+    .hero-stat-text { font-size: 0.9rem; margin-right: 0.5rem; }
     
     .cta-button {
       background: linear-gradient(135deg, #D4AF37, #FF8C00);
@@ -376,136 +202,29 @@
       border-radius: 50px;
       cursor: pointer;
       transition: all 0.3s;
-      position: relative;
-      overflow: hidden;
     }
+    .cta-button:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
     
-    .cta-button::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.3);
-      transform: translate(-50%, -50%);
-      transition: width 0.6s, height 0.6s;
-    }
+    .container { max-width: 1400px; margin: 0 auto; padding: 4rem 2rem; }
     
-    .cta-button:hover::before {
-      width: 300px;
-      height: 300px;
-    }
+    .section-title { text-align: center; font-size: 2.5rem; margin-bottom: 3rem; position: relative; font-weight: 700; }
+    .section-title::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 80px; height: 3px; background: linear-gradient(90deg, #D4AF37, #FF8C00); border-radius: 3px; }
     
-    .cta-button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-    }
+    .about-content { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+    .about-text h3 { font-size: 2rem; margin-bottom: 1rem; background: linear-gradient(135deg, #D4AF37, #FF8C00); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .about-text p { line-height: 1.8; margin-bottom: 1.5rem; color: var(--text-secondary); }
     
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 4rem 2rem;
-    }
+    .achievements { display: flex; gap: 2rem; margin-top: 2rem; flex-wrap: wrap; }
+    .achievement { text-align: center; flex: 1; min-width: 100px; padding: 1rem; background: var(--card-bg); border-radius: 15px; transition: transform 0.3s; border: 1px solid var(--border-color); }
+    .achievement:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
+    .achievement i { font-size: 2rem; color: #D4AF37; margin-bottom: 0.5rem; }
+    .achievement span { display: block; font-size: 0.9rem; color: var(--text-secondary); }
     
-    .section-title {
-      text-align: center;
-      font-size: 2.5rem;
-      margin-bottom: 3rem;
-      position: relative;
-      font-weight: 700;
-    }
+    .about-image img { width: 100%; border-radius: 20px; box-shadow: var(--shadow); transition: transform 0.3s; }
+    .about-image img:hover { transform: scale(1.02); }
     
-    .section-title::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80px;
-      height: 3px;
-      background: linear-gradient(90deg, #D4AF37, #FF8C00);
-      border-radius: 3px;
-    }
-    
-    .about-content {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3rem;
-      align-items: center;
-    }
-    
-    .about-text h3 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      background: linear-gradient(135deg, #D4AF37, #FF8C00);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    
-    .about-text p {
-      line-height: 1.8;
-      margin-bottom: 1.5rem;
-      color: var(--text-secondary);
-    }
-    
-    .achievements {
-      display: flex;
-      gap: 2rem;
-      margin-top: 2rem;
-      flex-wrap: wrap;
-    }
-    
-    .achievement {
-      text-align: center;
-      flex: 1;
-      min-width: 100px;
-      padding: 1rem;
-      background: var(--card-bg);
-      border-radius: 15px;
-      transition: transform 0.3s;
-      border: 1px solid var(--border-color);
-    }
-    
-    .achievement:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow);
-    }
-    
-    .achievement i {
-      font-size: 2rem;
-      color: #D4AF37;
-      margin-bottom: 0.5rem;
-    }
-    
-    .achievement span {
-      display: block;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-    
-    .about-image img {
-      width: 100%;
-      border-radius: 20px;
-      box-shadow: var(--shadow);
-      transition: transform 0.3s;
-    }
-    
-    .about-image img:hover {
-      transform: scale(1.02);
-    }
-    
-    .tours {
-      background: rgba(212, 175, 55, 0.05);
-    }
-    
-    .tours-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-      gap: 2rem;
-    }
+    .tours { background: rgba(212, 175, 55, 0.05); }
+    .tours-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; }
     
     .tour-card {
       background: var(--card-bg);
@@ -515,62 +234,17 @@
       transition: all 0.3s;
       border: 1px solid var(--border-color);
     }
+    .tour-card:hover { transform: translateY(-10px); box-shadow: var(--shadow-hover); }
     
-    .tour-card:hover {
-      transform: translateY(-10px);
-      box-shadow: var(--shadow-hover);
-    }
+    .tour-image { overflow: hidden; height: 250px; position: relative; }
+    .tour-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+    .tour-card:hover .tour-image img { transform: scale(1.1); }
+    .tour-badge { position: absolute; top: 1rem; right: 1rem; background: #D4AF37; color: #2c1810; padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.8rem; font-weight: bold; }
     
-    .tour-image {
-      overflow: hidden;
-      height: 250px;
-      position: relative;
-    }
-    
-    .tour-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.5s;
-    }
-    
-    .tour-card:hover .tour-image img {
-      transform: scale(1.1);
-    }
-    
-    .tour-badge {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: #D4AF37;
-      color: #2c1810;
-      padding: 0.3rem 0.8rem;
-      border-radius: 50px;
-      font-size: 0.8rem;
-      font-weight: bold;
-    }
-    
-    .tour-info {
-      padding: 1.5rem;
-    }
-    
-    .tour-info h3 {
-      margin-bottom: 0.5rem;
-      font-size: 1.3rem;
-    }
-    
-    .tour-details {
-      display: flex;
-      justify-content: space-between;
-      margin: 1rem 0;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-    
-    .tour-details i {
-      color: #D4AF37;
-      margin-left: 0.3rem;
-    }
+    .tour-info { padding: 1.5rem; }
+    .tour-info h3 { margin-bottom: 0.5rem; font-size: 1.3rem; }
+    .tour-details { display: flex; justify-content: space-between; margin: 1rem 0; color: var(--text-secondary); font-size: 0.9rem; }
+    .tour-details i { color: #D4AF37; margin-left: 0.3rem; }
     
     .book-btn {
       background: linear-gradient(135deg, #D4AF37, #FF8C00);
@@ -582,213 +256,46 @@
       width: 100%;
       font-weight: 700;
       transition: all 0.3s;
-    }
-    
-    .book-btn:hover {
-      opacity: 0.9;
-      transform: scale(0.98);
-    }
-    
-    .portfolio-content {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      align-items: center;
-    }
-    
-    .portfolio-text h3 {
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
-    }
-    
-    .portfolio-text ul {
-      list-style: none;
-      margin: 1rem 0;
-    }
-    
-    .portfolio-text li {
-      padding: 0.5rem 0;
-      padding-right: 1.5rem;
-      position: relative;
-    }
-    
-    .portfolio-text li::before {
-      content: '★';
-      position: absolute;
-      right: 0;
-      color: #D4AF37;
-    }
-    
-    .portfolio-gallery {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-    }
-    
-    .portfolio-gallery img {
-      width: 100%;
-      border-radius: 15px;
-      transition: all 0.3s;
-      cursor: pointer;
-    }
-    
-    .portfolio-gallery img:hover {
-      transform: scale(1.05);
-      box-shadow: var(--shadow);
-    }
-    
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1rem;
-    }
-    
-    .gallery-item {
-      overflow: hidden;
-      border-radius: 15px;
-      position: relative;
-      cursor: pointer;
-    }
-    
-    .gallery-item img {
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-      transition: transform 0.5s;
-    }
-    
-    .gallery-item:hover img {
-      transform: scale(1.1);
-    }
-    
-    .gallery-item::after {
-      content: '🔍';
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.6);
-      color: #D4AF37;
-      padding: 0.3rem 0.6rem;
-      border-radius: 50%;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    
-    .gallery-item:hover::after {
-      opacity: 1;
-    }
-    
-    .lightbox {
-      display: none;
-      position: fixed;
-      z-index: 2001;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.95);
-      backdrop-filter: blur(10px);
-      cursor: pointer;
-    }
-    
-    .lightbox-img {
-      max-width: 90%;
-      max-height: 90%;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border-radius: 10px;
-    }
-    
-    .lightbox-close {
-      position: absolute;
-      top: 20px;
-      right: 40px;
-      color: #fff;
-      font-size: 40px;
-      cursor: pointer;
-    }
-    
-    .testimonials-empty {
-      text-align: center;
-      padding: 4rem 2rem;
-      background: var(--card-bg);
-      border-radius: 20px;
-      margin: 2rem auto;
-      border: 1px solid var(--border-color);
-    }
-    
-    .testimonials-empty i {
-      font-size: 4rem;
-      color: #D4AF37;
-      margin-bottom: 1rem;
-    }
-    
-    .rate-btn {
       display: inline-block;
-      background: linear-gradient(135deg, #D4AF37, #FF8C00);
-      color: #2c1810;
-      padding: 0.8rem 2rem;
-      border-radius: 50px;
+      text-align: center;
       text-decoration: none;
-      font-weight: 700;
-      margin-top: 1rem;
-      transition: all 0.3s;
     }
+    .book-btn:hover { opacity: 0.9; transform: scale(0.98); }
     
-    .rate-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow);
-    }
+    .portfolio-content { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; }
+    .portfolio-text h3 { font-size: 1.8rem; margin-bottom: 1rem; }
+    .portfolio-text ul { list-style: none; margin: 1rem 0; }
+    .portfolio-text li { padding: 0.5rem 0; padding-right: 1.5rem; position: relative; }
+    .portfolio-text li::before { content: '★'; position: absolute; right: 0; color: #D4AF37; }
+    .portfolio-gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .portfolio-gallery img { width: 100%; border-radius: 15px; transition: all 0.3s; cursor: pointer; }
+    .portfolio-gallery img:hover { transform: scale(1.05); box-shadow: var(--shadow); }
     
-    .contact-content {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-    }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .gallery-item { overflow: hidden; border-radius: 15px; position: relative; cursor: pointer; }
+    .gallery-item img { width: 100%; height: 250px; object-fit: cover; transition: transform 0.5s; }
+    .gallery-item:hover img { transform: scale(1.1); }
+    .gallery-item::after { content: '🔍'; position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: #D4AF37; padding: 0.3rem 0.6rem; border-radius: 50%; opacity: 0; transition: opacity 0.3s; }
+    .gallery-item:hover::after { opacity: 1; }
     
-    .contact-info, .booking-form {
-      background: var(--card-bg);
-      padding: 2rem;
-      border-radius: 20px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border-color);
-    }
+    .lightbox { display: none; position: fixed; z-index: 2001; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); cursor: pointer; }
+    .lightbox-img { max-width: 90%; max-height: 90%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 10px; }
+    .lightbox-close { position: absolute; top: 20px; right: 40px; color: #fff; font-size: 40px; cursor: pointer; }
     
-    .contact-info h3, .booking-form h3 {
-      margin-bottom: 1.5rem;
-      font-size: 1.3rem;
-    }
+    .testimonials-empty { text-align: center; padding: 4rem 2rem; background: var(--card-bg); border-radius: 20px; margin: 2rem auto; border: 1px solid var(--border-color); }
+    .testimonials-empty i { font-size: 4rem; color: #D4AF37; margin-bottom: 1rem; }
+    .rate-btn { display: inline-block; background: linear-gradient(135deg, #D4AF37, #FF8C00); color: #2c1810; padding: 0.8rem 2rem; border-radius: 50px; text-decoration: none; font-weight: 700; margin-top: 1rem; transition: all 0.3s; }
+    .rate-btn:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
     
-    .contact-info a {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      margin: 1rem 0;
-      color: var(--text-primary);
-      text-decoration: none;
-      transition: color 0.3s;
-    }
+    .contact-content { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .contact-info, .booking-form { background: var(--card-bg); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+    .contact-info h3, .booking-form h3 { margin-bottom: 1.5rem; font-size: 1.3rem; }
+    .contact-info a { display: flex; align-items: center; gap: 0.8rem; margin: 1rem 0; color: var(--text-primary); text-decoration: none; transition: color 0.3s; }
+    .contact-info a:hover { color: #D4AF37; transform: translateX(-5px); }
+    .contact-info i { width: 30px; color: #D4AF37; font-size: 1.2rem; }
     
-    .contact-info a:hover {
-      color: #D4AF37;
-      transform: translateX(-5px);
-    }
-    
-    .contact-info i {
-      width: 30px;
-      color: #D4AF37;
-      font-size: 1.2rem;
-    }
-    
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
+    .form-group { margin-bottom: 1rem; }
+    .form-group input, .form-group select, .form-group textarea {
       width: 100%;
       padding: 0.9rem;
       border: 2px solid var(--border-color);
@@ -798,10 +305,7 @@
       font-family: 'Cairo', sans-serif;
       transition: all 0.3s;
     }
-    
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
       outline: none;
       border-color: #D4AF37;
       box-shadow: var(--gold-glow);
@@ -819,16 +323,8 @@
       font-size: 1rem;
       transition: all 0.3s;
     }
-    
-    .submit-btn:hover {
-      opacity: 0.9;
-      transform: scale(0.98);
-    }
-    
-    .submit-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    .submit-btn:hover { opacity: 0.9; transform: scale(0.98); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     
     .whatsapp-btn {
       position: fixed;
@@ -855,182 +351,47 @@
       70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
       100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
     }
+    .whatsapp-btn:hover { transform: scale(1.1); }
     
-    .whatsapp-btn:hover {
-      transform: scale(1.1);
-    }
+    .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); }
+    .modal-content { background: var(--card-bg); margin: 5% auto; padding: 2rem; width: 90%; max-width: 500px; border-radius: 20px; position: relative; animation: slideIn 0.3s; }
+    .close { position: absolute; top: 15px; right: 20px; font-size: 1.8rem; cursor: pointer; color: var(--text-secondary); }
+    .close:hover { color: #f44336; }
     
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 2000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(5px);
-    }
+    footer { background: var(--footer-bg); color: #fff; text-align: center; padding: 2rem; margin-top: 2rem; }
     
-    .modal-content {
-      background: var(--card-bg);
-      margin: 5% auto;
-      padding: 2rem;
-      width: 90%;
-      max-width: 500px;
-      border-radius: 20px;
-      position: relative;
-      animation: slideIn 0.3s;
-    }
+    .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease; }
+    .reveal.active { opacity: 1; transform: translateY(0); }
     
-    .close {
-      position: absolute;
-      top: 15px;
-      right: 20px;
-      font-size: 1.8rem;
-      cursor: pointer;
-      color: var(--text-secondary);
-    }
-    
-    .close:hover {
-      color: #f44336;
-    }
-    
-    footer {
-      background: var(--footer-bg);
-      color: #fff;
-      text-align: center;
-      padding: 2rem;
-      margin-top: 2rem;
-    }
-    
-    .reveal {
-      opacity: 0;
-      transform: translateY(30px);
-      transition: all 0.8s ease;
-    }
-    
-    .reveal.active {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    @keyframes slideIn {
-      from {
-        transform: translateY(-100px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { transform: translateY(-100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     
     @media (max-width: 992px) {
-      .about-content,
-      .portfolio-content,
-      .contact-content {
-        grid-template-columns: 1fr;
-      }
-      
-      .hero-title {
-        font-size: 2.5rem;
-      }
+      .about-content, .portfolio-content, .contact-content { grid-template-columns: 1fr; }
+      .hero-title { font-size: 2.5rem; }
     }
     
     @media (max-width: 768px) {
-      .nav-toggle {
-        display: block;
-      }
-      
-      .nav-menu {
-        position: fixed;
-        right: -100%;
-        top: 70px;
-        flex-direction: column;
-        background: var(--navbar-bg);
-        backdrop-filter: blur(15px);
-        width: 100%;
-        text-align: center;
-        transition: 0.3s;
-        padding: 2rem 0;
-        gap: 1.5rem;
-      }
-      
-      .nav-menu.active {
-        right: 0;
-      }
-      
-      .hero-title {
-        font-size: 1.8rem;
-      }
-      
-      .hero-subtitle {
-        font-size: 0.9rem;
-      }
-      
-      .section-title {
-        font-size: 1.8rem;
-      }
-      
-      .container {
-        padding: 2rem 1rem;
-      }
-      
-      .tours-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .achievements {
-        flex-direction: column;
-      }
-      
-      .hero-stats {
-        gap: 1rem;
-      }
-      
-      .hero-stat {
-        padding: 0.5rem 1rem;
-      }
-      
-      .hero-stat-number {
-        font-size: 1.2rem;
-      }
+      .nav-toggle { display: block; }
+      .nav-menu { position: fixed; right: -100%; top: 70px; flex-direction: column; background: var(--navbar-bg); backdrop-filter: blur(15px); width: 100%; text-align: center; transition: 0.3s; padding: 2rem 0; gap: 1.5rem; }
+      .nav-menu.active { right: 0; }
+      .hero-title { font-size: 1.8rem; }
+      .hero-subtitle { font-size: 0.9rem; }
+      .section-title { font-size: 1.8rem; }
+      .container { padding: 2rem 1rem; }
+      .tours-grid { grid-template-columns: 1fr; }
+      .achievements { flex-direction: column; }
+      .hero-stats { gap: 1rem; }
+      .hero-stat { padding: 0.5rem 1rem; }
+      .hero-stat-number { font-size: 1.2rem; }
     }
     
     @media (max-width: 480px) {
-      .portfolio-gallery {
-        grid-template-columns: 1fr;
-      }
-      
-      .gallery-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .nav-controls {
-        gap: 0.5rem;
-      }
-      
-      .icon-btn {
-        width: 35px;
-        height: 35px;
-      }
-      
-      .lang-btn {
-        padding: 0.2rem 0.8rem;
-        font-size: 0.8rem;
-      }
+      .portfolio-gallery { grid-template-columns: 1fr; }
+      .gallery-grid { grid-template-columns: 1fr; }
+      .nav-controls { gap: 0.5rem; }
+      .icon-btn { width: 35px; height: 35px; }
+      .lang-btn { padding: 0.2rem 0.8rem; font-size: 0.8rem; }
     }
   </style>
 </head>
@@ -1128,7 +489,7 @@
   <section id="testimonials" class="testimonials">
     <div class="container">
       <h2 class="section-title reveal" data-key="testimonials_title">آراء العملاء</h2>
-      <div class="testimonials-empty reveal"><i class="fas fa-star-of-life"></i><h3 data-key="no_reviews">لا توجد تقييمات بعد</h3><p data-key="be_first">كن أول من يقيّم تجربته معنا!</p><a href="#" class="rate-btn" data-key="add_review">أضف تقييمك الآن</a></div>
+      <div class="testimonials-empty reveal"><i class="fas fa-star-of-life"></i><h3 data-key="no_reviews">لا توجد تقييمات بعد</h3><p data-key="be_first">كن أول من يقيّم تجربته معنا!</p><a href="rate.html" class="rate-btn" data-key="add_review">أضف تقييمك الآن</a></div>
     </div>
   </section>
 
@@ -1194,12 +555,6 @@
     // Modal
     const modal = document.getElementById('bookingModal');
     const closeBtn = document.querySelector('.close');
-    function openBookingModal(tourName) { 
-      if (modal) { 
-        document.getElementById('modalTour').value = tourName; 
-        modal.style.display = 'block'; 
-      } 
-    }
     if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
     window.onclick = (event) => { if (event.target == modal) modal.style.display = 'none'; }
 
@@ -1213,7 +568,11 @@
         submitBtn.textContent = 'جاري الإرسال...';
         const contactData = { name: document.getElementById('contactName').value, email: document.getElementById('contactInfo').value, message: document.getElementById('contactMessage').value, createdAt: new Date().toISOString(), status: 'unread' };
         try {
-          await new Promise(resolve => setTimeout(resolve, 800));
+          await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(contactData)
+          });
           alert('✅ تم إرسال رسالتك بنجاح! سنتواصل معك قريباً');
           contactForm.reset();
         } catch (error) { alert('❌ حدث خطأ في الإرسال'); } 
@@ -1235,8 +594,8 @@
 
     // Language System
     const translations = {
-      ar: { logo: "رحلة في مصر", nav_home: "الرئيسية", nav_about: "نبذة عنا", nav_tours: "الجولات", nav_gallery: "المعرض", nav_testimonials: "آراء العملاء", nav_contact: "اتصل بنا", hero_title: "اكتشف جمال مصر", hero_subtitle: "مع مرشدة سياحية وممثلة محترفة، رحلة لا تُنسى في قلب التاريخ والثقافة المصرية", hero_btn: "احجز رحلتك الآن", about_title: "نبذة عنا", about_welcome: "مرحبا بكم في رحلة في مصر", about_p1: "أنا سيمون، مرشدة سياحية وممثلة مصرية محترفة. شغفي هو إظهار جمال مصر الحقيقي من خلال عيون فنانة.", about_p2: "مع أكثر من 10 سنوات من الخبرة في مجال السياحة والفن، أضمن لك رحلة مميزة.", achievement_1: "1000+ عميل سعيد", achievement_2: "15+ عمل فني", achievement_3: "50+ جولة سياحية", tours_title: "الجولات السياحية", tour1_title: "جولة المتحف المصري الكبير", tour1_desc: "استكشف عجائب الدنيا السبع القديمة", tour1_duration: "4 ساعات", tour1_group: "2-10 أشخاص", tour1_price: "50$", tour2_title: "رحلة النيل", tour2_desc: "عشاء رومانسي على ظهر مركب تقليدي", tour2_duration: "3 ساعات", tour2_group: "2-15 أشخاص", tour2_price: "75$", book_btn: "احجز الآن", portfolio_title: "ملف أعمال المرشدة السياحية", portfolio_name: "سيمون اسحاق - مرشدة سياحية وممثلة", portfolio_awards: "جوائز وتكريمات:", portfolio_award1: "تكريم من وزارة السياحة المصرية", gallery_title: "معرض الصور", testimonials_title: "آراء العملاء", no_reviews: "لا توجد تقييمات بعد", be_first: "كن أول من يقيّم تجربته معنا!", add_review: "أضف تقييمك الآن", contact_title: "اتصل بنا", contact_info: "معلومات الاتصال", whatsapp: "واتساب", facebook: "فيسبوك", send_message: "أرسل رسالتك", send_btn: "إرسال الرسالة", confirm_booking: "تأكيد الحجز", confirm_btn: "تأكيد الحجز", copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة" },
-      en: { logo: "Journey in Egypt", nav_home: "Home", nav_about: "About", nav_tours: "Tours", nav_gallery: "Gallery", nav_testimonials: "Testimonials", nav_contact: "Contact", hero_title: "Discover Egypt's Beauty", hero_subtitle: "With a professional tour guide and actress, an unforgettable journey into the heart of Egyptian history and culture", hero_btn: "Book Your Trip Now", about_title: "About Us", about_welcome: "Welcome to Journey in Egypt", about_p1: "I'm Simon, a professional Egyptian tour guide and actress. My passion is to show the true beauty of Egypt through an artist's eyes.", about_p2: "With over 10 years of experience in tourism and arts, I guarantee you a unique journey.", achievement_1: "1000+ Happy Clients", achievement_2: "15+ Artworks", achievement_3: "50+ Tours", tours_title: "Tours", tour1_title: "Grand Egyptian Museum Tour", tour1_desc: "Explore the wonders of the ancient Seven Wonders", tour1_duration: "4 Hours", tour1_group: "2-10 People", tour1_price: "$50", tour2_title: "Nile Cruise", tour2_desc: "Romantic dinner on a traditional boat", tour2_duration: "3 Hours", tour2_group: "2-15 People", tour2_price: "$75", book_btn: "Book Now", portfolio_title: "Tour Guide Portfolio", portfolio_name: "Simon Issac - Tour Guide & Actress", portfolio_awards: "Awards & Honors:", portfolio_award1: "Honored by Egyptian Ministry of Tourism", gallery_title: "Photo Gallery", testimonials_title: "Client Reviews", no_reviews: "No reviews yet", be_first: "Be the first to rate your experience with us!", add_review: "Add Your Review", contact_title: "Contact Us", contact_info: "Contact Information", whatsapp: "WhatsApp", facebook: "Facebook", send_message: "Send Message", send_btn: "Send Message", confirm_booking: "Confirm Booking", confirm_btn: "Confirm Booking", copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved" }
+      ar: { logo: "رحلة في مصر", nav_home: "الرئيسية", nav_about: "نبذة عنا", nav_tours: "الجولات", nav_gallery: "المعرض", nav_testimonials: "آراء العملاء", nav_contact: "اتصل بنا", hero_title: "اكتشف جمال مصر", hero_subtitle: "مع مرشدة سياحية وممثلة محترفة، رحلة لا تُنسى في قلب التاريخ والثقافة المصرية", hero_btn: "احجز رحلتك الآن", about_title: "نبذة عنا", about_welcome: "مرحبا بكم في رحلة في مصر", about_p1: "أنا سيمون، مرشدة سياحية وممثلة مصرية محترفة. شغفي هو إظهار جمال مصر الحقيقي من خلال عيون فنانة.", about_p2: "مع أكثر من 10 سنوات من الخبرة في مجال السياحة والفن، أضمن لك رحلة مميزة.", achievement_1: "1000+ عميل سعيد", achievement_2: "15+ عمل فني", achievement_3: "50+ جولة سياحية", tours_title: "الجولات السياحية", portfolio_title: "ملف أعمال المرشدة السياحية", portfolio_name: "سيمون اسحاق - مرشدة سياحية وممثلة", portfolio_awards: "جوائز وتكريمات:", portfolio_award1: "تكريم من وزارة السياحة المصرية", gallery_title: "معرض الصور", testimonials_title: "آراء العملاء", no_reviews: "لا توجد تقييمات بعد", be_first: "كن أول من يقيّم تجربته معنا!", add_review: "أضف تقييمك الآن", contact_title: "اتصل بنا", contact_info: "معلومات الاتصال", whatsapp: "واتساب", facebook: "فيسبوك", send_message: "أرسل رسالتك", send_btn: "إرسال الرسالة", confirm_booking: "تأكيد الحجز", confirm_btn: "تأكيد الحجز", copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة" },
+      en: { logo: "Journey in Egypt", nav_home: "Home", nav_about: "About", nav_tours: "Tours", nav_gallery: "Gallery", nav_testimonials: "Testimonials", nav_contact: "Contact", hero_title: "Discover Egypt's Beauty", hero_subtitle: "With a professional tour guide and actress, an unforgettable journey into the heart of Egyptian history and culture", hero_btn: "Book Your Trip Now", about_title: "About Us", about_welcome: "Welcome to Journey in Egypt", about_p1: "I'm Simon, a professional Egyptian tour guide and actress. My passion is to show the true beauty of Egypt through an artist's eyes.", about_p2: "With over 10 years of experience in tourism and arts, I guarantee you a unique journey.", achievement_1: "1000+ Happy Clients", achievement_2: "15+ Artworks", achievement_3: "50+ Tours", tours_title: "Tours", portfolio_title: "Tour Guide Portfolio", portfolio_name: "Simon Issac - Tour Guide & Actress", portfolio_awards: "Awards & Honors:", portfolio_award1: "Honored by Egyptian Ministry of Tourism", gallery_title: "Photo Gallery", testimonials_title: "Client Reviews", no_reviews: "No reviews yet", be_first: "Be the first to rate your experience with us!", add_review: "Add Your Review", contact_title: "Contact Us", contact_info: "Contact Information", whatsapp: "WhatsApp", facebook: "Facebook", send_message: "Send Message", send_btn: "Send Message", confirm_booking: "Confirm Booking", confirm_btn: "Confirm Booking", copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved" }
     };
     let currentLang = localStorage.getItem('language') || 'ar';
     function updateLanguage() { document.querySelectorAll('[data-key]').forEach(el => { const key = el.getAttribute('data-key'); if (translations[currentLang][key]) { if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = translations[currentLang][key]; else el.textContent = translations[currentLang][key]; } }); document.getElementById('langBtn').innerHTML = currentLang === 'ar' ? 'EN' : 'AR'; document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr'; document.documentElement.lang = currentLang; localStorage.setItem('language', currentLang); }
@@ -1258,10 +617,10 @@
     function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
 
-    // Smooth Scroll for all anchor links
+    // Smooth Scroll
     document.querySelectorAll('a[href^="#"]').forEach(anchor => { anchor.addEventListener('click', function(e) { e.preventDefault(); const target = document.querySelector(this.getAttribute('href')); if (target) target.scrollIntoView({ behavior: 'smooth' }); }); });
 
-    // ============= LOAD TOURS FROM API =============
+    // Helper functions
     function escapeHtml(str) {
       if (!str) return '';
       return str.replace(/[&<>]/g, function(m) {
@@ -1272,7 +631,7 @@
       });
     }
 
-// ============= LOAD TOURS FROM API (Modified for Details Page) =============
+    // ============= LOAD TOURS FROM API =============
     async function loadToursFromAPI() {
       const container = document.getElementById('toursContainer');
       if (!container) return;
@@ -1300,147 +659,27 @@
                 <span><i class="fas fa-dollar-sign"></i> الأجنبي: ${tour.priceForeign}$</span>
                 <span><i class="fas fa-pound-sign"></i> المصري: ${tour.priceEgyptian} جنيه</span>
               </div>
-              <!-- هنا التغيير: الرابط بيودي على صفحة التفاصيل -->
-              <a href="tour-details.html?id=${tour.id}" class="book-btn" style="display:inline-block; text-align:center; text-decoration:none;">احجز الآن</a>
+              <a href="tour-details.html?id=${tour.id}" class="book-btn">احجز الآن</a>
             </div>
           </div>
         `).join('');
+        
+        // Re-trigger reveal animations
+        document.querySelectorAll('.reveal:not(.active)').forEach(el => {
+          const windowHeight = window.innerHeight;
+          const revealTop = el.getBoundingClientRect().top;
+          const revealPoint = 150;
+          if (revealTop < windowHeight - revealPoint) el.classList.add('active');
+        });
         
       } catch (error) {
         console.error('Error loading tours:', error);
         container.innerHTML = '<div style="text-align:center; padding: 3rem;">❌ حدث خطأ في تحميل الجولات</div>';
       }
     }
-        
-        // Re-trigger reveal animations for new elements
-        const newRevealElements = document.querySelectorAll('.reveal:not(.active)');
-        newRevealElements.forEach(el => {
-          const windowHeight = window.innerHeight;
-          const revealTop = el.getBoundingClientRect().top;
-          const revealPoint = 150;
-          if (revealTop < windowHeight - revealPoint) {
-            el.classList.add('active');
-          }
-        });
-        
-      } catch (error) {
-        console.error('Error loading tours:', error);
-        container.innerHTML = '<div style="text-align:center; width:100%; padding: 3rem; color: #f44336;"><i class="fas fa-exclamation-triangle"></i> ❌ حدث خطأ في تحميل الجولات. تأكد من تشغيل السيرفر.</div>';
-      }
-    }
 
-    // Updated booking modal function to work with tour ID
-    window.openBookingModalWithTour = function(tourId, tourName) {
-      const modal = document.getElementById('bookingModal');
-      if (modal) {
-        document.getElementById('modalTour').value = tourName;
-        document.getElementById('modalTourId').value = tourId;
-        modal.style.display = 'block';
-      }
-    };
-
-    // Setup booking form submission
-    const modalBookingForm = document.getElementById('modalBookingForm');
-    if (modalBookingForm) {
-      modalBookingForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const submitBtn = modalBookingForm.querySelector('.submit-btn');
-        const originalText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'جاري المعالجة...';
-        
-        const nationality = document.getElementById('modalNationality')?.value;
-        const persons = parseInt(document.getElementById('modalPersons')?.value) || 1;
-        const tourName = document.getElementById('modalTour')?.value;
-        const tourId = document.getElementById('modalTourId')?.value;
-        
-        if (!tourId && !tourName) {
-          alert('❌ حدث خطأ: لم يتم تحديد الرحلة');
-          submitBtn.disabled = false;
-          submitBtn.textContent = originalText;
-          return;
-        }
-        
-        if (!nationality) {
-          alert('❌ الرجاء اختيار الجنسية');
-          submitBtn.disabled = false;
-          submitBtn.textContent = originalText;
-          return;
-        }
-        
-        let pricePerPerson = nationality === 'egyptian' ? 2500 : 50;
-        let currency = nationality === 'egyptian' ? 'EGP' : 'USD';
-        
-        // Try to get tour price from API
-        try {
-          const res = await fetch('/api/tours');
-          const tours = await res.json();
-          const tour = tours.find(t => t.id === tourId || t.name === tourName);
-          if (tour) {
-            pricePerPerson = nationality === 'egyptian' ? tour.priceEgyptian : tour.priceForeign;
-          }
-        } catch(e) {
-          console.log('Using default prices');
-        }
-        
-        const totalPrice = pricePerPerson * persons;
-        
-        const bookingData = {
-          tourId: tourId,
-          tourName: tourName,
-          name: document.getElementById('modalName').value,
-          email: document.getElementById('modalEmail').value,
-          phone: document.getElementById('modalPhone').value,
-          nationality: nationality,
-          persons: persons,
-          date: document.getElementById('modalDate').value,
-          message: document.getElementById('modalMessage').value || '',
-          totalPrice: totalPrice,
-          currency: currency
-        };
-        
-        // Validate required fields
-        if (!bookingData.name || !bookingData.email || !bookingData.phone || !bookingData.date) {
-          alert('❌ الرجاء تعبئة جميع الحقول المطلوبة');
-          submitBtn.disabled = false;
-          submitBtn.textContent = originalText;
-          return;
-        }
-        
-        try {
-          const response = await fetch('/api/bookings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bookingData)
-          });
-          
-          const result = await response.json();
-          
-          if (response.ok) {
-            alert(`✅ تم تأكيد حجزك بنجاح!\n\n📋 تفاصيل الحجز:\n🏝️ الرحلة: ${tourName}\n👥 عدد الأفراد: ${persons}\n💰 السعر الإجمالي: ${totalPrice} ${currency === 'EGP' ? 'جنيه' : '$'}\n\nسنقوم بالتواصل معك قريباً لتأكيد التفاصيل.`);
-            modal.style.display = 'none';
-            modalBookingForm.reset();
-          } else {
-            alert('❌ حدث خطأ في تأكيد الحجز: ' + (result.error || 'يرجى المحاولة مرة أخرى'));
-          }
-        } catch(error) {
-          console.error('Booking error:', error);
-          alert('❌ حدث خطأ في الاتصال بالخادم. يرجى التأكد من تشغيل السيرفر والمحاولة مرة أخرى.');
-        } finally {
-          submitBtn.disabled = false;
-          submitBtn.textContent = originalText;
-        }
-      });
-    }
-
-    // Load tours when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM loaded, loading tours...');
-      loadToursFromAPI();
-    });
-    
-    // Also call it immediately in case DOMContentLoaded already fired
+    // Load tours on page load
+    document.addEventListener('DOMContentLoaded', loadToursFromAPI);
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', loadToursFromAPI);
     } else {
