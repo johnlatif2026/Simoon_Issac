@@ -10,53 +10,74 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// ============ FIREBASE INITIALIZATION ============
+// Initialize Firebase Admin
 let db;
 try {
   if (process.env.FIREBASE_CONFIG) {
     const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
-    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
     db = admin.firestore();
-    console.log('✅ Firebase connected');
+    console.log('✅ Firebase connected successfully');
   } else {
-    console.warn('⚠️ No FIREBASE_CONFIG, using memory storage');
+    console.warn('⚠️ No FIREBASE_CONFIG found, using memory storage');
     db = null;
   }
 } catch (error) {
-  console.error('❌ Firebase error:', error.message);
+  console.error('❌ Firebase initialization error:', error.message);
   db = null;
 }
 
-// ============ MEMORY STORAGE ============
+// In-memory storage fallback
 const memoryStorage = {
-  tours: [],
+  tours: [
+    {
+      id: "1",
+      titleAr: "جولة المتحف المصري الكبير",
+      titleEn: "Grand Egyptian Museum Tour",
+      descriptionAr: "استكشف عجائب الحضارة المصرية القديمة في المتحف المصري الكبير",
+      descriptionEn: "Explore the wonders of ancient Egyptian civilization at the Grand Egyptian Museum",
+      duration: "4 ساعات",
+      groupSize: "2-10 أشخاص",
+      priceUSD: 50,
+      priceEGP: 2500,
+      image: "https://i.postimg.cc/4dWVP5tg/GEM.jpg"
+    },
+    {
+      id: "2",
+      titleAr: "رحلة النيل",
+      titleEn: "Nile Cruise",
+      descriptionAr: "عشاء رومانسي على ظهر مركب تقليدي في نهر النيل",
+      descriptionEn: "Romantic dinner on a traditional boat on the Nile River",
+      duration: "3 ساعات",
+      groupSize: "2-15 أشخاص",
+      priceUSD: 75,
+      priceEGP: 3750,
+      image: "https://i.postimg.cc/hjS7TCDB/nhr-alnyl.jpg"
+    }
+  ],
   bookings: [],
-  ratings: [],
-  contacts: []
+  contacts: [],
+  rankings: []
 };
 
-// ============ EMAIL TRANSPORTER ============
+// Email transporter
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT),
   secure: false,
-  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
 });
 
-// ============ HELPERS ============
-function generateSlug(title) {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
-}
-
-// ============ MIDDLEWARE ============
+// Middleware: Verify JWT
 const verifyToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'No token provided' });
+  
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
@@ -66,174 +87,16 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// ============ DATABASE ABSTRACTION LAYER ============
-const toursDAL = {
-  async getAll() {
-    if (db) {
-      const snapshot = await db.collection('tours').get();
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
-    return memoryStorage.tours;
-  },
-  async getById(id) {
-    if (db) {
-      const doc = await db.collection('tours').doc(id).get();
-      return doc.exists ? { id: doc.id, ...doc.data() } : null;
-    }
-    return memoryStorage.tours.find(t => t.id === id) || null;
-  },
-  async getBySlug(slug) {
-    if (db) {
-      const snapshot = await db.collection('tours').where('slug', '==', slug).get();
-      if (snapshot.empty) return null;
-      const doc = snapshot.docs[0];
-      return { id: doc.id, ...doc.data() };
-    }
-    return memoryStorage.tours.find(t => t.slug === slug) || null;
-  },
-  async create(data) {
-    const tour = { ...data, createdAt: new Date().toISOString() };
-    if (db) {
-      const docRef = await db.collection('tours').add(tour);
-      return { id: docRef.id, ...tour };
-    }
-    const newTour = { id: Date.now().toString(), ...tour };
-    memoryStorage.tours.push(newTour);
-    return newTour;
-  },
-  async update(id, data) {
-    if (db) {
-      await db.collection('tours').doc(id).update(data);
-      return { id, ...data };
-    }
-    const index = memoryStorage.tours.findIndex(t => t.id === id);
-    if (index === -1) return null;
-    memoryStorage.tours[index] = { ...memoryStorage.tours[index], ...data };
-    return memoryStorage.tours[index];
-  },
-  async delete(id) {
-    if (db) {
-      await db.collection('tours').doc(id).delete();
-      return true;
-    }
-    memoryStorage.tours = memoryStorage.tours.filter(t => t.id !== id);
-    return true;
-  }
-};
-
-const bookingsDAL = {
-  async getAll() {
-    if (db) {
-      const snapshot = await db.collection('bookings').orderBy('createdAt', 'desc').get();
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
-    return memoryStorage.bookings;
-  },
-  async getById(id) {
-    if (db) {
-      const doc = await db.collection('bookings').doc(id).get();
-      return doc.exists ? { id: doc.id, ...doc.data() } : null;
-    }
-    return memoryStorage.bookings.find(b => b.id === id) || null;
-  },
-  async create(data) {
-    const booking = { ...data, createdAt: new Date().toISOString(), paymentStatus: 'pending' };
-    if (db) {
-      const docRef = await db.collection('bookings').add(booking);
-      return { id: docRef.id, ...booking };
-    }
-    const newBooking = { id: Date.now().toString(), ...booking };
-    memoryStorage.bookings.push(newBooking);
-    return newBooking;
-  },
-  async update(id, data) {
-    if (db) {
-      await db.collection('bookings').doc(id).update(data);
-      return { id, ...data };
-    }
-    const index = memoryStorage.bookings.findIndex(b => b.id === id);
-    if (index === -1) return null;
-    memoryStorage.bookings[index] = { ...memoryStorage.bookings[index], ...data };
-    return memoryStorage.bookings[index];
-  },
-  async delete(id) {
-    if (db) {
-      await db.collection('bookings').doc(id).delete();
-      return true;
-    }
-    memoryStorage.bookings = memoryStorage.bookings.filter(b => b.id !== id);
-    return true;
-  }
-};
-
-const ratingsDAL = {
-  async getAll() {
-    if (db) {
-      const snapshot = await db.collection('rankings').get();
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
-    return memoryStorage.ratings;
-  },
-  async getByTourId(tourId) {
-    if (db) {
-      const snapshot = await db.collection('rankings').where('tourId', '==', tourId).get();
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
-    return memoryStorage.ratings.filter(r => r.tourId === tourId);
-  },
-  async create(data) {
-    const rating = { ...data, createdAt: new Date().toISOString() };
-    if (db) {
-      const docRef = await db.collection('rankings').add(rating);
-      return { id: docRef.id, ...rating };
-    }
-    const newRating = { id: Date.now().toString(), ...rating };
-    memoryStorage.ratings.push(newRating);
-    return newRating;
-  },
-  async delete(id) {
-    if (db) {
-      await db.collection('rankings').doc(id).delete();
-      return true;
-    }
-    memoryStorage.ratings = memoryStorage.ratings.filter(r => r.id !== id);
-    return true;
-  }
-};
-
-const contactsDAL = {
-  async getAll() {
-    if (db) {
-      const snapshot = await db.collection('contacts').orderBy('createdAt', 'desc').get();
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
-    return memoryStorage.contacts;
-  },
-  async create(data) {
-    const contact = { ...data, createdAt: new Date().toISOString() };
-    if (db) {
-      const docRef = await db.collection('contacts').add(contact);
-      return { id: docRef.id, ...contact };
-    }
-    const newContact = { id: Date.now().toString(), ...contact };
-    memoryStorage.contacts.push(newContact);
-    return newContact;
-  },
-  async delete(id) {
-    if (db) {
-      await db.collection('contacts').doc(id).delete();
-      return true;
-    }
-    memoryStorage.contacts = memoryStorage.contacts.filter(c => c.id !== id);
-    return true;
-  }
-};
-
-// ============ AUTH ROUTES ============
+// ============= AUTH ENDPOINTS =============
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
+  
   if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
-    const token = jwt.sign({ username, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign(
+      { username, role: 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
     res.json({ success: true, token });
   } else {
     res.status(401).json({ success: false, error: 'Invalid credentials' });
@@ -244,16 +107,16 @@ app.post('/api/verify-token', verifyToken, (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
-// ============ TOURS ROUTES ============
+// ============= TOURS ENDPOINTS =============
 app.get('/api/tours', async (req, res) => {
   try {
-    const tours = await toursDAL.getAll();
-    const toursWithStats = await Promise.all(tours.map(async (tour) => {
-      const ratings = await ratingsDAL.getByTourId(tour.id);
-      const avgRating = ratings.length ? ratings.reduce((s, r) => s + r.rating, 0) / ratings.length : 0;
-      return { ...tour, avgRating: avgRating.toFixed(1), reviewsCount: ratings.length };
-    }));
-    res.json(toursWithStats);
+    if (db) {
+      const snapshot = await db.collection('tours').get();
+      const tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      res.json(tours);
+    } else {
+      res.json(memoryStorage.tours);
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -261,19 +124,16 @@ app.get('/api/tours', async (req, res) => {
 
 app.get('/api/tours/:id', async (req, res) => {
   try {
-    const tour = await toursDAL.getById(req.params.id);
-    if (!tour) return res.status(404).json({ error: 'Tour not found' });
-    res.json(tour);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/tours/slug/:slug', async (req, res) => {
-  try {
-    const tour = await toursDAL.getBySlug(req.params.slug);
-    if (!tour) return res.status(404).json({ error: 'Tour not found' });
-    res.json(tour);
+    const { id } = req.params;
+    if (db) {
+      const doc = await db.collection('tours').doc(id).get();
+      if (!doc.exists) return res.status(404).json({ error: 'Tour not found' });
+      res.json({ id: doc.id, ...doc.data() });
+    } else {
+      const tour = memoryStorage.tours.find(t => t.id === id);
+      if (!tour) return res.status(404).json({ error: 'Tour not found' });
+      res.json(tour);
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -281,10 +141,15 @@ app.get('/api/tours/slug/:slug', async (req, res) => {
 
 app.post('/api/tours', verifyToken, async (req, res) => {
   try {
-    let tour = req.body;
-    if (!tour.slug && tour.title) tour.slug = generateSlug(tour.title);
-    const newTour = await toursDAL.create(tour);
-    res.json(newTour);
+    const tour = req.body;
+    if (db) {
+      const docRef = await db.collection('tours').add(tour);
+      res.json({ id: docRef.id, ...tour });
+    } else {
+      const newTour = { id: Date.now().toString(), ...tour };
+      memoryStorage.tours.push(newTour);
+      res.json(newTour);
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -292,9 +157,17 @@ app.post('/api/tours', verifyToken, async (req, res) => {
 
 app.put('/api/tours/:id', verifyToken, async (req, res) => {
   try {
-    const updated = await toursDAL.update(req.params.id, req.body);
-    if (!updated) return res.status(404).json({ error: 'Tour not found' });
-    res.json(updated);
+    const { id } = req.params;
+    const updates = req.body;
+    if (db) {
+      await db.collection('tours').doc(id).update(updates);
+      res.json({ id, ...updates });
+    } else {
+      const index = memoryStorage.tours.findIndex(t => t.id === id);
+      if (index === -1) return res.status(404).json({ error: 'Tour not found' });
+      memoryStorage.tours[index] = { ...memoryStorage.tours[index], ...updates };
+      res.json({ id, ...updates });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -302,40 +175,86 @@ app.put('/api/tours/:id', verifyToken, async (req, res) => {
 
 app.delete('/api/tours/:id', verifyToken, async (req, res) => {
   try {
-    await toursDAL.delete(req.params.id);
-    res.json({ success: true });
+    const { id } = req.params;
+    if (db) {
+      await db.collection('tours').doc(id).delete();
+      res.json({ success: true });
+    } else {
+      memoryStorage.tours = memoryStorage.tours.filter(t => t.id !== id);
+      res.json({ success: true });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ============ BOOKINGS ROUTES ============
+// ============= BOOKINGS ENDPOINTS =============
 app.post('/api/bookings', async (req, res) => {
   try {
-    const { tourId, name, email, phone, nationality, persons, date, notes } = req.body;
-    const tour = await toursDAL.getById(tourId);
-    if (!tour) return res.status(404).json({ error: 'Tour not found' });
+    const booking = req.body;
+    booking.createdAt = new Date().toISOString();
     
-    const pricePerPerson = nationality === 'egyptian' ? tour.priceEgyptian : tour.priceForeigner;
-    const totalPrice = pricePerPerson * (persons || 1);
-    const currency = nationality === 'egyptian' ? 'EGP' : 'USD';
+    let savedBooking;
+    if (db) {
+      const docRef = await db.collection('bookings').add(booking);
+      savedBooking = { id: docRef.id, ...booking };
+    } else {
+      savedBooking = { id: Date.now().toString(), ...booking };
+      memoryStorage.bookings.push(savedBooking);
+    }
     
-    const booking = await bookingsDAL.create({
-      tourId, tourName: tour.title, name, email, phone, nationality, persons, date, notes,
-      totalPrice, currency
-    });
-    
-    // Send email
+    // Send beautiful email notification to customer
     try {
+      const tourName = booking.tour || 'رحلة سياحية';
+      const emailHtml = `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head><meta charset="UTF-8"><title>تأكيد الحجز</title>
+        <style>
+          body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #0B3B5A 0%, #1a5a7a 100%); color: white; padding: 30px; text-align: center; }
+          .header h1 { margin: 0; font-size: 28px; }
+          .content { padding: 30px; }
+          .tour-details { background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #F4A261; }
+          .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0; }
+          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
+        </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header"><h1>🇪🇬 جولات استكشافية في مصر</h1><p>استكشف مصر</p></div>
+            <div class="content">
+              <p>السادة العملاء الكرام،</p>
+              <p>يسعدنا تأكيد حجزكم معنا، ونشكركم لثقتكم بنا.</p>
+              <div class="tour-details">
+                <div class="detail-row"><span>🏝️ اسم الرحلة:</span><span>${tourName}</span></div>
+                <div class="detail-row"><span>👤 الاسم:</span><span>${booking.name || '-'}</span></div>
+                <div class="detail-row"><span>📧 البريد الإلكتروني:</span><span>${booking.email || '-'}</span></div>
+                <div class="detail-row"><span>📞 رقم الهاتف:</span><span>${booking.phone || '-'}</span></div>
+                <div class="detail-row"><span>👥 عدد الأشخاص:</span><span>${booking.persons || '1'} شخص</span></div>
+                <div class="detail-row"><span>📅 تاريخ الرحلة:</span><span>${booking.date || '-'}</span></div>
+              </div>
+              <p style="text-align: center;"><strong>مع تحيات فريق جولات استكشافية في مصر</strong></p>
+            </div>
+            <div class="footer"><p>© 2026 جولات استكشافية في مصر - جميع الحقوق محفوظة</p></div>
+          </div>
+        </body>
+        </html>
+      `;
+      
       await transporter.sendMail({
-        from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-        to: email,
-        subject: 'تأكيد حجز رحلتك',
-        html: `<h2>تم استلام حجزك</h2><p>شكراً لحجزك معنا. سيتم التواصل معك قريباً لتأكيد الحجز.</p><p>رقم الحجز: ${booking.id}</p>`
+        from: `"جولات استكشافية في مصر" <${process.env.SMTP_USER}>`,
+        to: booking.email,
+        subject: '🎉 تأكيد حجز رحلتك - جولات استكشافية في مصر',
+        html: emailHtml
       });
-    } catch (emailError) { console.log('Email error:', emailError.message); }
+      console.log(`📧 Booking email sent to ${booking.email}`);
+    } catch (emailError) {
+      console.log('Email error:', emailError.message);
+    }
     
-    res.json({ success: true, id: booking.id });
+    res.json({ success: true, booking: savedBooking });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -343,27 +262,13 @@ app.post('/api/bookings', async (req, res) => {
 
 app.get('/api/bookings', verifyToken, async (req, res) => {
   try {
-    const bookings = await bookingsDAL.getAll();
-    res.json(bookings);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/bookings/:id', async (req, res) => {
-  try {
-    const booking = await bookingsDAL.getById(req.params.id);
-    if (!booking) return res.status(404).json({ error: 'Booking not found' });
-    res.json(booking);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.put('/api/bookings/:id', verifyToken, async (req, res) => {
-  try {
-    const updated = await bookingsDAL.update(req.params.id, req.body);
-    res.json(updated);
+    if (db) {
+      const snapshot = await db.collection('bookings').orderBy('createdAt', 'desc').get();
+      const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      res.json(bookings);
+    } else {
+      res.json(memoryStorage.bookings);
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -371,27 +276,29 @@ app.put('/api/bookings/:id', verifyToken, async (req, res) => {
 
 app.delete('/api/bookings/:id', verifyToken, async (req, res) => {
   try {
-    await bookingsDAL.delete(req.params.id);
-    res.json({ success: true });
+    const { id } = req.params;
+    if (db) {
+      await db.collection('bookings').doc(id).delete();
+      res.json({ success: true });
+    } else {
+      memoryStorage.bookings = memoryStorage.bookings.filter(b => b.id !== id);
+      res.json({ success: true });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ============ RATINGS ROUTES ============
+// ============= RANKINGS ENDPOINTS =============
 app.get('/api/rankings', async (req, res) => {
   try {
-    const ratings = await ratingsDAL.getAll();
-    res.json(ratings);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/rankings/tour/:tourId', async (req, res) => {
-  try {
-    const ratings = await ratingsDAL.getByTourId(req.params.tourId);
-    res.json(ratings);
+    if (db) {
+      const snapshot = await db.collection('rankings').orderBy('createdAt', 'desc').get();
+      const rankings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      res.json(rankings);
+    } else {
+      res.json(memoryStorage.rankings || []);
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -399,8 +306,18 @@ app.get('/api/rankings/tour/:tourId', async (req, res) => {
 
 app.post('/api/rankings', async (req, res) => {
   try {
-    const rating = await ratingsDAL.create(req.body);
-    res.json(rating);
+    const ranking = req.body;
+    ranking.createdAt = new Date().toISOString();
+    
+    if (db) {
+      const docRef = await db.collection('rankings').add(ranking);
+      res.json({ id: docRef.id, ...ranking });
+    } else {
+      const newRanking = { id: Date.now().toString(), ...ranking };
+      if (!memoryStorage.rankings) memoryStorage.rankings = [];
+      memoryStorage.rankings.push(newRanking);
+      res.json(newRanking);
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -408,18 +325,71 @@ app.post('/api/rankings', async (req, res) => {
 
 app.delete('/api/rankings/:id', verifyToken, async (req, res) => {
   try {
-    await ratingsDAL.delete(req.params.id);
-    res.json({ success: true });
+    const { id } = req.params;
+    if (db) {
+      await db.collection('rankings').doc(id).delete();
+      res.json({ success: true });
+    } else {
+      if (memoryStorage.rankings) {
+        memoryStorage.rankings = memoryStorage.rankings.filter(r => r.id !== id);
+      }
+      res.json({ success: true });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ============ CONTACTS ROUTES ============
+// ============= CONTACT ENDPOINTS =============
 app.post('/api/contacts', async (req, res) => {
   try {
-    const contact = await contactsDAL.create(req.body);
-    res.json(contact);
+    const contact = { ...req.body, createdAt: new Date().toISOString(), status: 'unread' };
+    
+    if (db) {
+      await db.collection('contacts').add(contact);
+    } else {
+      if (!memoryStorage.contacts) memoryStorage.contacts = [];
+      contact.id = Date.now().toString();
+      memoryStorage.contacts.push(contact);
+    }
+    
+    // Send confirmation email to user
+    try {
+      await transporter.sendMail({
+        from: `"جولات استكشافية في مصر" <${process.env.SMTP_USER}>`,
+        to: contact.email,
+        subject: `📧 شكراً لتواصلك مع جولات استكشافية في مصر`,
+        html: `
+          <!DOCTYPE html>
+          <html dir="rtl" lang="ar">
+          <head><meta charset="UTF-8"><title>شكراً لتواصلك</title>
+          <style>
+            body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
+            .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #0B3B5A 0%, #1a5a7a 100%); color: white; padding: 30px; text-align: center; }
+            .content { padding: 30px; }
+            .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
+          </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header"><h1>🇪🇬 جولات استكشافية في مصر</h1></div>
+              <div class="content">
+                <p>عزيزي/عزيزتي ${contact.name}،</p>
+                <p>شكراً لتواصلك مع فريق جولات استكشافية في مصر. هذا تأكيد باستلام رسالتك، وسنقوم بالرد عليك في أقرب وقت ممكن.</p>
+                <p style="text-align: center;"><strong>مع تحيات فريق جولات استكشافية في مصر</strong></p>
+              </div>
+              <div class="footer"><p>© 2026 جولات استكشافية في مصر - جميع الحقوق محفوظة</p></div>
+            </div>
+          </body>
+          </html>
+        `
+      });
+    } catch (emailError) {
+      console.log('Email error:', emailError.message);
+    }
+    
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -427,8 +397,13 @@ app.post('/api/contacts', async (req, res) => {
 
 app.get('/api/contacts', verifyToken, async (req, res) => {
   try {
-    const contacts = await contactsDAL.getAll();
-    res.json(contacts);
+    if (db) {
+      const snapshot = await db.collection('contacts').orderBy('createdAt', 'desc').get();
+      const contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      res.json(contacts);
+    } else {
+      res.json(memoryStorage.contacts || []);
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -436,31 +411,110 @@ app.get('/api/contacts', verifyToken, async (req, res) => {
 
 app.delete('/api/contacts/:id', verifyToken, async (req, res) => {
   try {
-    await contactsDAL.delete(req.params.id);
-    res.json({ success: true });
+    const { id } = req.params;
+    if (db) {
+      await db.collection('contacts').doc(id).delete();
+      res.json({ success: true });
+    } else {
+      if (memoryStorage.contacts) {
+        memoryStorage.contacts = memoryStorage.contacts.filter(c => c.id !== id);
+      }
+      res.json({ success: true });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ============ PAYMENT ROUTES ============
-app.post('/api/payment/confirm', async (req, res) => {
+// ============= ADMIN SEND EMAIL ENDPOINT =============
+app.post('/api/admin/send-email', verifyToken, async (req, res) => {
   try {
-    const { bookingId, transferNumber } = req.body;
-    const booking = await bookingsDAL.getById(bookingId);
-    if (!booking) return res.status(404).json({ error: 'Booking not found' });
+    const { email, subject, message } = req.body;
     
-    await bookingsDAL.update(bookingId, { paymentStatus: 'completed', transferNumber });
+    if (!email || !subject || !message) {
+      return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
+    }
+    
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head><meta charset="UTF-8"><title>${subject}</title>
+      <style>
+        body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #0B3B5A 0%, #1a5a7a 100%); color: white; padding: 30px; text-align: center; }
+        .content { padding: 30px; }
+        .message-box { background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #F4A261; line-height: 1.8; white-space: pre-wrap; }
+        .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
+      </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>🇪🇬 جولات استكشافية في مصر</h1><p>استكشف مصر</p></div>
+          <div class="content">
+            <div class="message-box">${message.replace(/\n/g, '<br>')}</div>
+            <p style="text-align: center;"><strong>مع تحيات فريق جولات استكشافية في مصر</strong></p>
+          </div>
+          <div class="footer"><p>© 2026 جولات استكشافية في مصر - جميع الحقوق محفوظة</p></div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    await transporter.sendMail({
+      from: `"جولات استكشافية في مصر" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: subject,
+      html: emailHtml
+    });
+    
+    res.json({ success: true, message: 'تم إرسال البريد بنجاح' });
+  } catch (error) {
+    res.status(500).json({ error: 'فشل إرسال البريد: ' + error.message });
+  }
+});
+
+// ============= CONFIRM PAYMENT ENDPOINT =============
+app.post('/api/confirm-payment', async (req, res) => {
+  try {
+    const { bookingId, email, name, tour, persons, date, totalAmount, currency, transferNumber } = req.body;
     
     // Send confirmation email
-    try {
-      await transporter.sendMail({
-        from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-        to: booking.email,
-        subject: '✅ تأكيد الحجز النهائي',
-        html: `<h2>تم تأكيد حجزك بنجاح!</h2><p>نشكرك على ثقتك بنا. في انتظارك في رحلتك الممتعة.</p>`
-      });
-    } catch (e) { console.log(e); }
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head><meta charset="UTF-8"><title>تأكيد الدفع - جولات استكشافية في مصر</title>
+      <style>
+        body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #0B3B5A 0%, #1a5a7a 100%); color: white; padding: 30px; text-align: center; }
+        .content { padding: 30px; }
+        .success-box { background-color: #d4edda; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; color: #155724; }
+        .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
+      </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>🇪🇬 جولات استكشافية في مصر</h1><p>استكشف مصر</p></div>
+          <div class="content">
+            <div class="success-box">
+              <h2>✅ تم تأكيد حجزك بنجاح!</h2>
+              <p>شكراً لحجزك معنا. سيتم التواصل معك قريباً لتأكيد التفاصيل النهائية.</p>
+            </div>
+            <p style="text-align: center;"><strong>مع تحيات فريق جولات استكشافية في مصر</strong></p>
+          </div>
+          <div class="footer"><p>© 2026 جولات استكشافية في مصر - جميع الحقوق محفوظة</p></div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    await transporter.sendMail({
+      from: `"جولات استكشافية في مصر" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: '✅ تأكيد الدفع - جولات استكشافية في مصر',
+      html: emailHtml
+    });
     
     res.json({ success: true });
   } catch (error) {
@@ -468,8 +522,10 @@ app.post('/api/payment/confirm', async (req, res) => {
   }
 });
 
-// ============ SERVER START ============
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📱 Main site: http://localhost:${PORT}/`);
+  console.log(`🔐 Login: http://localhost:${PORT}/login`);
+  console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
 });
