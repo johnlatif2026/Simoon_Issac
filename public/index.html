@@ -268,12 +268,14 @@
     object-fit: cover !important;
     min-height: 200px !important;
 }
-    .tour-card:hover .tour-image img { transform: scale(1.1); }
-    .tour-badge { position: absolute; top: 1rem; right: 1rem; background: #D4AF37; color: #2c1810; padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.8rem; font-weight: bold; }
+.tour-card {
+    background: var(--card-bg);
+    border: 1px solid #D4AF37;
+}    .tour-badge { position: absolute; top: 1rem; right: 1rem; background: #D4AF37; color: #2c1810; padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.8rem; font-weight: bold; }
     
     .tour-info { padding: 1.5rem; }
-    .tour-info h3 {
-    font-size: 1.1rem;
+.tour-info h3 {
+    color: #D4AF37 !important;
 }
     .tour-info p {
     font-size: 0.85rem;
@@ -285,22 +287,19 @@
     .tour-details { display: flex; justify-content: space-between; margin: 1rem 0; color: var(--text-secondary); font-size: 0.9rem; }
     .tour-details i { color: #D4AF37; margin-left: 0.3rem; }
     
-    .book-btn {
-      background: linear-gradient(135deg, #D4AF37, #FF8C00);
-      color: #2c1810;
-      border: none;
-      padding: 0.8rem;
-      border-radius: 50px;
-      cursor: pointer;
-      width: 100%;
-      font-weight: 700;
-      transition: all 0.3s;
-      display: inline-block;
-      text-align: center;
-      text-decoration: none;
-    }
-    .book-btn:hover { opacity: 0.9; transform: scale(0.98); }
-    
+.book-btn {
+    background: linear-gradient(135deg, #D4AF37, #FF8C00) !important;
+    color: #2c1810 !important;
+    font-weight: 800 !important;
+    padding: 0.8rem !important;
+    font-size: 1rem !important;
+    border: 2px solid #D4AF37 !important;
+    text-shadow: none !important;
+}
+.book-btn:hover {
+    background: #D4AF37 !important;
+    transform: scale(0.98) !important;
+}    
     .portfolio-content { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; }
     .portfolio-text h3 { font-size: 1.8rem; margin-bottom: 1rem; }
     .portfolio-text ul { list-style: none; margin: 1rem 0; }
@@ -432,6 +431,32 @@
       .icon-btn { width: 35px; height: 35px; }
       .lang-btn { padding: 0.2rem 0.8rem; font-size: 0.8rem; }
     }
+    /* Ensure booking buttons are always visible */
+.book-btn {
+    background: linear-gradient(135deg, #D4AF37, #FF8C00);
+    color: #2c1810;
+    border: none;
+    padding: 0.8rem;
+    border-radius: 50px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 800;
+    transition: all 0.3s;
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+.book-btn:active {
+    transform: scale(0.97);
+}
+
+/* Dark mode button fix */
+body.dark-mode .book-btn {
+    background: linear-gradient(135deg, #D4AF37, #FF8C00);
+    color: #2c1810;
+}
   </style>
 </head>
 <body>
