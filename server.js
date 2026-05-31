@@ -29,32 +29,38 @@ try {
   db = null;
 }
 
-// In-memory storage fallback with demo tours
+// In-memory storage with demo tours
 const memoryStorage = {
   tours: [
     {
       id: "1",
-      titleAr: "جولة المتحف المصري الكبير",
-      titleEn: "Grand Egyptian Museum Tour",
-      descriptionAr: "استكشف عجائب الحضارة المصرية القديمة في المتحف المصري الكبير",
-      descriptionEn: "Explore the wonders of ancient Egyptian civilization at the Grand Egyptian Museum",
-      duration: "4 ساعات",
-      groupSize: "2-10 أشخاص",
-      priceUSD: 50,
-      priceEGP: 2500,
-      image: "https://i.postimg.cc/4dWVP5tg/GEM.jpg"
+      name: "جولة الأهرامات وأبو الهول",
+      description: "استكشف عجائب الدنيا السبع القديمة الأهرامات العظيمة وأبو الهول، مع جولة في المتحف المصري القديم.",
+      days: 3,
+      priceEgyptian: 2500,
+      priceForeign: 75,
+      image: "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
+      createdAt: new Date().toISOString()
     },
     {
       id: "2",
-      titleAr: "رحلة النيل",
-      titleEn: "Nile Cruise",
-      descriptionAr: "عشاء رومانسي على ظهر مركب تقليدي في نهر النيل",
-      descriptionEn: "Romantic dinner on a traditional boat on the Nile River",
-      duration: "3 ساعات",
-      groupSize: "2-15 أشخاص",
-      priceUSD: 75,
-      priceEGP: 3750,
-      image: "https://i.postimg.cc/hjS7TCDB/nhr-alnyl.jpg"
+      name: "رحلة الأقصر وأسوان",
+      description: "جولة 5 أيام في مدن الجنوب الأقصر وأسوان، زيارة معابد الكرنك، الأقصر، وادي الملوك، معبد أبو سمبل.",
+      days: 5,
+      priceEgyptian: 4500,
+      priceForeign: 150,
+      image: "https://images.unsplash.com/photo-1566740933436-9121a7c2dadd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: "3",
+      name: "رحلة الغردقة والبحر الأحمر",
+      description: "استمتع بأجمل الشواطئ والغطس في البحر الأحمر، رحلة سفاري وبحيرة الأملاح.",
+      days: 4,
+      priceEgyptian: 3500,
+      priceForeign: 120,
+      image: "https://images.unsplash.com/photo-1535739020868-a1106c8fb78a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
+      createdAt: new Date().toISOString()
     }
   ],
   bookings: [],
@@ -107,17 +113,16 @@ app.post('/api/verify-token', verifyToken, (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
-// ============= TOURS ENDPOINTS =============
+// ============= TOURS MANAGEMENT ENDPOINTS =============
 app.get('/api/tours', async (req, res) => {
   try {
     if (db) {
       const snapshot = await db.collection('tours').get();
-      const tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       if (tours.length === 0) {
-        res.json(memoryStorage.tours);
-      } else {
-        res.json(tours);
+        tours = memoryStorage.tours;
       }
+      res.json(tours);
     } else {
       res.json(memoryStorage.tours);
     }
@@ -149,12 +154,27 @@ app.get('/api/tours/:id', async (req, res) => {
 
 app.post('/api/tours', verifyToken, async (req, res) => {
   try {
-    const tour = req.body;
+    const { name, description, days, priceEgyptian, priceForeign, image } = req.body;
+    
+    if (!name || !description || !days || !priceEgyptian || !priceForeign) {
+      return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
+    }
+    
+    const newTour = {
+      name,
+      description,
+      days: parseInt(days),
+      priceEgyptian: parseFloat(priceEgyptian),
+      priceForeign: parseFloat(priceForeign),
+      image: image || 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80',
+      createdAt: new Date().toISOString()
+    };
+    
     if (db) {
-      const docRef = await db.collection('tours').add(tour);
-      res.json({ id: docRef.id, ...tour });
+      const docRef = await db.collection('tours').add(newTour);
+      res.json({ id: docRef.id, ...newTour });
     } else {
-      const newTour = { id: Date.now().toString(), ...tour };
+      newTour.id = Date.now().toString();
       memoryStorage.tours.push(newTour);
       res.json(newTour);
     }
@@ -167,14 +187,15 @@ app.put('/api/tours/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
+    
     if (db) {
       await db.collection('tours').doc(id).update(updates);
-      res.json({ id, ...updates });
+      res.json({ success: true, id, ...updates });
     } else {
       const index = memoryStorage.tours.findIndex(t => t.id === id);
       if (index === -1) return res.status(404).json({ error: 'Tour not found' });
       memoryStorage.tours[index] = { ...memoryStorage.tours[index], ...updates };
-      res.json({ id, ...updates });
+      res.json({ success: true, id, ...updates });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -199,8 +220,24 @@ app.delete('/api/tours/:id', verifyToken, async (req, res) => {
 // ============= BOOKINGS ENDPOINTS =============
 app.post('/api/bookings', async (req, res) => {
   try {
-    const booking = req.body;
-    booking.createdAt = new Date().toISOString();
+    const { tourId, tourName, name, email, phone, persons, date, nationality, totalPrice, currency, message } = req.body;
+    
+    const booking = { 
+      tourId: tourId || '',
+      tourName: tourName || 'رحلة سياحية',
+      name, 
+      email, 
+      phone, 
+      persons: parseInt(persons) || 1, 
+      date,
+      nationality: nationality || 'foreign',
+      totalAmount: totalPrice || 0,
+      currency: currency || 'USD',
+      message: message || '',
+      transferNumber: 'TR-' + Date.now(),
+      createdAt: new Date().toISOString(),
+      paymentStatus: 'pending'
+    };
     
     let savedBooking;
     if (db) {
@@ -213,50 +250,50 @@ app.post('/api/bookings', async (req, res) => {
     
     // Send email notification to customer
     try {
-      const tourName = booking.tour || 'رحلة سياحية';
       const emailHtml = `
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
-        <head><meta charset="UTF-8"><title>تأكيد الحجز</title>
+        <head><meta charset="UTF-8"><title>تأكيد الحجز - رحلة في مصر</title>
         <style>
           body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
           .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #0B3B5A 0%, #1a5a7a 100%); color: white; padding: 30px; text-align: center; }
+          .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 30px; text-align: center; }
           .header h1 { margin: 0; font-size: 28px; }
           .content { padding: 30px; }
-          .tour-details { background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #F4A261; }
+          .tour-details { background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #D4AF37; }
           .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0; }
           .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
         </style>
         </head>
         <body>
           <div class="container">
-            <div class="header"><h1>🇪🇬 جولات استكشافية في مصر</h1><p>استكشف مصر</p></div>
+            <div class="header"><h1>🇪🇬 رحلة في مصر مع سيمون</h1><p>اكتشف جمال مصر</p></div>
             <div class="content">
               <p>السادة العملاء الكرام،</p>
               <p>يسعدنا تأكيد حجزكم معنا، ونشكركم لثقتكم بنا.</p>
               <div class="tour-details">
-                <div class="detail-row"><span>🏝️ اسم الرحلة:</span><span>${tourName}</span></div>
+                <div class="detail-row"><span>🏝️ اسم الرحلة:</span><span>${booking.tourName}</span></div>
                 <div class="detail-row"><span>👤 الاسم:</span><span>${booking.name || '-'}</span></div>
                 <div class="detail-row"><span>📧 البريد الإلكتروني:</span><span>${booking.email || '-'}</span></div>
                 <div class="detail-row"><span>📞 رقم الهاتف:</span><span>${booking.phone || '-'}</span></div>
-                <div class="detail-row"><span>👥 عدد الأشخاص:</span><span>${booking.persons || '1'} شخص</span></div>
+                <div class="detail-row"><span>👥 عدد الأشخاص:</span><span>${booking.persons} شخص</span></div>
                 <div class="detail-row"><span>📅 تاريخ الرحلة:</span><span>${booking.date || '-'}</span></div>
-                <div class="detail-row"><span>💰 المبلغ:</span><span>${booking.totalAmount || 0} ${booking.currency === 'EGP' ? 'جنيه' : '$'}</span></div>
-                <div class="detail-row"><span>🔢 رقم التحويل:</span><span>${booking.transferNumber || '-'}</span></div>
+                <div class="detail-row"><span>💰 المبلغ الإجمالي:</span><span>${booking.totalAmount} ${booking.currency === 'EGP' ? 'جنيه' : '$'}</span></div>
+                <div class="detail-row"><span>🔢 رقم الحجز:</span><span>${booking.transferNumber}</span></div>
               </div>
-              <p style="text-align: center;"><strong>مع تحيات فريق جولات استكشافية في مصر</strong></p>
+              <p>سنقوم بالتواصل معكم خلال 24 ساعة لتأكيد التفاصيل النهائية.</p>
+              <p style="text-align: center;"><strong>مع تحيات فريق رحلة في مصر مع سيمون</strong></p>
             </div>
-            <div class="footer"><p>© 2026 جولات استكشافية في مصر - جميع الحقوق محفوظة</p></div>
+            <div class="footer"><p>© 2026 رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p></div>
           </div>
         </body>
         </html>
       `;
       
       await transporter.sendMail({
-        from: `"جولات استكشافية في مصر" <${process.env.SMTP_USER}>`,
+        from: `"رحلة في مصر مع سيمون" <${process.env.SMTP_USER}>`,
         to: booking.email,
-        subject: '🎉 تأكيد حجز رحلتك - جولات استكشافية في مصر',
+        subject: '🎉 تأكيد حجز رحلتك - رحلة في مصر مع سيمون',
         html: emailHtml
       });
       console.log(`📧 Booking email sent to ${booking.email}`);
@@ -266,6 +303,7 @@ app.post('/api/bookings', async (req, res) => {
     
     res.json({ success: true, booking: savedBooking });
   } catch (error) {
+    console.error('Booking error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -299,106 +337,27 @@ app.delete('/api/bookings/:id', verifyToken, async (req, res) => {
   }
 });
 
-// ============= RANKINGS ENDPOINTS =============
-app.get('/api/rankings', async (req, res) => {
-  try {
-    if (db) {
-      const snapshot = await db.collection('rankings').orderBy('createdAt', 'desc').get();
-      const rankings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      res.json(rankings);
-    } else {
-      res.json(memoryStorage.rankings || []);
-    }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/rankings', async (req, res) => {
-  try {
-    const ranking = req.body;
-    ranking.createdAt = new Date().toISOString();
-    
-    if (db) {
-      const docRef = await db.collection('rankings').add(ranking);
-      res.json({ id: docRef.id, ...ranking });
-    } else {
-      const newRanking = { id: Date.now().toString(), ...ranking };
-      if (!memoryStorage.rankings) memoryStorage.rankings = [];
-      memoryStorage.rankings.push(newRanking);
-      res.json(newRanking);
-    }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.delete('/api/rankings/:id', verifyToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (db) {
-      await db.collection('rankings').doc(id).delete();
-      res.json({ success: true });
-    } else {
-      if (memoryStorage.rankings) {
-        memoryStorage.rankings = memoryStorage.rankings.filter(r => r.id !== id);
-      }
-      res.json({ success: true });
-    }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // ============= CONTACT ENDPOINTS =============
-app.post('/api/contacts', async (req, res) => {
+app.post('/api/contact', async (req, res) => {
   try {
     const contact = { ...req.body, createdAt: new Date().toISOString(), status: 'unread' };
     
     if (db) {
       await db.collection('contacts').add(contact);
     } else {
-      if (!memoryStorage.contacts) memoryStorage.contacts = [];
       contact.id = Date.now().toString();
+      if (!memoryStorage.contacts) memoryStorage.contacts = [];
       memoryStorage.contacts.push(contact);
     }
     
-    // Send confirmation email to user
     try {
       await transporter.sendMail({
-        from: `"جولات استكشافية في مصر" <${process.env.SMTP_USER}>`,
+        from: `"رحلة في مصر مع سيمون" <${process.env.SMTP_USER}>`,
         to: contact.email,
-        subject: `📧 شكراً لتواصلك مع جولات استكشافية في مصر`,
-        html: `
-          <!DOCTYPE html>
-          <html dir="rtl" lang="ar">
-          <head><meta charset="UTF-8"><title>شكراً لتواصلك</title>
-          <style>
-            body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
-            .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-            .header { background: linear-gradient(135deg, #0B3B5A 0%, #1a5a7a 100%); color: white; padding: 30px; text-align: center; }
-            .content { padding: 30px; }
-            .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
-          </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header"><h1>🇪🇬 جولات استكشافية في مصر</h1></div>
-              <div class="content">
-                <p>عزيزي/عزيزتي ${contact.name}،</p>
-                <p>شكراً لتواصلك مع فريق جولات استكشافية في مصر. هذا تأكيد باستلام رسالتك، وسنقوم بالرد عليك في أقرب وقت ممكن.</p>
-                <p style="text-align: center;"><strong>مع تحيات فريق جولات استكشافية في مصر</strong></p>
-              </div>
-              <div class="footer"><p>© 2026 جولات استكشافية في مصر - جميع الحقوق محفوظة</p></div>
-            </div>
-          </body>
-          </html>
-        `
+        subject: `📧 شكراً لتواصلك مع رحلة في مصر`,
+        html: `<div style="font-family: 'Cairo', sans-serif; direction: rtl;"><h3>شكراً لتواصلك ${contact.name}</h3><p>سنقوم بالرد عليك في أقرب وقت ممكن.</p><br><p>مع تحيات فريق رحلة في مصر مع سيمون</p></div>`
       });
-      console.log(`📧 Contact confirmation email sent to ${contact.email}`);
-    } catch (emailError) {
-      console.log('Email error:', emailError.message);
-    }
+    } catch (e) { console.log('Email error:', e.message); }
     
     res.json({ success: true });
   } catch (error) {
@@ -425,13 +384,55 @@ app.delete('/api/contacts/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
     if (db) {
       await db.collection('contacts').doc(id).delete();
-      res.json({ success: true });
     } else {
-      if (memoryStorage.contacts) {
-        memoryStorage.contacts = memoryStorage.contacts.filter(c => c.id !== id);
-      }
-      res.json({ success: true });
+      memoryStorage.contacts = memoryStorage.contacts.filter(c => c.id !== id);
     }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============= RANKINGS ENDPOINTS =============
+app.post('/api/rankings', async (req, res) => {
+  try {
+    const ranking = { ...req.body, createdAt: new Date().toISOString() };
+    if (db) {
+      await db.collection('rankings').add(ranking);
+    } else {
+      ranking.id = Date.now().toString();
+      if (!memoryStorage.rankings) memoryStorage.rankings = [];
+      memoryStorage.rankings.push(ranking);
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/rankings', async (req, res) => {
+  try {
+    if (db) {
+      const snapshot = await db.collection('rankings').orderBy('createdAt', 'desc').get();
+      const rankings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      res.json(rankings);
+    } else {
+      res.json(memoryStorage.rankings || []);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/rankings/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (db) {
+      await db.collection('rankings').doc(id).delete();
+    } else {
+      memoryStorage.rankings = memoryStorage.rankings.filter(r => r.id !== id);
+    }
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -446,43 +447,15 @@ app.post('/api/admin/send-email', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
     }
     
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
-      <head><meta charset="UTF-8"><title>${subject}</title>
-      <style>
-        body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
-        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #0B3B5A 0%, #1a5a7a 100%); color: white; padding: 30px; text-align: center; }
-        .content { padding: 30px; }
-        .message-box { background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #F4A261; line-height: 1.8; white-space: pre-wrap; }
-        .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
-      </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header"><h1>🇪🇬 جولات استكشافية في مصر</h1><p>استكشف مصر</p></div>
-          <div class="content">
-            <div class="message-box">${message.replace(/\n/g, '<br>')}</div>
-            <p style="text-align: center;"><strong>مع تحيات فريق جولات استكشافية في مصر</strong></p>
-          </div>
-          <div class="footer"><p>© 2026 جولات استكشافية في مصر - جميع الحقوق محفوظة</p></div>
-        </div>
-      </body>
-      </html>
-    `;
-    
     await transporter.sendMail({
-      from: `"جولات استكشافية في مصر" <${process.env.SMTP_USER}>`,
+      from: `"رحلة في مصر مع سيمون" <${process.env.SMTP_USER}>`,
       to: email,
       subject: subject,
-      html: emailHtml
+      html: `<div style="font-family: 'Cairo', sans-serif; direction: rtl;"><h3>${subject}</h3><p>${message.replace(/\n/g, '<br>')}</p><br><p>مع تحيات فريق <strong>رحلة في مصر مع سيمون</strong></p></div>`
     });
     
-    console.log(`📧 Admin email sent to: ${email} - Subject: ${subject}`);
     res.json({ success: true, message: 'تم إرسال البريد بنجاح' });
   } catch (error) {
-    console.error('Email error:', error);
     res.status(500).json({ error: 'فشل إرسال البريد: ' + error.message });
   }
 });
@@ -495,11 +468,11 @@ app.post('/api/confirm-payment', async (req, res) => {
     const emailHtml = `
       <!DOCTYPE html>
       <html dir="rtl" lang="ar">
-      <head><meta charset="UTF-8"><title>تأكيد الدفع - جولات استكشافية في مصر</title>
+      <head><meta charset="UTF-8"><title>تأكيد الدفع - رحلة في مصر</title>
       <style>
         body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
         .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #0B3B5A 0%, #1a5a7a 100%); color: white; padding: 30px; text-align: center; }
+        .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 30px; text-align: center; }
         .content { padding: 30px; }
         .success-box { background-color: #d4edda; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; color: #155724; }
         .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
@@ -507,33 +480,31 @@ app.post('/api/confirm-payment', async (req, res) => {
       </head>
       <body>
         <div class="container">
-          <div class="header"><h1>🇪🇬 جولات استكشافية في مصر</h1><p>استكشف مصر</p></div>
+          <div class="header"><h1>🇪🇬 رحلة في مصر مع سيمون</h1></div>
           <div class="content">
             <div class="success-box">
               <h2>✅ تم تأكيد حجزك بنجاح!</h2>
               <p>شكراً لحجزك معنا. سيتم التواصل معك قريباً لتأكيد التفاصيل النهائية.</p>
-              <p><strong>رقم التحويل المرجعي:</strong> ${transferNumber}</p>
+              <p><strong>رقم الحجز المرجعي:</strong> ${transferNumber}</p>
               <p><strong>المبلغ:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه' : 'دولار'}</p>
             </div>
-            <p style="text-align: center;"><strong>مع تحيات فريق جولات استكشافية في مصر</strong></p>
+            <p style="text-align: center;"><strong>مع تحيات فريق رحلة في مصر مع سيمون</strong></p>
           </div>
-          <div class="footer"><p>© 2026 جولات استكشافية في مصر - جميع الحقوق محفوظة</p></div>
+          <div class="footer"><p>© 2026 رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p></div>
         </div>
       </body>
       </html>
     `;
     
     await transporter.sendMail({
-      from: `"جولات استكشافية في مصر" <${process.env.SMTP_USER}>`,
+      from: `"رحلة في مصر مع سيمون" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: '✅ تأكيد الدفع - جولات استكشافية في مصر',
+      subject: '✅ تأكيد الدفع - رحلة في مصر مع سيمون',
       html: emailHtml
     });
     
-    console.log(`📧 Payment confirmation email sent to ${email}`);
     res.json({ success: true });
   } catch (error) {
-    console.error('Confirm payment email error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -544,5 +515,5 @@ app.listen(PORT, () => {
   console.log(`📱 Main site: http://localhost:${PORT}/`);
   console.log(`🔐 Login: http://localhost:${PORT}/login`);
   console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
-  console.log(`✨ Demo tours loaded - 2 tours available`);
+  console.log(`✨ 3 demo tours loaded successfully!`);
 });
