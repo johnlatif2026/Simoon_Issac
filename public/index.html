@@ -958,6 +958,16 @@
   max-width:100%;
   height:auto;
 }
+.contact-content {
+  background: linear-gradient(135deg, rgba(212,175,55,0.05), transparent);
+  padding: 2rem;
+  border-radius: 30px;
+}
+
+.booking-form {
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(212,175,55,0.25);
+}
 .nav-menu a {
   color: #f8f9fa;
 }
@@ -1107,13 +1117,38 @@
         <a href="https://wa.me/201026517329" target="_blank"><i class="fab fa-whatsapp"></i> <span data-key="whatsapp">واتساب</span></a>
         <a href="https://www.facebook.com/simoon.issac" target="_blank"><i class="fab fa-facebook"></i> <span data-key="facebook">فيسبوك</span></a>
       </div>
-      <form id="contactForm" class="booking-form reveal">
-        <h3 data-key="send_message">أرسل رسالتك</h3>
-        <input type="text" id="contactName" data-key="name_placeholder">
-        <input type="text" id="contactInfo" data-key="contact_placeholder">
-        <textarea id="contactMessage" data-key="message_placeholder"></textarea>
-        <button type="submit" class="submit-btn" data-key="send_btn">إرسال الرسالة</button>
-      </form>
+<form id="contactForm" class="booking-form reveal">
+  <h3 data-key="send_message" style="margin-bottom: 1.5rem;">أرسل رسالتك</h3>
+  
+  <div class="form-group">
+    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--gold-primary);">
+      <i class="fas fa-user"></i> 
+      <span data-key="name_label">الاسم الكامل</span>
+    </label>
+    <input type="text" id="contactName" data-key="name_placeholder" placeholder="الاسم الكامل" required>
+  </div>
+  
+  <div class="form-group">
+    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--gold-primary);">
+      <i class="fas fa-envelope"></i> 
+      <span data-key="contact_label">وسيلة التواصل</span>
+    </label>
+    <input type="text" id="contactInfo" data-key="contact_placeholder" placeholder="البريد الإلكتروني أو رقم الهاتف" required>
+  </div>
+  
+  <div class="form-group">
+    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--gold-primary);">
+      <i class="fas fa-comment"></i> 
+      <span data-key="message_label">رسالتك</span>
+    </label>
+    <textarea id="contactMessage" data-key="message_placeholder" rows="5" placeholder="اكتب رسالتك هنا..."></textarea>
+  </div>
+  
+  <button type="submit" class="submit-btn" data-key="send_btn">
+    <i class="fas fa-paper-plane"></i> 
+    <span data-key="send_btn_text">إرسال الرسالة</span>
+  </button>
+</form>
     </div>
   </div>
 </section>
@@ -1271,6 +1306,10 @@
       name_placeholder: "الاسم الكامل",
 contact_placeholder: "البريد الإلكتروني أو رقم الهاتف",
 message_placeholder: "رسالتك",
+no_tours_title: {
+  ar: "📭 لا توجد جولات حالياً",
+  en: "📭 No tours available"
+},
     },
     en: {
       logo: "Journey in Egypt", nav_home: "Home", nav_about: "About", nav_tours: "Tours",
@@ -1290,6 +1329,10 @@ message_placeholder: "رسالتك",
       name_placeholder: "Full Name",
 contact_placeholder: "Email or Phone Number",
 message_placeholder: "Your Message",
+no_tours_desc: {
+  ar: "سيتم إضافة جولات جديدة قريباً، تابعونا!",
+  en: "New tours will be added soon, stay tuned!"
+}
     }
   };
   
@@ -1389,8 +1432,8 @@ function updateLanguage() {
         container.innerHTML = `
           <div class="no-tours-message">
             <i class="fas fa-map-marked-alt"></i>
-            <h3>📭 لا توجد جولات حالياً</h3>
-            <p>سيتم إضافة جولات جديدة قريباً، تابعونا!</p>
+            <h3>${translations[currentLang].no_tours_title}</h3>
+            <p>${translations[currentLang].no_tours_desc}</p>
           </div>
         `;
         return;
