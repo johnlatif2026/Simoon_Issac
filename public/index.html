@@ -958,6 +958,9 @@
   max-width:100%;
   height:auto;
 }
+.nav-menu a {
+  color: #f8f9fa;
+}
   </style>
 </head>
 <body>
@@ -1087,7 +1090,7 @@
       <i class="fas fa-star-of-life"></i>
       <h3 data-key="no_reviews">لا توجد تقييمات بعد</h3>
       <p data-key="be_first">كن أول من يقيّم تجربته معنا!</p>
-      <a href="/rate" class="rate-btn" data-key="add_review">أضف تقييمك الآن</a>
+      <a href="rate" class="rate-btn" data-key="add_review">أضف تقييمك الآن</a>
     </div>
   </div>
 </section>
@@ -1106,9 +1109,9 @@
       </div>
       <form id="contactForm" class="booking-form reveal">
         <h3 data-key="send_message">أرسل رسالتك</h3>
-        <div class="form-group"><input type="text" id="contactName" placeholder="الاسم الكامل" required></div>
-        <div class="form-group"><input type="text" id="contactInfo" placeholder="البريد الإلكتروني أو رقم الهاتف" required></div>
-        <div class="form-group"><textarea id="contactMessage" rows="5" placeholder="رسالتك" required></textarea></div>
+        <input type="text" id="contactName" data-key="name_placeholder">
+        <input type="text" id="contactInfo" data-key="contact_placeholder">
+        <textarea id="contactMessage" data-key="message_placeholder"></textarea>
         <button type="submit" class="submit-btn" data-key="send_btn">إرسال الرسالة</button>
       </form>
     </div>
@@ -1264,7 +1267,10 @@
       testimonials_title: "آراء العملاء", no_reviews: "لا توجد تقييمات بعد", be_first: "كن أول من يقيّم تجربته معنا!",
       add_review: "أضف تقييمك الآن", contact_title: "اتصل بنا", contact_info: "معلومات الاتصال",
       whatsapp: "واتساب", facebook: "فيسبوك", send_message: "أرسل رسالتك", send_btn: "إرسال الرسالة",
-      confirm_booking: "تأكيد الحجز", confirm_btn: "تأكيد الحجز", copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة"
+      confirm_booking: "تأكيد الحجز", confirm_btn: "تأكيد الحجز", copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة",
+      name_placeholder: "الاسم الكامل",
+contact_placeholder: "البريد الإلكتروني أو رقم الهاتف",
+message_placeholder: "رسالتك",
     },
     en: {
       logo: "Journey in Egypt", nav_home: "Home", nav_about: "About", nav_tours: "Tours",
@@ -1280,23 +1286,34 @@
       be_first: "Be the first to rate your experience!", add_review: "Add Your Review",
       contact_title: "Contact Us", contact_info: "Contact Information", whatsapp: "WhatsApp",
       facebook: "Facebook", send_message: "Send Message", send_btn: "Send Message",
-      confirm_booking: "Confirm Booking", confirm_btn: "Confirm Booking", copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved"
+      confirm_booking: "Confirm Booking", confirm_btn: "Confirm Booking", copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved",
+      name_placeholder: "Full Name",
+contact_placeholder: "Email or Phone Number",
+message_placeholder: "Your Message",
     }
   };
   
   let currentLang = localStorage.getItem('language') || 'ar';
-  function updateLanguage() {
-    document.querySelectorAll('[data-key]').forEach(el => {
-      const key = el.getAttribute('data-key');
-      if (translations[currentLang][key]) {
-        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = translations[currentLang][key];
-        else el.textContent = translations[currentLang][key];
-      }
-    });
-    document.getElementById('langBtn').innerHTML = currentLang === 'ar' ? 'EN' : 'AR';
-    document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-    localStorage.setItem('language', currentLang);
-  }
+function updateLanguage() {
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const key = el.getAttribute('data-key');
+    const value = translations[currentLang][key];
+
+    if (!value) return;
+
+    if (el.placeholder !== undefined) {
+      el.placeholder = value;
+    } else {
+      el.textContent = value;
+    }
+  });
+
+  document.getElementById('langBtn').innerHTML =
+    currentLang === 'ar' ? 'EN' : 'AR';
+
+  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+  localStorage.setItem('language', currentLang);
+}
   function initLanguage() {
     document.getElementById('langBtn').addEventListener('click', () => {
       currentLang = currentLang === 'ar' ? 'en' : 'ar';
