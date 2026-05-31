@@ -3,8 +3,6 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const admin = require('firebase-admin');
-const fs = require('fs').promises;
-const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -12,62 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// ========================
-// CREDENTIALS MANAGEMENT (JSON File)
-// ========================
-const CREDENTIALS_FILE = path.join(__dirname, 'credentials.json');
-
-// Function to read credentials from JSON file
-async function readCredentials() {
-    try {
-        const data = await fs.readFile(CREDENTIALS_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        if (error.code === 'ENOENT') {
-            // File doesn't exist, create it from .env
-            const initialCredentials = {
-                username: process.env.ADMIN_USERNAME,
-                password: process.env.ADMIN_PASSWORD
-            };
-            await fs.writeFile(CREDENTIALS_FILE, JSON.stringify(initialCredentials, null, 2));
-            return initialCredentials;
-        }
-        throw error;
-    }
-}
-
-// Function to update username
-async function updateUsername(currentUsername, currentPassword, newUsername) {
-    const credentials = await readCredentials();
-    if (credentials.username !== currentUsername || credentials.password !== currentPassword) {
-        return { success: false, message: 'بيانات الاعتماد الحالية غير صحيحة.' };
-    }
-    if (newUsername.length < 4) {
-        return { success: false, message: 'اسم المستخدم الجديد يجب ألا يقل عن 4 أحرف.' };
-    }
-    credentials.username = newUsername;
-    await fs.writeFile(CREDENTIALS_FILE, JSON.stringify(credentials, null, 2));
-    return { success: true, message: 'تم تغيير اسم المستخدم بنجاح.' };
-}
-
-// Function to update password
-async function updatePassword(currentUsername, currentPassword, newPassword) {
-    const credentials = await readCredentials();
-    if (credentials.username !== currentUsername || credentials.password !== currentPassword) {
-        return { success: false, message: 'بيانات الاعتماد الحالية غير صحيحة.' };
-    }
-    if (newPassword.length < 8) {
-        return { success: false, message: 'كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف.' };
-    }
-    credentials.password = newPassword;
-    await fs.writeFile(CREDENTIALS_FILE, JSON.stringify(credentials, null, 2));
-    return { success: true, message: 'تم تغيير كلمة المرور بنجاح.' };
-}
-
-// ========================
-// FIREBASE & EMAIL SETUP
-// ========================
-// ... (keep your existing Firebase and Email setup code as it was) ...
+// Initialize Firebase Admin
 let db;
 try {
   if (process.env.FIREBASE_CONFIG) {
@@ -120,12 +63,11 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// ============= AUTH ENDPOINTS (MODIFIED) =============
+// ============= AUTH ENDPOINTS =============
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
-  const credentials = await readCredentials();
   
-  if (username === credentials.username && password === credentials.password) {
+  if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
     const token = jwt.sign(
       { username, role: 'admin' },
       process.env.JWT_SECRET,
@@ -133,43 +75,12 @@ app.post('/api/login', async (req, res) => {
     );
     res.json({ success: true, token });
   } else {
-    res.status(401).json({ success: false, error: 'بيانات الاعتماد غير صحيحة' });
+    res.status(401).json({ success: false, error: 'Invalid credentials' });
   }
 });
 
 app.post('/api/verify-token', verifyToken, (req, res) => {
   res.json({ valid: true, user: req.user });
-});
-
-// ============= NEW APIs FOR CHANGING CREDENTIALS =============
-app.post('/api/change-username', verifyToken, async (req, res) => {
-    const { currentUsername, currentPassword, newUsername } = req.body;
-    
-    if (!currentUsername || !currentPassword || !newUsername) {
-        return res.status(400).json({ success: false, message: 'جميع الحقول مطلوبة.' });
-    }
-    
-    const result = await updateUsername(currentUsername, currentPassword, newUsername);
-    if (result.success) {
-        res.json({ success: true, message: result.message });
-    } else {
-        res.status(400).json({ success: false, message: result.message });
-    }
-});
-
-app.post('/api/change-password', verifyToken, async (req, res) => {
-    const { currentUsername, currentPassword, newPassword } = req.body;
-    
-    if (!currentUsername || !currentPassword || !newPassword) {
-        return res.status(400).json({ success: false, message: 'جميع الحقول مطلوبة.' });
-    }
-    
-    const result = await updatePassword(currentUsername, currentPassword, newPassword);
-    if (result.success) {
-        res.json({ success: true, message: result.message });
-    } else {
-        res.status(400).json({ success: false, message: result.message });
-    }
 });
 
 // ============= TOURS MANAGEMENT ENDPOINTS (CRUD) =============
