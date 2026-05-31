@@ -1042,7 +1042,7 @@
 <!-- Tours Section -->
 <section id="tours" class="tours">
   <div class="container">
-    <h2 class="section-title reveal" data-key="tours_title">الجولات السياحية</h2>
+    <h2 class="section-title" data-key="tours_title">الجولات السياحية</h2>
     <div id="toursContainer" class="tours-grid">
       <div style="text-align:center; width:100%;"><i class="fas fa-spinner fa-spin"></i> جاري تحميل الجولات...</div>
     </div>
@@ -1403,7 +1403,7 @@ function updateLanguage() {
           : `<div style="width:100%; height:100%; background:var(--gradient-gold); display:flex; align-items:center; justify-content:center;"><i class="fas fa-pyramid" style="font-size:3rem; color:#2c1810;"></i></div>`;
         
         html += `
-          <div class="tour-card reveal">
+          <div class="tour-card">
             <div class="tour-image">
               ${imgHtml}
               <div class="tour-badge">⭐ ${tour.days || 3} أيام</div>
@@ -1444,11 +1444,12 @@ function updateLanguage() {
   }
   
   // تحميل أولي للرحلات
- document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
+  document.addEventListener('DOMContentLoaded', loadToursFromAPI);
+  
+  // تحديث تلقائي كل دقيقتين (بدون ريفرش للصفحة)
+  setInterval(() => {
     loadToursFromAPI();
-  }
-});
+  }, 30000);
   
   // Smooth Scroll for anchor links
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
