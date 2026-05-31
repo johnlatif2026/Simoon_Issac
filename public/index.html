@@ -528,163 +528,356 @@
 
   <footer><div class="container"><p data-key="copyright">&copy; 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة</p></div></footer>
 
-  <script>
+<script>
     // Loading State
     window.addEventListener('load', () => {
-      document.getElementById('loadingOverlay').style.opacity = '0';
-      setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 500);
+        document.getElementById('loadingOverlay').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }, 500);
     });
 
     // Mobile menu
     const navToggle = document.querySelector('.nav-toggle');
     const navMenu = document.querySelector('.nav-menu');
+    
     if (navToggle) {
-      navToggle.addEventListener('click', () => {
-        navMenu.classList.toggle('active');
-        navToggle.classList.toggle('active');
-      });
+        navToggle.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+            navToggle.classList.toggle('active');
+        });
     }
 
     function scrollToSection(sectionId) {
-      const section = document.getElementById(sectionId);
-      if (section) section.scrollIntoView({ behavior: 'smooth' });
-      navMenu.classList.remove('active');
-      if (navToggle) navToggle.classList.remove('active');
+        const section = document.getElementById(sectionId);
+        if (section) section.scrollIntoView({ behavior: 'smooth' });
+        navMenu.classList.remove('active');
+        if (navToggle) navToggle.classList.remove('active');
     }
 
     // Modal
     const modal = document.getElementById('bookingModal');
     const closeBtn = document.querySelector('.close');
-    if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
-    window.onclick = (event) => { if (event.target == modal) modal.style.display = 'none'; }
+    
+    if (closeBtn) {
+        closeBtn.onclick = () => modal.style.display = 'none';
+    }
+    
+    window.onclick = (event) => {
+        if (event.target == modal) modal.style.display = 'none';
+    }
 
     // Contact Form
     const contactForm = document.getElementById('contactForm');
+    
     if (contactForm) {
-      contactForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submitBtn = contactForm.querySelector('.submit-btn');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'جاري الإرسال...';
-        const contactData = { name: document.getElementById('contactName').value, email: document.getElementById('contactInfo').value, message: document.getElementById('contactMessage').value, createdAt: new Date().toISOString(), status: 'unread' };
-        try {
-          await fetch('/api/contact', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(contactData)
-          });
-          alert('✅ تم إرسال رسالتك بنجاح! سنتواصل معك قريباً');
-          contactForm.reset();
-        } catch (error) { alert('❌ حدث خطأ في الإرسال'); } 
-        finally { submitBtn.disabled = false; submitBtn.textContent = 'إرسال الرسالة'; }
-      });
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = contactForm.querySelector('.submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'جاري الإرسال...';
+            
+            const contactData = {
+                name: document.getElementById('contactName').value,
+                email: document.getElementById('contactInfo').value,
+                message: document.getElementById('contactMessage').value,
+                createdAt: new Date().toISOString(),
+                status: 'unread'
+            };
+            
+            try {
+                await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(contactData)
+                });
+                alert('✅ تم إرسال رسالتك بنجاح! سنتواصل معك قريباً');
+                contactForm.reset();
+            } catch (error) {
+                alert('❌ حدث خطأ في الإرسال');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'إرسال الرسالة';
+            }
+        });
     }
 
     // Navbar Scroll Effect
-    window.addEventListener('scroll', () => { const navbar = document.querySelector('.navbar'); if (window.scrollY > 50) navbar.classList.add('scrolled'); else navbar.classList.remove('scrolled'); });
-    document.querySelectorAll('.nav-menu a').forEach(link => { link.addEventListener('click', () => { navMenu.classList.remove('active'); if (navToggle) navToggle.classList.remove('active'); }); });
+    window.addEventListener('scroll', () => {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+    
+    document.querySelectorAll('.nav-menu a').forEach(link => {
+        link.addEventListener('click', () => {
+            navMenu.classList.remove('active');
+            if (navToggle) navToggle.classList.remove('active');
+        });
+    });
 
     // Dark Mode
     function initDarkMode() {
-      const darkModeBtn = document.getElementById('darkModeBtn');
-      const isDark = localStorage.getItem('darkMode') === 'true';
-      if (isDark) { document.body.classList.add('dark-mode'); darkModeBtn.innerHTML = '<i class="fas fa-sun"></i>'; }
-      darkModeBtn.addEventListener('click', () => { document.body.classList.toggle('dark-mode'); const isDarkNow = document.body.classList.contains('dark-mode'); localStorage.setItem('darkMode', isDarkNow); darkModeBtn.innerHTML = isDarkNow ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>'; });
+        const darkModeBtn = document.getElementById('darkModeBtn');
+        const isDark = localStorage.getItem('darkMode') === 'true';
+        
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+            darkModeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        
+        darkModeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDarkNow = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkNow);
+            darkModeBtn.innerHTML = isDarkNow ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        });
     }
 
     // Language System
     const translations = {
-      ar: { logo: "رحلة في مصر", nav_home: "الرئيسية", nav_about: "نبذة عنا", nav_tours: "الجولات", nav_gallery: "المعرض", nav_testimonials: "آراء العملاء", nav_contact: "اتصل بنا", hero_title: "اكتشف جمال مصر", hero_subtitle: "مع مرشدة سياحية وممثلة محترفة، رحلة لا تُنسى في قلب التاريخ والثقافة المصرية", hero_btn: "احجز رحلتك الآن", about_title: "نبذة عنا", about_welcome: "مرحبا بكم في رحلة في مصر", about_p1: "أنا سيمون، مرشدة سياحية وممثلة مصرية محترفة. شغفي هو إظهار جمال مصر الحقيقي من خلال عيون فنانة.", about_p2: "مع أكثر من 10 سنوات من الخبرة في مجال السياحة والفن، أضمن لك رحلة مميزة.", achievement_1: "1000+ عميل سعيد", achievement_2: "15+ عمل فني", achievement_3: "50+ جولة سياحية", tours_title: "الجولات السياحية", portfolio_title: "ملف أعمال المرشدة السياحية", portfolio_name: "سيمون اسحاق - مرشدة سياحية وممثلة", portfolio_awards: "جوائز وتكريمات:", portfolio_award1: "تكريم من وزارة السياحة المصرية", gallery_title: "معرض الصور", testimonials_title: "آراء العملاء", no_reviews: "لا توجد تقييمات بعد", be_first: "كن أول من يقيّم تجربته معنا!", add_review: "أضف تقييمك الآن", contact_title: "اتصل بنا", contact_info: "معلومات الاتصال", whatsapp: "واتساب", facebook: "فيسبوك", send_message: "أرسل رسالتك", send_btn: "إرسال الرسالة", confirm_booking: "تأكيد الحجز", confirm_btn: "تأكيد الحجز", copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة" },
-      en: { logo: "Journey in Egypt", nav_home: "Home", nav_about: "About", nav_tours: "Tours", nav_gallery: "Gallery", nav_testimonials: "Testimonials", nav_contact: "Contact", hero_title: "Discover Egypt's Beauty", hero_subtitle: "With a professional tour guide and actress, an unforgettable journey into the heart of Egyptian history and culture", hero_btn: "Book Your Trip Now", about_title: "About Us", about_welcome: "Welcome to Journey in Egypt", about_p1: "I'm Simon, a professional Egyptian tour guide and actress. My passion is to show the true beauty of Egypt through an artist's eyes.", about_p2: "With over 10 years of experience in tourism and arts, I guarantee you a unique journey.", achievement_1: "1000+ Happy Clients", achievement_2: "15+ Artworks", achievement_3: "50+ Tours", tours_title: "Tours", portfolio_title: "Tour Guide Portfolio", portfolio_name: "Simon Issac - Tour Guide & Actress", portfolio_awards: "Awards & Honors:", portfolio_award1: "Honored by Egyptian Ministry of Tourism", gallery_title: "Photo Gallery", testimonials_title: "Client Reviews", no_reviews: "No reviews yet", be_first: "Be the first to rate your experience with us!", add_review: "Add Your Review", contact_title: "Contact Us", contact_info: "Contact Information", whatsapp: "WhatsApp", facebook: "Facebook", send_message: "Send Message", send_btn: "Send Message", confirm_booking: "Confirm Booking", confirm_btn: "Confirm Booking", copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved" }
+        ar: {
+            logo: "رحلة في مصر",
+            nav_home: "الرئيسية",
+            nav_about: "نبذة عنا",
+            nav_tours: "الجولات",
+            nav_gallery: "المعرض",
+            nav_testimonials: "آراء العملاء",
+            nav_contact: "اتصل بنا",
+            hero_title: "اكتشف جمال مصر",
+            hero_subtitle: "مع مرشدة سياحية وممثلة محترفة، رحلة لا تُنسى في قلب التاريخ والثقافة المصرية",
+            hero_btn: "احجز رحلتك الآن",
+            about_title: "نبذة عنا",
+            about_welcome: "مرحبا بكم في رحلة في مصر",
+            about_p1: "أنا سيمون، مرشدة سياحية وممثلة مصرية محترفة. شغفي هو إظهار جمال مصر الحقيقي من خلال عيون فنانة.",
+            about_p2: "مع أكثر من 10 سنوات من الخبرة في مجال السياحة والفن، أضمن لك رحلة مميزة.",
+            achievement_1: "1000+ عميل سعيد",
+            achievement_2: "15+ عمل فني",
+            achievement_3: "50+ جولة سياحية",
+            tours_title: "الجولات السياحية",
+            portfolio_title: "ملف أعمال المرشدة السياحية",
+            portfolio_name: "سيمون اسحاق - مرشدة سياحية وممثلة",
+            portfolio_awards: "جوائز وتكريمات:",
+            portfolio_award1: "تكريم من وزارة السياحة المصرية",
+            gallery_title: "معرض الصور",
+            testimonials_title: "آراء العملاء",
+            no_reviews: "لا توجد تقييمات بعد",
+            be_first: "كن أول من يقيّم تجربته معنا!",
+            add_review: "أضف تقييمك الآن",
+            contact_title: "اتصل بنا",
+            contact_info: "معلومات الاتصال",
+            whatsapp: "واتساب",
+            facebook: "فيسبوك",
+            send_message: "أرسل رسالتك",
+            send_btn: "إرسال الرسالة",
+            confirm_booking: "تأكيد الحجز",
+            confirm_btn: "تأكيد الحجز",
+            copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة"
+        },
+        en: {
+            logo: "Journey in Egypt",
+            nav_home: "Home",
+            nav_about: "About",
+            nav_tours: "Tours",
+            nav_gallery: "Gallery",
+            nav_testimonials: "Testimonials",
+            nav_contact: "Contact",
+            hero_title: "Discover Egypt's Beauty",
+            hero_subtitle: "With a professional tour guide and actress, an unforgettable journey into the heart of Egyptian history and culture",
+            hero_btn: "Book Your Trip Now",
+            about_title: "About Us",
+            about_welcome: "Welcome to Journey in Egypt",
+            about_p1: "I'm Simon, a professional Egyptian tour guide and actress. My passion is to show the true beauty of Egypt through an artist's eyes.",
+            about_p2: "With over 10 years of experience in tourism and arts, I guarantee you a unique journey.",
+            achievement_1: "1000+ Happy Clients",
+            achievement_2: "15+ Artworks",
+            achievement_3: "50+ Tours",
+            tours_title: "Tours",
+            portfolio_title: "Tour Guide Portfolio",
+            portfolio_name: "Simon Issac - Tour Guide & Actress",
+            portfolio_awards: "Awards & Honors:",
+            portfolio_award1: "Honored by Egyptian Ministry of Tourism",
+            gallery_title: "Photo Gallery",
+            testimonials_title: "Client Reviews",
+            no_reviews: "No reviews yet",
+            be_first: "Be the first to rate your experience with us!",
+            add_review: "Add Your Review",
+            contact_title: "Contact Us",
+            contact_info: "Contact Information",
+            whatsapp: "WhatsApp",
+            facebook: "Facebook",
+            send_message: "Send Message",
+            send_btn: "Send Message",
+            confirm_booking: "Confirm Booking",
+            confirm_btn: "Confirm Booking",
+            copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved"
+        }
     };
+    
     let currentLang = localStorage.getItem('language') || 'ar';
-    function updateLanguage() { document.querySelectorAll('[data-key]').forEach(el => { const key = el.getAttribute('data-key'); if (translations[currentLang][key]) { if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = translations[currentLang][key]; else el.textContent = translations[currentLang][key]; } }); document.getElementById('langBtn').innerHTML = currentLang === 'ar' ? 'EN' : 'AR'; document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr'; document.documentElement.lang = currentLang; localStorage.setItem('language', currentLang); }
-    function initLanguage() { document.getElementById('langBtn').addEventListener('click', () => { currentLang = currentLang === 'ar' ? 'en' : 'ar'; updateLanguage(); }); updateLanguage(); }
-    initDarkMode(); initLanguage();
+    
+    function updateLanguage() {
+        document.querySelectorAll('[data-key]').forEach(el => {
+            const key = el.getAttribute('data-key');
+            if (translations[currentLang][key]) {
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                    el.placeholder = translations[currentLang][key];
+                } else {
+                    el.textContent = translations[currentLang][key];
+                }
+            }
+        });
+        
+        document.getElementById('langBtn').innerHTML = currentLang === 'ar' ? 'EN' : 'AR';
+        document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+        document.documentElement.lang = currentLang;
+        localStorage.setItem('language', currentLang);
+    }
+    
+    function initLanguage() {
+        document.getElementById('langBtn').addEventListener('click', () => {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            updateLanguage();
+        });
+        updateLanguage();
+    }
+    
+    initDarkMode();
+    initLanguage();
 
     // Active Link Highlighting
     const sections = document.querySelectorAll('section[id]');
     const navLinks = document.querySelectorAll('.nav-menu a');
-    window.addEventListener('scroll', () => { let current = ''; sections.forEach(section => { const sectionTop = section.offsetTop - 100; const sectionHeight = section.clientHeight; if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) current = section.getAttribute('id'); }); navLinks.forEach(link => { link.classList.remove('active'); if (link.getAttribute('href') === `#${current}`) link.classList.add('active'); }); });
+    
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop - 100;
+            const sectionHeight = section.clientHeight;
+            if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
+                current = section.getAttribute('id');
+            }
+        });
+        
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === `#${current}`) {
+                link.classList.add('active');
+            }
+        });
+    });
 
     // Scroll Reveal Animation
     const revealElements = document.querySelectorAll('.reveal');
-    function checkReveal() { revealElements.forEach(el => { const windowHeight = window.innerHeight; const revealTop = el.getBoundingClientRect().top; const revealPoint = 150; if (revealTop < windowHeight - revealPoint) el.classList.add('active'); }); }
-    window.addEventListener('scroll', checkReveal); checkReveal();
+    
+    function checkReveal() {
+        revealElements.forEach(el => {
+            const windowHeight = window.innerHeight;
+            const revealTop = el.getBoundingClientRect().top;
+            const revealPoint = 150;
+            if (revealTop < windowHeight - revealPoint) {
+                el.classList.add('active');
+            }
+        });
+    }
+    
+    window.addEventListener('scroll', checkReveal);
+    checkReveal();
 
     // Lightbox
-    function openLightbox(src) { const lightbox = document.getElementById('lightbox'); const lightboxImg = document.getElementById('lightboxImg'); lightbox.style.display = 'block'; lightboxImg.src = src; }
-    function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+    function openLightbox(src) {
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        lightbox.style.display = 'block';
+        lightboxImg.src = src;
+    }
+    
+    function closeLightbox() {
+        document.getElementById('lightbox').style.display = 'none';
+    }
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeLightbox();
+    });
 
     // Smooth Scroll
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => { anchor.addEventListener('click', function(e) { e.preventDefault(); const target = document.querySelector(this.getAttribute('href')); if (target) target.scrollIntoView({ behavior: 'smooth' }); }); });
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) target.scrollIntoView({ behavior: 'smooth' });
+        });
+    });
 
     // Helper functions
     function escapeHtml(str) {
-      if (!str) return '';
-      return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-      });
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
     }
 
     // ============= LOAD TOURS FROM API =============
     async function loadToursFromAPI() {
-      const container = document.getElementById('toursContainer');
-      if (!container) return;
-      
-      try {
-        const response = await fetch('/api/tours');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const tours = await response.json();
+        const container = document.getElementById('toursContainer');
+        if (!container) return;
         
-        if (!tours || tours.length === 0) {
-          container.innerHTML = '<div style="text-align:center; width:100%; padding: 3rem;">📭 لا توجد جولات حالياً</div>';
-          return;
+        try {
+            const response = await fetch('/api/tours');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const tours = await response.json();
+            
+            if (!tours || tours.length === 0) {
+                container.innerHTML = '<div style="text-align:center; width:100%; padding: 3rem;">📭 لا توجد جولات حالياً</div>';
+                return;
+            }
+            
+            container.innerHTML = tours.map(tour => `
+                <div class="tour-card reveal">
+                    <div class="tour-image">
+                        <img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'">
+                        <div class="tour-badge">${tour.days} أيام</div>
+                    </div>
+                    <div class="tour-info">
+                        <h3>${escapeHtml(tour.name)}</h3>
+                        <p>${escapeHtml(tour.description.substring(0, 80))}${tour.description.length > 80 ? '...' : ''}</p>
+                        <div class="tour-details">
+                            <span><i class="fas fa-dollar-sign"></i> الأجنبي: ${tour.priceForeign}$</span>
+                            <span><i class="fas fa-pound-sign"></i> المصري: ${tour.priceEgyptian} جنيه</span>
+                        </div>
+                        <a href="tour-details?id=${tour.id}" class="book-btn">احجز الآن</a>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Re-trigger reveal animations
+            document.querySelectorAll('.reveal:not(.active)').forEach(el => {
+                const windowHeight = window.innerHeight;
+                const revealTop = el.getBoundingClientRect().top;
+                const revealPoint = 150;
+                if (revealTop < windowHeight - revealPoint) el.classList.add('active');
+            });
+            
+        } catch (error) {
+            console.error('Error loading tours:', error);
+            container.innerHTML = '<div style="text-align:center; padding: 3rem;">❌ حدث خطأ في تحميل الجولات</div>';
         }
-        
-        container.innerHTML = tours.map(tour => `
-          <div class="tour-card reveal">
-            <div class="tour-image">
-              <img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'">
-              <div class="tour-badge">${tour.days} أيام</div>
-            </div>
-            <div class="tour-info">
-              <h3>${escapeHtml(tour.name)}</h3>
-              <p>${escapeHtml(tour.description.substring(0, 80))}${tour.description.length > 80 ? '...' : ''}</p>
-              <div class="tour-details">
-                <span><i class="fas fa-dollar-sign"></i> الأجنبي: ${tour.priceForeign}$</span>
-                <span><i class="fas fa-pound-sign"></i> المصري: ${tour.priceEgyptian} جنيه</span>
-              </div>
-              <a href="tour-details.html?id=${tour.id}" class="book-btn">احجز الآن</a>
-            </div>
-          </div>
-        `).join('');
-        
-        // Re-trigger reveal animations
-        document.querySelectorAll('.reveal:not(.active)').forEach(el => {
-          const windowHeight = window.innerHeight;
-          const revealTop = el.getBoundingClientRect().top;
-          const revealPoint = 150;
-          if (revealTop < windowHeight - revealPoint) el.classList.add('active');
-        });
-        
-      } catch (error) {
-        console.error('Error loading tours:', error);
-        container.innerHTML = '<div style="text-align:center; padding: 3rem;">❌ حدث خطأ في تحميل الجولات</div>';
-      }
     }
 
     // Load tours on page load
     document.addEventListener('DOMContentLoaded', loadToursFromAPI);
+    
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadToursFromAPI);
+        document.addEventListener('DOMContentLoaded', loadToursFromAPI);
     } else {
-      loadToursFromAPI();
+        loadToursFromAPI();
     }
-  </script>
+</script>
 </body>
 </html>
