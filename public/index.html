@@ -829,9 +829,14 @@
         if (!container) return;
         
         try {
-            const response = await fetch('/api/tours');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const tours = await response.json();
+const response = await fetch('/api/tours');
+if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+const tours = await response.json();
+
+// 👇 هنا حطهم
+console.log("Tours:", tours);
+alert("عدد الجولات: " + tours.length);
             
             if (!tours || tours.length === 0) {
                 container.innerHTML = '<div style="text-align:center; width:100%; padding: 3rem;">📭 لا توجد جولات حالياً</div>';
@@ -846,7 +851,16 @@
                     </div>
                     <div class="tour-info">
                         <h3>${escapeHtml(tour.name)}</h3>
-                        <p>${escapeHtml(tour.description.substring(0, 80))}${tour.description.length > 80 ? '...' : ''}</p>
+const desc = tour.description || '';
+
+return `
+  <div class="tour-card reveal">
+    ...
+    <h3>${escapeHtml(tour.name)}</h3>
+    <p>${escapeHtml(desc.substring(0, 80))}${desc.length > 80 ? '...' : ''}</p>
+    ...
+  </div>
+`;
                         <div class="tour-details">
                             <span><i class="fas fa-dollar-sign"></i> الأجنبي: ${tour.priceForeign}$</span>
                             <span><i class="fas fa-pound-sign"></i> المصري: ${tour.priceEgyptian} جنيه</span>
@@ -871,13 +885,9 @@
     }
 
     // Load tours on page load
-    document.addEventListener('DOMContentLoaded', loadToursFromAPI);
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadToursFromAPI);
-    } else {
-        loadToursFromAPI();
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    loadToursFromAPI();
+});
 </script>
 </body>
 </html>
