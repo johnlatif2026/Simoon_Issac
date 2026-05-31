@@ -425,11 +425,12 @@
             }
         }
         
-        async function confirmPayment(transferNumber) {
-            const btn = event.target;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التأكيد...';
-            
+async function confirmPayment(transferNumber) {
+    const btn = document.querySelector('.btn-secondary');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التأكيد...';
+    
             try {
                 const response = await fetch('/api/confirm-payment', {
                     method: 'POST',
