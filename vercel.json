@@ -46,10 +46,6 @@
       "dest": "/public/pay.html"
     },
     {
-      "src": "/tour-details",
-      "dest": "/public/tour-details.html"
-    },
-    {
       "src": "/(.*)",
       "dest": "/public/index.html"
     }
