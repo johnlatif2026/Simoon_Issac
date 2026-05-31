@@ -1272,26 +1272,18 @@
       });
     }
 
+// ============= LOAD TOURS FROM API (Modified for Details Page) =============
     async function loadToursFromAPI() {
       const container = document.getElementById('toursContainer');
-      if (!container) {
-        console.error('toursContainer not found');
-        return;
-      }
+      if (!container) return;
       
       try {
-        console.log('Fetching tours from API...');
         const response = await fetch('/api/tours');
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const tours = await response.json();
-        console.log('Tours loaded:', tours);
         
         if (!tours || tours.length === 0) {
-          container.innerHTML = '<div style="text-align:center; width:100%; padding: 3rem;"><i class="fas fa-info-circle"></i> 📭 لا توجد جولات حالياً، سيتم إضافتها قريباً</div>';
+          container.innerHTML = '<div style="text-align:center; width:100%; padding: 3rem;">📭 لا توجد جولات حالياً</div>';
           return;
         }
         
@@ -1305,17 +1297,20 @@
               <h3>${escapeHtml(tour.name)}</h3>
               <p>${escapeHtml(tour.description.substring(0, 80))}${tour.description.length > 80 ? '...' : ''}</p>
               <div class="tour-details">
-                <span><i class="fas fa-calendar-week"></i> ${tour.days} أيام</span>
-                <span><i class="fas fa-users"></i> جولات جماعية</span>
-              </div>
-              <div class="tour-details">
                 <span><i class="fas fa-dollar-sign"></i> الأجنبي: ${tour.priceForeign}$</span>
                 <span><i class="fas fa-pound-sign"></i> المصري: ${tour.priceEgyptian} جنيه</span>
               </div>
-              <button class="book-btn" onclick="openBookingModalWithTour('${tour.id}', '${escapeHtml(tour.name).replace(/'/g, "\\'")}')" data-key="book_btn">احجز الآن</button>
+              <!-- هنا التغيير: الرابط بيودي على صفحة التفاصيل -->
+              <a href="tour-details.html?id=${tour.id}" class="book-btn" style="display:inline-block; text-align:center; text-decoration:none;">احجز الآن</a>
             </div>
           </div>
         `).join('');
+        
+      } catch (error) {
+        console.error('Error loading tours:', error);
+        container.innerHTML = '<div style="text-align:center; padding: 3rem;">❌ حدث خطأ في تحميل الجولات</div>';
+      }
+    }
         
         // Re-trigger reveal animations for new elements
         const newRevealElements = document.querySelectorAll('.reveal:not(.active)');
