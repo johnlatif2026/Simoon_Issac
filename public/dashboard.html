@@ -1,3 +1,5 @@
+public/dashboard.html
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -15,15 +17,11 @@
             --text-secondary: #5c3a2a;
             --border-color: #e0d5c0;
             --shadow: 0 10px 30px rgba(0,0,0,0.1);
-            --shadow-sm: 0 2px 10px rgba(0,0,0,0.05);
             --navbar-bg: #2c1810;
-            --table-header: #f5f5f5;
             --danger: #f44336;
             --success: #4caf50;
             --warning: #ff9800;
-            --info: #2196f3;
         }
-        
         body.dark-mode {
             --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             --card-bg: #2d2d44;
@@ -31,655 +29,78 @@
             --text-secondary: #d4a373;
             --border-color: #3d3d5c;
             --navbar-bg: #0f0f1a;
-            --table-header: #1a1a2e;
         }
-        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: var(--bg-gradient);
-            color: var(--text-primary);
-            transition: all 0.3s ease;
-        }
-        
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--text-secondary); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 10px; }
-        
-        .dashboard-nav {
-            background: var(--navbar-bg);
-            padding: 1rem 0;
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 100;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.2);
-        }
-        
-        .nav-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 2rem;
-        }
-        
-        .nav-logo .logo-text {
-            font-size: 1.3rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #D4AF37, #FFD700);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        
+        body { font-family: 'Cairo', sans-serif; background: var(--bg-gradient); color: var(--text-primary); transition: all 0.3s ease; }
+        .dashboard-nav { background: var(--navbar-bg); padding: 1rem 0; position: fixed; top: 0; width: 100%; z-index: 100; box-shadow: 0 2px 20px rgba(0,0,0,0.2); }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 2rem; }
+        .nav-logo .logo-text { font-size: 1.3rem; font-weight: 800; background: linear-gradient(135deg, #D4AF37, #FFD700); -webkit-background-clip: text; background-clip: text; color: transparent; }
         .nav-actions { display: flex; gap: 1rem; align-items: center; }
-        
-        .icon-btn {
-            background: rgba(212, 175, 55, 0.2);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: #D4AF37;
-            transition: all 0.3s;
-        }
-        
-        .icon-btn:hover { background: #D4AF37; color: #2c1810; transform: scale(1.05); }
-        
-        .logout-btn {
-            background: var(--danger);
-            color: #fff;
-            border: none;
-            padding: 0.5rem 1.2rem;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-family: 'Cairo', sans-serif;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .logout-btn:hover { opacity: 0.9; transform: translateY(-2px); }
-        
+        .icon-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #D4AF37; }
+        .logout-btn { background: var(--danger); color: #fff; border: none; padding: 0.5rem 1.2rem; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-family: 'Cairo', sans-serif; font-weight: 600; }
         .dashboard-container { margin-top: 80px; padding: 2rem; max-width: 1400px; margin-left: auto; margin-right: auto; }
-        
-        .dashboard-header {
-            background: linear-gradient(135deg, #D4AF37, #FF8C00);
-            padding: 2rem;
-            border-radius: 20px;
-            margin-bottom: 2rem;
-            color: #2c1810;
-        }
-        
-        .dashboard-header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
-        
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .stat-card {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 1.2rem;
-            box-shadow: var(--shadow-sm);
-            transition: transform 0.3s;
-            border: 1px solid var(--border-color);
-        }
-        
-        .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
+        .dashboard-header { background: linear-gradient(135deg, #D4AF37, #FF8C00); padding: 2rem; border-radius: 20px; margin-bottom: 2rem; color: #2c1810; }
+        .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--card-bg); padding: 1.5rem; border-radius: 20px; display: flex; align-items: center; gap: 1.2rem; border: 1px solid var(--border-color); }
         .stat-card i { font-size: 2.5rem; color: #D4AF37; }
-        .stat-info h3 { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem; }
-        .stat-info p { font-size: 1.8rem; font-weight: 800; color: var(--text-primary); }
-        
-        .dashboard-tabs {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 2rem;
-            border-bottom: 2px solid var(--border-color);
-            flex-wrap: wrap;
-            padding-bottom: 0.5rem;
-        }
-        
-        .tab-btn {
-            background: none;
-            border: none;
-            padding: 0.8rem 1.8rem;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            color: var(--text-secondary);
-            font-family: 'Cairo', sans-serif;
-            border-radius: 10px;
-            transition: all 0.3s;
-        }
-        
-        .tab-btn:hover { background: rgba(212, 175, 55, 0.1); }
+        .stat-info p { font-size: 1.8rem; font-weight: 800; }
+        .dashboard-tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 2px solid var(--border-color); flex-wrap: wrap; padding-bottom: 0.5rem; }
+        .tab-btn { background: none; border: none; padding: 0.8rem 1.8rem; font-size: 1rem; font-weight: 600; cursor: pointer; color: var(--text-secondary); border-radius: 10px; }
         .tab-btn.active { background: linear-gradient(135deg, #D4AF37, #FF8C00); color: #2c1810; }
-        
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
-        
-        .card-container {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-        }
-        
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
+        .card-container { background: var(--card-bg); border-radius: 20px; padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border-color); margin-bottom: 2rem; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
         .form-group { margin-bottom: 1rem; }
         .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 0.8rem;
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            background: var(--card-bg);
-            color: var(--text-primary);
-            font-family: 'Cairo', sans-serif;
-            transition: all 0.3s;
-        }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #D4AF37;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #D4AF37, #FF8C00);
-            color: #2c1810;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-        
-        .btn-danger {
-            background: var(--danger);
-            color: #fff;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .btn-danger:hover { opacity: 0.8; }
-        
-        .btn-warning {
-            background: var(--warning);
-            color: #fff;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-left: 0.5rem;
-            transition: all 0.3s;
-        }
-        .btn-warning:hover { opacity: 0.8; }
-        
-        .tours-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .tours-table th, .tours-table td {
-            padding: 1rem;
-            text-align: right;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .tours-table th { background: var(--table-header); font-weight: 700; }
-        
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: 12px; background: var(--card-bg); color: var(--text-primary); font-family: 'Cairo', sans-serif; }
+        .btn-primary { background: linear-gradient(135deg, #D4AF37, #FF8C00); color: #2c1810; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: 700; }
+        .btn-danger { background: var(--danger); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+        .btn-warning { background: var(--warning); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; margin-left: 0.5rem; }
+        .tours-table { width: 100%; border-collapse: collapse; }
+        .tours-table th, .tours-table td { padding: 1rem; text-align: right; border-bottom: 1px solid var(--border-color); }
         .table-responsive { overflow-x: auto; }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @media (max-width: 768px) {
-            .dashboard-container { padding: 1rem; }
-            .stats-cards { grid-template-columns: 1fr; }
-            .tab-btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 768px) { .dashboard-container { padding: 1rem; } .stats-cards { grid-template-columns: 1fr; } .tab-btn { padding: 0.5rem 1rem; font-size: 0.8rem; } }
     </style>
 </head>
 <body>
-    <nav class="dashboard-nav">
-        <div class="nav-container">
-            <div class="nav-logo"><span class="logo-text">👑 لوحة التحكم - رحلة في مصر</span></div>
-            <div class="nav-actions">
-                <button id="darkModeBtn" class="icon-btn"><i class="fas fa-moon"></i></button>
-                <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
-            </div>
-        </div>
-    </nav>
-    
-    <div class="dashboard-container">
-        <div class="dashboard-header">
-            <h1>🌟 مرحباً بك في لوحة التحكم</h1>
-            <p>إدارة الجولات السياحية، الحجوزات، التقييمات، والتواصل مع العملاء</p>
-        </div>
-        
-        <div class="stats-cards">
-            <div class="stat-card"><i class="fas fa-umbrella-beach"></i><div class="stat-info"><h3>إجمالي الجولات</h3><p id="totalTours">0</p></div></div>
-            <div class="stat-card"><i class="fas fa-calendar-check"></i><div class="stat-info"><h3>حجوزات اليوم</h3><p id="todayBookings">0</p></div></div>
-            <div class="stat-card"><i class="fas fa-users"></i><div class="stat-info"><h3>إجمالي العملاء</h3><p id="totalClients">0</p></div></div>
-            <div class="stat-card"><i class="fas fa-star"></i><div class="stat-info"><h3>متوسط التقييمات</h3><p id="avgRating">0</p></div></div>
-            <div class="stat-card"><i class="fas fa-envelope"></i><div class="stat-info"><h3>رسائل غير مقروءة</h3><p id="unreadCount">0</p></div></div>
-        </div>
-        
-        <div class="dashboard-tabs">
-            <button class="tab-btn active" data-tab="tours"><i class="fas fa-umbrella-beach"></i> الجولات</button>
-            <button class="tab-btn" data-tab="orders"><i class="fas fa-shopping-cart"></i> الطلبات</button>
-            <button class="tab-btn" data-tab="reviews"><i class="fas fa-star"></i> آراء العملاء</button>
-            <button class="tab-btn" data-tab="contacts"><i class="fas fa-envelope"></i> التواصل</button>
-            <button class="tab-btn" data-tab="messages"><i class="fas fa-paper-plane"></i> إرسال رسالة</button>
-        </div>
-        
-        <!-- تبويب إدارة الجولات -->
-        <div id="tours-tab" class="tab-content active">
-            <div class="card-container">
-                <h2 style="margin-bottom: 1.5rem;">➕ إضافة جولة جديدة</h2>
-                <form id="addTourForm">
-                    <div class="form-grid">
-                        <div class="form-group"><label>اسم الرحلة</label><input type="text" id="tourName" placeholder="مثال: رحلة الأهرامات" required></div>
-                        <div class="form-group"><label>عدد الأيام</label><input type="number" id="tourDays" placeholder="مثال: 5" required></div>
-                        <div class="form-group"><label>السعر للمصري (EGP)</label><input type="number" id="tourPriceEgyptian" placeholder="مثال: 2500" required></div>
-                        <div class="form-group"><label>السعر للأجنبي (USD)</label><input type="number" id="tourPriceForeign" placeholder="مثال: 50" required></div>
-                        <div class="form-group"><label>رابط الصورة</label><input type="text" id="tourImage" placeholder="https://..."></div>
-                    </div>
-                    <div class="form-group"><label>تفاصيل الرحلة</label><textarea id="tourDescription" rows="3" placeholder="وصف تفصيلي للرحلة..." required></textarea></div>
-                    <button type="submit" class="btn-primary"><i class="fas fa-plus"></i> إضافة الجولة</button>
-                </form>
-            </div>
-            
-            <div class="card-container" style="margin-top: 2rem;">
-                <h2 style="margin-bottom: 1.5rem;">📋 قائمة الجولات السياحية</h2>
-                <div class="table-responsive">
-                    <table class="tours-table">
-                        <thead><tr><th>الاسم</th><th>التفاصيل</th><th>الأيام</th><th>السعر (مصري)</th><th>السعر (أجنبي)</th><th>الإجراءات</th></tr></thead>
-                        <tbody id="toursTableBody"><tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        
-        <div id="orders-tab" class="tab-content">
-            <div class="card-container">
-                <h2>📋 قائمة الطلبات</h2>
-                <div class="table-responsive">
-                    <table class="tours-table">
-                        <thead><tr><th>الاسم</th><th>البريد</th><th>الهاتف</th><th>الجولة</th><th>عدد الأفراد</th><th>السعر</th><th>التاريخ</th><th>الإجراءات</th></tr></thead>
-                        <tbody id="bookingsTableBody"><tr><td colspan="8" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        
-        <div id="reviews-tab" class="tab-content">
-            <div class="card-container"><h2><i class="fas fa-star"></i> آراء العملاء</h2><div id="rankingsAdminContainer"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div></div>
-        </div>
-        
-        <div id="contacts-tab" class="tab-content">
-            <div class="card-container"><h2><i class="fas fa-envelope"></i> رسائل العملاء</h2><div id="contactsAdminContainer"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div></div>
-        </div>
-        
-        <div id="messages-tab" class="tab-content">
-            <div class="card-container">
-                <h2><i class="fas fa-paper-plane"></i> إرسال رسالة إلى عميل</h2>
-                <form id="smtpForm" style="max-width: 600px; margin-top: 1.5rem;">
-                    <div class="form-group"><label>📧 البريد الإلكتروني</label><input type="email" id="toEmail" placeholder="example@email.com" required></div>
-                    <div class="form-group"><label>📝 الموضوع</label><input type="text" id="subject" placeholder="موضوع الرسالة" required></div>
-                    <div class="form-group"><label>💬 الرسالة</label><textarea id="messageContent" rows="6" placeholder="محتوى الرسالة..." required></textarea></div>
-                    <button type="submit" class="btn-primary"><i class="fas fa-paper-plane"></i> إرسال الرسالة</button>
-                </form>
-                <div id="smtpMessage" style="display:none;"></div>
-            </div>
-        </div>
-    </div>
-
+    <nav class="dashboard-nav"><div class="nav-container"><div class="nav-logo"><span class="logo-text">👑 لوحة التحكم - رحلة في مصر</span></div><div class="nav-actions"><button id="darkModeBtn" class="icon-btn"><i class="fas fa-moon"></i></button><button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button></div></div></nav>
+    <div class="dashboard-container"><div class="dashboard-header"><h1>🌟 مرحباً بك في لوحة التحكم</h1><p>إدارة الجولات السياحية، الحجوزات، التقييمات، والتواصل مع العملاء</p></div>
+    <div class="stats-cards"><div class="stat-card"><i class="fas fa-umbrella-beach"></i><div class="stat-info"><h3>إجمالي الجولات</h3><p id="totalTours">0</p></div></div><div class="stat-card"><i class="fas fa-calendar-check"></i><div class="stat-info"><h3>حجوزات اليوم</h3><p id="todayBookings">0</p></div></div><div class="stat-card"><i class="fas fa-users"></i><div class="stat-info"><h3>إجمالي العملاء</h3><p id="totalClients">0</p></div></div><div class="stat-card"><i class="fas fa-star"></i><div class="stat-info"><h3>متوسط التقييمات</h3><p id="avgRating">0</p></div></div><div class="stat-card"><i class="fas fa-envelope"></i><div class="stat-info"><h3>رسائل غير مقروءة</h3><p id="unreadCount">0</p></div></div></div>
+    <div class="dashboard-tabs"><button class="tab-btn active" data-tab="tours"><i class="fas fa-umbrella-beach"></i> الجولات</button><button class="tab-btn" data-tab="orders"><i class="fas fa-shopping-cart"></i> الطلبات</button><button class="tab-btn" data-tab="reviews"><i class="fas fa-star"></i> آراء العملاء</button><button class="tab-btn" data-tab="contacts"><i class="fas fa-envelope"></i> التواصل</button><button class="tab-btn" data-tab="messages"><i class="fas fa-paper-plane"></i> إرسال رسالة</button></div>
+    <div id="tours-tab" class="tab-content active"><div class="card-container"><h2 style="margin-bottom:1.5rem;">➕ إضافة جولة جديدة</h2><form id="addTourForm"><div class="form-grid"><div class="form-group"><label>اسم الرحلة</label><input type="text" id="tourName" required></div><div class="form-group"><label>عدد الأيام</label><input type="number" id="tourDays" required></div><div class="form-group"><label>السعر للمصري (EGP)</label><input type="number" id="tourPriceEgyptian" required></div><div class="form-group"><label>السعر للأجنبي (USD)</label><input type="number" id="tourPriceForeign" required></div><div class="form-group"><label>رابط الصورة</label><input type="text" id="tourImage" placeholder="https://..."></div></div><div class="form-group"><label>تفاصيل الرحلة</label><textarea id="tourDescription" rows="3" required></textarea></div><button type="submit" class="btn-primary"><i class="fas fa-plus"></i> إضافة الجولة</button></form></div><div class="card-container"><h2>📋 قائمة الجولات السياحية</h2><div class="table-responsive"><table class="tours-table"><thead><tr><th>الاسم</th><th>التفاصيل</th><th>الأيام</th><th>السعر (مصري)</th><th>السعر (أجنبي)</th><th>الإجراءات</th></tr></thead><tbody id="toursTableBody"><tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr></tbody></table></div></div></div>
+    <div id="orders-tab" class="tab-content"><div class="card-container"><h2>📋 قائمة الطلبات</h2><div class="table-responsive"><table class="tours-table"><thead><tr><th>الاسم</th><th>البريد</th><th>الهاتف</th><th>الجولة</th><th>عدد الأفراد</th><th>السعر</th><th>التاريخ</th><th>الإجراءات</th></tr></thead><tbody id="bookingsTableBody"><tr><td colspan="8" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr></tbody></table></div></div></div>
+    <div id="reviews-tab" class="tab-content"><div class="card-container"><h2><i class="fas fa-star"></i> آراء العملاء</h2><div id="rankingsAdminContainer"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div></div></div>
+    <div id="contacts-tab" class="tab-content"><div class="card-container"><h2><i class="fas fa-envelope"></i> رسائل العملاء</h2><div id="contactsAdminContainer"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div></div></div>
+    <div id="messages-tab" class="tab-content"><div class="card-container"><h2><i class="fas fa-paper-plane"></i> إرسال رسالة إلى عميل</h2><form id="smtpForm"><div class="form-group"><label>📧 البريد الإلكتروني</label><input type="email" id="toEmail" required></div><div class="form-group"><label>📝 الموضوع</label><input type="text" id="subject" required></div><div class="form-group"><label>💬 الرسالة</label><textarea id="messageContent" rows="6" required></textarea></div><button type="submit" class="btn-primary"><i class="fas fa-paper-plane"></i> إرسال الرسالة</button></form><div id="smtpMessage" style="display:none;"></div></div></div></div>
     <script>
         const API_URL = window.location.origin;
         let allBookings = [], allRankings = [], allContacts = [], allTours = [];
-        
-        function initDarkMode() {
-            const btn = document.getElementById('darkModeBtn');
-            const isDark = localStorage.getItem('darkMode') === 'true';
-            if (isDark) { document.body.classList.add('dark-mode'); btn.innerHTML = '<i class="fas fa-sun"></i>'; }
-            btn.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                const isDarkNow = document.body.classList.contains('dark-mode');
-                localStorage.setItem('darkMode', isDarkNow);
-                btn.innerHTML = isDarkNow ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-            });
-        }
-        
-        function checkAuth() {
-            const token = localStorage.getItem('adminToken');
-            if (!token) { window.location.href = 'login'; return false; }
-            return token;
-        }
-        
         function getToken() { return localStorage.getItem('adminToken'); }
-        
-        function initTabs() {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const tabId = btn.dataset.tab;
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    document.getElementById(`${tabId}-tab`).classList.add('active');
-                    if (tabId === 'tours') loadTours();
-                    if (tabId === 'reviews') loadRankingsAdmin();
-                    if (tabId === 'contacts') loadContactsAdmin();
-                    if (tabId === 'orders') loadBookings();
-                });
-            });
-        }
-        
-        // ============= TOURS MANAGEMENT =============
-        async function loadTours() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch('/api/tours', { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.status === 401) { localStorage.removeItem('adminToken'); window.location.href = 'login'; return; }
-                if (res.ok) { allTours = await res.json(); displayToursTable(); updateTourStats(); }
-            } catch(e) { console.error(e); }
-        }
-        
-        function displayToursTable() {
-            const tbody = document.getElementById('toursTableBody');
-            if (!tbody) return;
-            if (allTours.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">📭 لا توجد جولات</td></tr>'; return; }
-            tbody.innerHTML = allTours.map(tour => `
-                <tr>
-                    <td><strong>${escapeHtml(tour.name)}</strong></td>
-                    <td>${escapeHtml(tour.description.substring(0, 50))}${tour.description.length > 50 ? '...' : ''}</td>
-                    <td>${tour.days} يوم</td>
-                    <td>${tour.priceEgyptian} جنيه</td>
-                    <td>${tour.priceForeign} $</td>
-                    <td>
-                        <button class="btn-warning" onclick="editTour('${tour.id}')"><i class="fas fa-edit"></i> تعديل</button>
-                        <button class="btn-danger" onclick="deleteTour('${tour.id}')"><i class="fas fa-trash"></i> حذف</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-        
-        function updateTourStats() {
-            document.getElementById('totalTours').textContent = allTours.length;
-        }
-        
-        document.getElementById('addTourForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const token = getToken();
-            if (!token) return;
-            
-            const tourData = {
-                name: document.getElementById('tourName').value,
-                description: document.getElementById('tourDescription').value,
-                days: parseInt(document.getElementById('tourDays').value),
-                priceEgyptian: parseFloat(document.getElementById('tourPriceEgyptian').value),
-                priceForeign: parseFloat(document.getElementById('tourPriceForeign').value),
-                image: document.getElementById('tourImage').value || 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'
-            };
-            
-            try {
-                const res = await fetch('/api/tours', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(tourData)
-                });
-                if (res.ok) {
-                    alert('✅ تم إضافة الجولة بنجاح');
-                    document.getElementById('addTourForm').reset();
-                    loadTours();
-                } else { alert('❌ حدث خطأ'); }
-            } catch(e) { alert('❌ حدث خطأ'); }
-        });
-        
-        window.deleteTour = async (id) => {
-            if (!confirm('⚠️ هل أنت متأكد من حذف هذه الجولة؟')) return;
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch(`/api/tours/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) { alert('✅ تم الحذف'); loadTours(); }
-                else { alert('❌ حدث خطأ'); }
-            } catch(e) { alert('❌ حدث خطأ'); }
-        };
-        
-        window.editTour = async (id) => {
-            const tour = allTours.find(t => t.id === id);
-            if (!tour) return;
-            const newName = prompt('اسم الرحلة:', tour.name);
-            if (!newName) return;
-            const newDesc = prompt('تفاصيل الرحلة:', tour.description);
-            const newDays = prompt('عدد الأيام:', tour.days);
-            const newPriceEgypt = prompt('السعر للمصري:', tour.priceEgyptian);
-            const newPriceFor = prompt('السعر للأجنبي:', tour.priceForeign);
-            
-            const token = getToken();
-            if (!token) return;
-            
-            try {
-                const res = await fetch(`/api/tours/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ name: newName, description: newDesc, days: parseInt(newDays), priceEgyptian: parseFloat(newPriceEgypt), priceForeign: parseFloat(newPriceFor) })
-                });
-                if (res.ok) { alert('✅ تم التعديل'); loadTours(); }
-                else { alert('❌ حدث خطأ'); }
-            } catch(e) { alert('❌ حدث خطأ'); }
-        };
-        
-        // ============= BOOKINGS =============
-        async function loadBookings() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch('/api/bookings', { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) { allBookings = await res.json(); displayBookings(); updateBookingStats(); }
-            } catch(e) { console.error(e); }
-        }
-        
-        function displayBookings() {
-            const tbody = document.getElementById('bookingsTableBody');
-            if (!tbody) return;
-            if (allBookings.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">📭 لا توجد حجوزات</td></tr>'; return; }
-            tbody.innerHTML = allBookings.map(b => `
-                <tr>
-                    <td>${escapeHtml(b.name)}</td>
-                    <td>${escapeHtml(b.email)}</td>
-                    <td>${escapeHtml(b.phone)}</td>
-                    <td>${escapeHtml(b.tourName)}</td>
-                    <td>${b.persons || 1}</td>
-                    <td>${b.totalAmount || 0} ${b.currency === 'EGP' ? 'جنيه' : '$'}</td>
-                    <td>${formatDate(b.date)}</td>
-                    <td><button class="btn-danger" onclick="deleteBooking('${b.id}')"><i class="fas fa-trash"></i> حذف</button></td>
-                </tr>
-            `).join('');
-        }
-        
-        function updateBookingStats() {
-            const today = new Date().toDateString();
-            const todayBookings = allBookings.filter(b => new Date(b.createdAt).toDateString() === today).length;
-            const unique = new Set(allBookings.map(b => b.email)).size;
-            document.getElementById('todayBookings').textContent = todayBookings;
-            document.getElementById('totalClients').textContent = unique;
-        }
-        
-        window.deleteBooking = async (id) => {
-            if (!confirm('⚠️ هل أنت متأكد من حذف هذا الحجز؟')) return;
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch(`/api/bookings/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) loadBookings();
-            } catch(e) { alert('❌ حدث خطأ'); }
-        };
-        
-        // ============= RANKINGS =============
-        async function loadRankingsAdmin() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch('/api/rankings', { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) { allRankings = await res.json(); displayRankingsAdmin(); updateAvgRating(); }
-            } catch(e) { console.error(e); }
-        }
-        
-        function displayRankingsAdmin() {
-            const container = document.getElementById('rankingsAdminContainer');
-            if (!container) return;
-            if (allRankings.length === 0) { container.innerHTML = '<p style="text-align:center;">📭 لا توجد تقييمات</p>'; return; }
-            container.innerHTML = allRankings.map(r => `
-                <div style="background: rgba(212,175,55,0.05); border-radius: 15px; padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border-color);">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <strong>${escapeHtml(r.name)}</strong>
-                        <div style="color: #D4AF37;">${generateStars(r.rating)}</div>
-                    </div>
-                    <div style="margin: 0.5rem 0; padding: 0.5rem; background: rgba(0,0,0,0.03); border-radius: 10px;">${escapeHtml(r.message)}</div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                        <small>${formatDate(r.createdAt)}</small>
-                        <button class="btn-danger" onclick="deleteRanking('${r.id}')">حذف</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        function updateAvgRating() {
-            const avg = allRankings.length ? (allRankings.reduce((s, r) => s + r.rating, 0) / allRankings.length).toFixed(1) : 0;
-            document.getElementById('avgRating').textContent = avg;
-        }
-        
-        window.deleteRanking = async (id) => {
-            if (!confirm('⚠️ هل أنت متأكد من حذف هذا التقييم؟')) return;
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch(`/api/rankings/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) loadRankingsAdmin();
-            } catch(e) { alert('❌ حدث خطأ'); }
-        };
-        
-        // ============= CONTACTS =============
-        async function loadContactsAdmin() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) { allContacts = await res.json(); displayContactsAdmin(); updateUnreadCount(); }
-            } catch(e) { console.error(e); }
-        }
-        
-        function displayContactsAdmin() {
-            const container = document.getElementById('contactsAdminContainer');
-            if (!container) return;
-            if (allContacts.length === 0) { container.innerHTML = '<p style="text-align:center;">📭 لا توجد رسائل</p>'; return; }
-            container.innerHTML = allContacts.map(c => `
-                <div style="background: rgba(212,175,55,0.05); border-radius: 15px; padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border-color);">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <strong>${escapeHtml(c.name)}</strong>
-                        ${c.status === 'unread' ? '<span style="background:#f44336; color:#fff; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.7rem;">جديد</span>' : ''}
-                    </div>
-                    <div>📧 ${escapeHtml(c.email)}</div>
-                    <div style="margin: 0.5rem 0; padding: 0.5rem; background: rgba(0,0,0,0.03); border-radius: 10px;">${escapeHtml(c.message)}</div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <small>${formatDate(c.createdAt)}</small>
-                        <button class="btn-danger" onclick="deleteContact('${c.id}')">حذف</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        function updateUnreadCount() {
-            const unread = allContacts.filter(c => c.status === 'unread').length;
-            document.getElementById('unreadCount').textContent = unread;
-        }
-        
-        window.deleteContact = async (id) => {
-            if (!confirm('⚠️ هل أنت متأكد من حذف هذه الرسالة؟')) return;
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) loadContactsAdmin();
-            } catch(e) { alert('❌ حدث خطأ'); }
-        };
-        
-        // ============= EMAIL =============
-        document.getElementById('smtpForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const msg = document.getElementById('smtpMessage');
-            msg.style.display = 'block';
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch('/api/send-email', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({
-                        to: document.getElementById('toEmail').value,
-                        subject: document.getElementById('subject').value,
-                        message: document.getElementById('messageContent').value
-                    })
-                });
-                if (res.ok) {
-                    msg.className = 'success-message';
-                    msg.innerHTML = '✅ تم الإرسال بنجاح!';
-                    e.target.reset();
-                    setTimeout(() => msg.style.display = 'none', 3000);
-                } else { throw new Error(); }
-            } catch(err) {
-                msg.className = 'error-message';
-                msg.innerHTML = '❌ حدث خطأ';
-            }
-        });
-        
-        function generateStars(rating) {
-            let stars = '';
-            for (let i = 1; i <= 5; i++) stars += i <= rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
-            return stars;
-        }
-        
-        function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
-        function formatDate(d) { if (!d) return '-'; return new Date(d).toLocaleDateString('ar-EG'); }
-        
-        document.getElementById('logoutBtn')?.addEventListener('click', () => { localStorage.removeItem('adminToken'); window.location.href = 'login'; });
-        
+        function checkAuth() { if (!getToken()) window.location.href = 'login'; }
+        checkAuth();
+        function initDarkMode() { const btn = document.getElementById('darkModeBtn'); const isDark = localStorage.getItem('darkMode') === 'true'; if(isDark){ document.body.classList.add('dark-mode'); btn.innerHTML = '<i class="fas fa-sun"></i>'; } btn.addEventListener('click',()=>{ document.body.classList.toggle('dark-mode'); const isDarkNow = document.body.classList.contains('dark-mode'); localStorage.setItem('darkMode', isDarkNow); btn.innerHTML = isDarkNow ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>'; }); }
         initDarkMode();
-        initTabs();
-        loadTours();
-        loadBookings();
-        loadRankingsAdmin();
-        loadContactsAdmin();
+        function initTabs() { document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { const tabId = btn.dataset.tab; document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById(`${tabId}-tab`).classList.add('active'); if(tabId === 'tours') loadTours(); if(tabId === 'reviews') loadRankingsAdmin(); if(tabId === 'contacts') loadContactsAdmin(); if(tabId === 'orders') loadBookings(); }); }); }
+        async function loadTours() { try { const res = await fetch('/api/tours', { headers: { 'Authorization': `Bearer ${getToken()}` } }); if(res.ok){ allTours = await res.json(); displayToursTable(); document.getElementById('totalTours').textContent = allTours.length; } } catch(e){} }
+        function displayToursTable() { const tbody = document.getElementById('toursTableBody'); if(!tbody) return; if(allTours.length===0){ tbody.innerHTML='<tr><td colspan="6" style="text-align:center;">📭 لا توجد جولات</td></tr>'; return; } tbody.innerHTML = allTours.map(tour => `<tr><td><strong>${escapeHtml(tour.name)}</strong></td><td>${escapeHtml(tour.description.substring(0,50))}...</td><td>${tour.days} يوم</td><td>${tour.priceEgyptian} جنيه</td><td>${tour.priceForeign} $</td><td><button class="btn-warning" onclick="editTour('${tour.id}')"><i class="fas fa-edit"></i> تعديل</button> <button class="btn-danger" onclick="deleteTour('${tour.id}')"><i class="fas fa-trash"></i> حذف</button></td></tr>`).join(''); }
+        window.deleteTour = async (id) => { if(!confirm('⚠️ هل أنت متأكد؟')) return; try { await fetch(`/api/tours/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${getToken()}` } }); loadTours(); } catch(e){} };
+        window.editTour = async (id) => { const tour = allTours.find(t=>t.id===id); if(!tour) return; const newName = prompt('اسم الرحلة:', tour.name); if(!newName) return; const newDesc = prompt('تفاصيل الرحلة:', tour.description); const newDays = prompt('عدد الأيام:', tour.days); const newPriceEgypt = prompt('السعر للمصري:', tour.priceEgyptian); const newPriceFor = prompt('السعر للأجنبي:', tour.priceForeign); try { await fetch(`/api/tours/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` }, body: JSON.stringify({ name: newName, description: newDesc, days: parseInt(newDays), priceEgyptian: parseFloat(newPriceEgypt), priceForeign: parseFloat(newPriceFor) }) }); loadTours(); } catch(e){} };
+        document.getElementById('addTourForm')?.addEventListener('submit', async (e) => { e.preventDefault(); const tourData = { name: document.getElementById('tourName').value, description: document.getElementById('tourDescription').value, days: parseInt(document.getElementById('tourDays').value), priceEgyptian: parseFloat(document.getElementById('tourPriceEgyptian').value), priceForeign: parseFloat(document.getElementById('tourPriceForeign').value), image: document.getElementById('tourImage').value || 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80' }; try { await fetch('/api/tours', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` }, body: JSON.stringify(tourData) }); alert('✅ تم إضافة الجولة'); e.target.reset(); loadTours(); } catch(e){ alert('❌ حدث خطأ'); } });
+        async function loadBookings() { try { const res = await fetch('/api/bookings', { headers: { 'Authorization': `Bearer ${getToken()}` } }); if(res.ok){ allBookings = await res.json(); displayBookings(); const today = new Date().toDateString(); const todayBookings = allBookings.filter(b => new Date(b.createdAt).toDateString() === today).length; document.getElementById('todayBookings').textContent = todayBookings; const unique = new Set(allBookings.map(b => b.email)).size; document.getElementById('totalClients').textContent = unique; } } catch(e){} }
+        function displayBookings() { const tbody = document.getElementById('bookingsTableBody'); if(!tbody) return; if(allBookings.length===0){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;">📭 لا توجد حجوزات</td></tr>'; return; } tbody.innerHTML = allBookings.map(b => `<tr><td>${escapeHtml(b.name)}</td><td>${escapeHtml(b.email)}</td><td>${escapeHtml(b.phone)}</td><td>${escapeHtml(b.tourName)}</td><td>${b.persons||1}</td><td>${b.totalAmount||0} ${b.currency==='EGP'?'جنيه':'$'}</td><td>${new Date(b.date).toLocaleDateString('ar-EG')}</td><td><button class="btn-danger" onclick="deleteBooking('${b.id}')">حذف</button></td></tr>`).join(''); }
+        window.deleteBooking = async (id) => { if(!confirm('⚠️ هل أنت متأكد؟')) return; try { await fetch(`/api/bookings/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${getToken()}` } }); loadBookings(); } catch(e){} };
+        async function loadRankingsAdmin() { try { const res = await fetch('/api/rankings', { headers: { 'Authorization': `Bearer ${getToken()}` } }); if(res.ok){ allRankings = await res.json(); displayRankingsAdmin(); const avg = allRankings.length ? (allRankings.reduce((s,r)=>s+r.rating,0)/allRankings.length).toFixed(1) : 0; document.getElementById('avgRating').textContent = avg; } } catch(e){} }
+        function displayRankingsAdmin() { const container = document.getElementById('rankingsAdminContainer'); if(!container) return; if(allRankings.length===0){ container.innerHTML='<p style="text-align:center;">📭 لا توجد تقييمات</p>'; return; } container.innerHTML = allRankings.map(r => `<div style="padding:1rem; margin-bottom:1rem; border:1px solid var(--border-color); border-radius:15px;"><div style="display:flex; justify-content:space-between;"><strong>${escapeHtml(r.name)}</strong><div style="color:#D4AF37;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div></div><div style="margin:0.5rem 0;">${escapeHtml(r.message)}</div><div style="display:flex; justify-content:space-between;"><small>${new Date(r.createdAt).toLocaleDateString('ar-EG')}</small><button class="btn-danger" onclick="deleteRanking('${r.id}')">حذف</button></div></div>`).join(''); }
+        window.deleteRanking = async (id) => { if(!confirm('⚠️ هل أنت متأكد؟')) return; try { await fetch(`/api/rankings/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${getToken()}` } }); loadRankingsAdmin(); } catch(e){} };
+        async function loadContactsAdmin() { try { const res = await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${getToken()}` } }); if(res.ok){ allContacts = await res.json(); displayContactsAdmin(); const unread = allContacts.filter(c=>c.status==='unread').length; document.getElementById('unreadCount').textContent = unread; } } catch(e){} }
+        function displayContactsAdmin() { const container = document.getElementById('contactsAdminContainer'); if(!container) return; if(allContacts.length===0){ container.innerHTML='<p style="text-align:center;">📭 لا توجد رسائل</p>'; return; } container.innerHTML = allContacts.map(c => `<div style="padding:1rem; margin-bottom:1rem; border:1px solid var(--border-color); border-radius:15px;"><div style="display:flex; justify-content:space-between;"><strong>${escapeHtml(c.name)}</strong>${c.status==='unread'?'<span style="background:#f44336; color:#fff; padding:0.2rem 0.6rem; border-radius:20px;">جديد</span>':''}</div><div>📧 ${escapeHtml(c.email)}</div><div style="margin:0.5rem 0;">${escapeHtml(c.message)}</div><div style="display:flex; justify-content:space-between;"><small>${new Date(c.createdAt).toLocaleDateString('ar-EG')}</small><button class="btn-danger" onclick="deleteContact('${c.id}')">حذف</button></div></div>`).join(''); }
+        window.deleteContact = async (id) => { if(!confirm('⚠️ هل أنت متأكد؟')) return; try { await fetch(`/api/contacts/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${getToken()}` } }); loadContactsAdmin(); } catch(e){} };
+        document.getElementById('smtpForm')?.addEventListener('submit', async (e) => { e.preventDefault(); const msg = document.getElementById('smtpMessage'); msg.style.display='block'; try { const res = await fetch('/api/send-email', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` }, body: JSON.stringify({ to: document.getElementById('toEmail').value, subject: document.getElementById('subject').value, message: document.getElementById('messageContent').value }) }); if(res.ok){ msg.innerHTML='✅ تم الإرسال بنجاح!'; e.target.reset(); setTimeout(()=>msg.style.display='none',3000); } else throw new Error(); } catch(err){ msg.innerHTML='❌ حدث خطأ'; } });
+        function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+        document.getElementById('logoutBtn')?.addEventListener('click', () => { localStorage.removeItem('adminToken'); window.location.href = 'login'; });
+        initTabs(); loadTours(); loadBookings(); loadRankingsAdmin(); loadContactsAdmin();
     </script>
 </body>
 </html>
