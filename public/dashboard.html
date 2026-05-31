@@ -255,57 +255,6 @@
         
         .table-responsive { overflow-x: auto; }
         
-        /* Modal Styles for Edit Tour */
-        .edit-modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
-        }
-        
-        .edit-modal-content {
-            background: var(--card-bg);
-            margin: 3% auto;
-            padding: 2rem;
-            width: 90%;
-            max-width: 600px;
-            border-radius: 28px;
-            position: relative;
-            animation: slideIn 0.3s;
-            border: 1px solid var(--gold-primary, #D4AF37);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .edit-modal-content h2 {
-            margin-bottom: 1.5rem;
-            color: var(--gold-primary, #D4AF37);
-            text-align: center;
-        }
-        
-        .edit-modal-content .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 2rem;
-            cursor: pointer;
-            color: var(--text-secondary);
-        }
-        
-        .edit-modal-content .close-modal:hover {
-            color: var(--danger);
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateY(-100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -315,12 +264,6 @@
             .dashboard-container { padding: 1rem; }
             .stats-cards { grid-template-columns: 1fr; }
             .tab-btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
-            .edit-modal-content { margin: 10% auto; width: 95%; padding: 1.5rem; }
-        }
-        
-        html[dir="ltr"] .close-modal {
-            right: auto;
-            left: 20px;
         }
     </style>
 </head>
@@ -379,27 +322,9 @@
                 <div class="table-responsive">
                     <table class="tours-table">
                         <thead><tr><th>الاسم</th><th>التفاصيل</th><th>الأيام</th><th>السعر (مصري)</th><th>السعر (أجنبي)</th><th>الإجراءات</th></tr></thead>
-                        <tbody id="toursTableBody"><tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                        <tbody id="toursTableBody"><tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr></tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Edit Tour Modal -->
-        <div id="editTourModal" class="edit-modal">
-            <div class="edit-modal-content">
-                <span class="close-modal">&times;</span>
-                <h2><i class="fas fa-edit"></i> تعديل الرحلة</h2>
-                <form id="editTourForm">
-                    <input type="hidden" id="editTourId">
-                    <div class="form-group"><label>اسم الرحلة</label><input type="text" id="editTourName" required></div>
-                    <div class="form-group"><label>تفاصيل الرحلة</label><textarea id="editTourDescription" rows="3" required></textarea></div>
-                    <div class="form-group"><label>عدد الأيام</label><input type="number" id="editTourDays" required></div>
-                    <div class="form-group"><label>السعر للمصري (EGP)</label><input type="number" id="editTourPriceEgyptian" required></div>
-                    <div class="form-group"><label>السعر للأجنبي (USD)</label><input type="number" id="editTourPriceForeign" required></div>
-                    <div class="form-group"><label>رابط الصورة</label><input type="text" id="editTourImage" placeholder="https://..."></div>
-                    <button type="submit" class="btn-primary" style="width:100%;"><i class="fas fa-save"></i> حفظ التعديلات</button>
-                </form>
             </div>
         </div>
         
@@ -409,7 +334,7 @@
                 <div class="table-responsive">
                     <table class="tours-table">
                         <thead><tr><th>الاسم</th><th>البريد</th><th>الهاتف</th><th>الجولة</th><th>عدد الأفراد</th><th>السعر</th><th>التاريخ</th><th>الإجراءات</th></tr></thead>
-                        <tbody id="bookingsTableBody"><tr><td colspan="8" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                        <tbody id="bookingsTableBody"><tr><td colspan="8" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -477,97 +402,40 @@
             });
         }
         
-        // ============= Edit Tour Modal =============
-        const editModal = document.getElementById('editTourModal');
-        const closeModalBtn = document.querySelector('.close-modal');
-        
-        function openEditModal(tour) {
-            document.getElementById('editTourId').value = tour.id;
-            document.getElementById('editTourName').value = tour.name;
-            document.getElementById('editTourDescription').value = tour.description;
-            document.getElementById('editTourDays').value = tour.days;
-            document.getElementById('editTourPriceEgyptian').value = tour.priceEgyptian;
-            document.getElementById('editTourPriceForeign').value = tour.priceForeign;
-            document.getElementById('editTourImage').value = tour.image || '';
-            editModal.style.display = 'block';
-        }
-        
-        function closeEditModal() {
-            editModal.style.display = 'none';
-        }
-        
-        if (closeModalBtn) closeModalBtn.onclick = closeEditModal;
-        window.onclick = (event) => { if (event.target == editModal) closeEditModal(); };
-        
-        // Edit Tour Form Submission
-        document.getElementById('editTourForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const token = getToken();
-            if (!token) return;
-            
-            const id = document.getElementById('editTourId').value;
-            const tourData = {
-                name: document.getElementById('editTourName').value,
-                description: document.getElementById('editTourDescription').value,
-                days: parseInt(document.getElementById('editTourDays').value),
-                priceEgyptian: parseFloat(document.getElementById('editTourPriceEgyptian').value),
-                priceForeign: parseFloat(document.getElementById('editTourPriceForeign').value),
-                image: document.getElementById('editTourImage').value || ''
-            };
-            
-            try {
-                const res = await fetch(`/api/tours/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(tourData)
-                });
-                if (res.ok) {
-                    alert('✅ تم تعديل الرحلة بنجاح');
-                    closeEditModal();
-                    loadTours();
-                } else {
-                    const err = await res.json();
-                    alert('❌ حدث خطأ: ' + (err.error || 'يرجى المحاولة مرة أخرى'));
-                }
-            } catch(e) { 
-                alert('❌ حدث خطأ');
-            }
-        });
-        
         // ============= TOURS MANAGEMENT =============
-        document.getElementById('addTourForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const token = getToken();
-            if (!token) return;
-            
-            const imageValue = document.getElementById('tourImage').value;
-            const tourData = {
-                name: document.getElementById('tourName').value,
-                description: document.getElementById('tourDescription').value,
-                days: parseInt(document.getElementById('tourDays').value),
-                priceEgyptian: parseFloat(document.getElementById('tourPriceEgyptian').value),
-                priceForeign: parseFloat(document.getElementById('tourPriceForeign').value),
-                image: (imageValue && imageValue.trim() !== '') ? imageValue : ''
-            };
-            
-            try {
-                const res = await fetch('/api/tours', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(tourData)
-                });
-                if (res.ok) {
-                    alert('✅ تم إضافة الجولة بنجاح');
-                    document.getElementById('addTourForm').reset();
-                    loadTours();
-                } else { 
-                    const err = await res.json();
-                    alert('❌ حدث خطأ: ' + (err.error || 'يرجى المحاولة مرة أخرى'));
-                }
-            } catch(e) { 
-                alert('❌ حدث خطأ');
-            }
+ document.getElementById('addTourForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = getToken();
+    if (!token) return;
+    
+    const imageValue = document.getElementById('tourImage').value;
+    const tourData = {
+        name: document.getElementById('tourName').value,
+        description: document.getElementById('tourDescription').value,
+        days: parseInt(document.getElementById('tourDays').value),
+        priceEgyptian: parseFloat(document.getElementById('tourPriceEgyptian').value),
+        priceForeign: parseFloat(document.getElementById('tourPriceForeign').value),
+        image: (imageValue && imageValue.trim() !== '') ? imageValue : ''  // ← لو فارغ، يبعت string فاضي
+    };
+    
+    try {
+        const res = await fetch('/api/tours', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(tourData)
         });
+        if (res.ok) {
+            alert('✅ تم إضافة الجولة بنجاح');
+            document.getElementById('addTourForm').reset();
+            loadTours();
+        } else { 
+            const err = await res.json();
+            alert('❌ حدث خطأ: ' + (err.error || 'يرجى المحاولة مرة أخرى'));
+        }
+    } catch(e) { 
+        alert('❌ حدث خطأ');
+    }
+});
         
         window.deleteTour = async (id) => {
             if (!confirm('⚠️ هل أنت متأكد من حذف هذه الجولة؟')) return;
@@ -580,45 +448,29 @@
             } catch(e) { alert('❌ حدث خطأ'); }
         };
         
-        window.editTour = (id) => {
+        window.editTour = async (id) => {
             const tour = allTours.find(t => t.id === id);
-            if (tour) {
-                openEditModal(tour);
-            }
-        };
-        
-        async function loadTours() {
+            if (!tour) return;
+            const newName = prompt('اسم الرحلة:', tour.name);
+            if (!newName) return;
+            const newDesc = prompt('تفاصيل الرحلة:', tour.description);
+            const newDays = prompt('عدد الأيام:', tour.days);
+            const newPriceEgypt = prompt('السعر للمصري:', tour.priceEgyptian);
+            const newPriceFor = prompt('السعر للأجنبي:', tour.priceForeign);
+            
             const token = getToken();
             if (!token) return;
+            
             try {
-                const res = await fetch('/api/tours', { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) { allTours = await res.json(); displayTours(); updateTourStats(); }
-                else console.error('Failed to load tours');
-            } catch(e) { console.error(e); }
-        }
-        
-        function displayTours() {
-            const tbody = document.getElementById('toursTableBody');
-            if (!tbody) return;
-            if (allTours.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">📭 لا توجد جولات</td></tr>'; return; }
-            tbody.innerHTML = allTours.map(t => `
-                <tr>
-                    <td>${escapeHtml(t.name)}</td>
-                    <td>${escapeHtml(t.description.substring(0, 50))}${t.description.length > 50 ? '...' : ''}</td>
-                    <td>${t.days}</td>
-                    <td>${t.priceEgyptian} ج</td>
-                    <td>${t.priceForeign} $</td>
-                    <td>
-                        <button class="btn-warning" onclick="editTour('${t.id}')"><i class="fas fa-edit"></i> تعديل</button>
-                        <button class="btn-danger" onclick="deleteTour('${t.id}')"><i class="fas fa-trash"></i> حذف</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-        
-        function updateTourStats() {
-            document.getElementById('totalTours').textContent = allTours.length;
-        }
+                const res = await fetch(`/api/tours/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ name: newName, description: newDesc, days: parseInt(newDays), priceEgyptian: parseFloat(newPriceEgypt), priceForeign: parseFloat(newPriceFor) })
+                });
+                if (res.ok) { alert('✅ تم التعديل'); loadTours(); }
+                else { alert('❌ حدث خطأ'); }
+            } catch(e) { alert('❌ حدث خطأ'); }
+        };
         
         // ============= BOOKINGS =============
         async function loadBookings() {
@@ -666,15 +518,16 @@
             } catch(e) { alert('❌ حدث خطأ'); }
         };
         
-        // ============= RANKINGS =============
-        async function loadRankingsAdmin() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch('/api/rankings');
-                if (res.ok) { allRankings = await res.json(); displayRankingsAdmin(); updateAvgRating(); }
-            } catch(e) { console.error(e); }
-        }
+// ============= RANKINGS =============
+async function loadRankingsAdmin() {
+    const token = getToken();
+    if (!token) return;
+    try {
+        // Rankings endpoint is public, no token needed
+        const res = await fetch('/api/rankings');
+        if (res.ok) { allRankings = await res.json(); displayRankingsAdmin(); updateAvgRating(); }
+    } catch(e) { console.error(e); }
+}
         
         function displayRankingsAdmin() {
             const container = document.getElementById('rankingsAdminContainer');
