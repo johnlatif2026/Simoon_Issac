@@ -895,17 +895,30 @@ async function loadToursFromAPI() {
     });
 }
 
-// إضافة دالة فتح المودال المدمجة
-function openBookingModal(tourId, tourName) {
-    const modal = document.getElementById('bookingModal');
-    const modalTour = document.getElementById('modalTour');
-    const modalTourId = document.getElementById('modalTourId');
-    
-    if (modalTour) modalTour.value = tourName;
-    if (modalTourId) modalTourId.value = tourId;
-    
-    modal.style.display = 'block';
-}
+// ============= MODAL FUNCTIONS =============
+    function openBookingModal(tourId, tourName) {
+        const modal = document.getElementById('bookingModal');
+        const modalTour = document.getElementById('modalTour');
+        const modalTourId = document.getElementById('modalTourId');
+        
+        if (modalTour) modalTour.value = tourName;
+        if (modalTourId) modalTourId.value = tourId;
+        
+        if (modal) modal.style.display = 'block';
+    }
+
+    const modalForm = document.getElementById('modalBookingForm');
+    if (modalForm) {
+        modalForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('modalName').value;
+            const tour = document.getElementById('modalTour').value;
+            
+            alert(`✅ تم استلام طلب حجزك لجولة "${tour}"، سنتواصل معك قريباً يا ${name}`);
+            modalForm.reset();
+            document.getElementById('bookingModal').style.display = 'none';
+        });
+    }
 
     // Load tours on page load
     document.addEventListener('DOMContentLoaded', loadToursFromAPI);
