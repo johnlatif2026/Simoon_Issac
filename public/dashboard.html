@@ -182,6 +182,7 @@
             padding: 1.5rem;
             box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
         }
         
         .form-grid {
@@ -221,19 +222,6 @@
         }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
         
-        .btn-secondary {
-            background: var(--card-bg);
-            color: var(--text-primary);
-            border: 2px solid var(--border-color);
-            padding: 0.8rem 1.5rem;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-        .btn-secondary:hover { background: rgba(212, 175, 55, 0.1); }
-        
         .btn-danger {
             background: var(--danger);
             color: #fff;
@@ -244,6 +232,17 @@
             transition: all 0.3s;
         }
         .btn-danger:hover { opacity: 0.8; }
+        
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-success:hover { opacity: 0.8; }
         
         .btn-warning {
             background: var(--warning);
@@ -270,71 +269,46 @@
         
         .table-responsive { overflow-x: auto; }
         
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(5px);
-        }
-        
-        .modal-container {
-            background: var(--card-bg);
-            border-radius: 20px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 2px solid var(--border-color);
+        .list-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 8px;
+            background: rgba(212,175,55,0.1);
+            margin-bottom: 8px;
+            border-radius: 8px;
         }
         
-        .modal-header h3 {
-            font-size: 1.5rem;
-            color: var(--text-primary);
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
-        
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-secondary);
-            transition: all 0.3s;
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 800px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
         }
-        
-        .modal-close:hover {
-            color: var(--danger);
-            transform: scale(1.1);
-        }
-        
-        .modal-body {
-            padding: 1.5rem;
-        }
-        
-        .modal-footer {
-            padding: 1.5rem;
-            border-top: 2px solid var(--border-color);
+        .modal-header {
             display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
         }
+        .close-modal { cursor: pointer; font-size: 1.5rem; }
         
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -345,7 +319,6 @@
             .dashboard-container { padding: 1rem; }
             .stats-cards { grid-template-columns: 1fr; }
             .tab-btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
-            .modal-container { width: 95%; margin: 1rem; }
         }
     </style>
 </head>
@@ -392,19 +365,30 @@
                         <div class="form-group"><label>عدد الأيام</label><input type="number" id="tourDays" placeholder="مثال: 5" required></div>
                         <div class="form-group"><label>السعر للمصري (EGP)</label><input type="number" id="tourPriceEgyptian" placeholder="مثال: 2500" required></div>
                         <div class="form-group"><label>السعر للأجنبي (USD)</label><input type="number" id="tourPriceForeign" placeholder="مثال: 50" required></div>
-                        <div class="form-group"><label>رابط الصورة</label><input type="text" id="tourImage" placeholder="https://..."></div>
+                        <div class="form-group"><label>رابط الصورة الرئيسية</label><input type="text" id="tourImage" placeholder="https://..."></div>
                     </div>
                     <div class="form-group"><label>تفاصيل الرحلة</label><textarea id="tourDescription" rows="3" placeholder="وصف تفصيلي للرحلة..." required></textarea></div>
                     <button type="submit" class="btn-primary"><i class="fas fa-plus"></i> إضافة الجولة</button>
                 </form>
             </div>
             
-            <div class="card-container" style="margin-top: 2rem;">
+            <div class="card-container">
                 <h2 style="margin-bottom: 1.5rem;">📋 قائمة الجولات السياحية</h2>
                 <div class="table-responsive">
                     <table class="tours-table">
-                        <thead><tr><th>الاسم</th><th>التفاصيل</th><th>الأيام</th><th>السعر (مصري)</th><th>السعر (أجنبي)</th><th>الإجراءات</th></tr></thead>
-                        <tbody id="toursTableBody"><tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>التفاصيل</th>
+                                <th>الأيام</th>
+                                <th>السعر (مصري)</th>
+                                <th>السعر (أجنبي)</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="toursTableBody">
+                            <tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -415,8 +399,21 @@
                 <h2>📋 قائمة الطلبات</h2>
                 <div class="table-responsive">
                     <table class="tours-table">
-                        <thead><tr><th>الاسم</th><th>البريد</th><th>الهاتف</th><th>الجولة</th><th>عدد الأفراد</th><th>السعر</th><th>التاريخ</th><th>الإجراءات</th></tr></thead>
-                        <tbody id="bookingsTableBody"><tr><td colspan="8" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>البريد</th>
+                                <th>الهاتف</th>
+                                <th>الجولة</th>
+                                <th>عدد الأفراد</th>
+                                <th>السعر</th>
+                                <th>التاريخ</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingsTableBody">
+                            <tr><td colspan="8" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -444,18 +441,51 @@
         </div>
     </div>
 
+    <!-- Modal for editing full tour details -->
+    <div id="editTourModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit"></i> تعديل تفاصيل الرحلة</h2>
+                <span class="close-modal" onclick="closeEditModal()">&times;</span>
+            </div>
+            <form id="fullTourForm">
+                <input type="hidden" id="editTourId">
+                
+                <div class="form-grid">
+                    <div class="form-group"><label>اسم الرحلة</label><input type="text" id="editName" required></div>
+                    <div class="form-group"><label>عدد الأيام</label><input type="number" id="editDays" required></div>
+                    <div class="form-group"><label>السعر للمصري (EGP)</label><input type="number" id="editPriceEgyptian" required></div>
+                    <div class="form-group"><label>السعر للأجنبي (USD)</label><input type="number" id="editPriceForeign" required></div>
+                    <div class="form-group"><label>رابط الصورة الرئيسية</label><input type="text" id="editImage" placeholder="https://..."></div>
+                </div>
+                <div class="form-group"><label>وصف الرحلة</label><textarea id="editDescription" rows="3" required></textarea></div>
+                
+                <hr style="margin: 1rem 0; border-color: var(--border-color);">
+                
+                <h3><i class="fas fa-map-marked-alt"></i> 📍 البرنامج (أدخل كل يوم في سطر جديد)</h3>
+                <div class="form-group"><textarea id="editItinerary" rows="4" placeholder="اليوم 1: زيارة الأهرامات&#10;اليوم 2: جولة المتحف&#10;اليوم 3: ركوب الجمل"></textarea></div>
+                
+                <h3><i class="fas fa-check-circle"></i> ✔ ما يشمل (أدخل كل عنصر في سطر جديد)</h3>
+                <div class="form-group"><textarea id="editIncludes" rows="3" placeholder="مرشد سياحي&#10;انتقالات&#10;مياه شرب"></textarea></div>
+                
+                <h3><i class="fas fa-times-circle"></i> ✖ ما لا يشمل (أدخل كل عنصر في سطر جديد)</h3>
+                <div class="form-group"><textarea id="editExcludes" rows="3" placeholder="تذاكر الطيران&#10;المشروبات الساخنة&#10;الإكراميات"></textarea></div>
+                
+                <h3><i class="fas fa-question-circle"></i> ❓ الأسئلة الشائعة (كل سؤال وجواب في سطر، افصل بينهما بـ | )</h3>
+                <div class="form-group"><textarea id="editFaq" rows="4" placeholder="هل يمكن إلغاء الحجز؟ | نعم، يمكن الإلغاء قبل 48 ساعة&#10;هل السعر شامل الضرائب؟ | نعم، الأسعار شاملة"></textarea></div>
+                
+                <h3><i class="fas fa-images"></i> 📸 معرض الصور (روابط الصور - كل رابط في سطر جديد)</h3>
+                <div class="form-group"><textarea id="editGallery" rows="3" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea></div>
+                
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> حفظ التعديلات</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         const API_URL = window.location.origin;
         let allBookings = [], allRankings = [], allContacts = [], allTours = [];
-        
-        // حماية صفحة Dashboard - التحقق من وجود token قبل عرض أي محتوى
-        (function protectDashboard() {
-            const token = localStorage.getItem('adminToken');
-            if (!token || token.trim() === '') {
-                window.location.href = '/login';
-                return;
-            }
-        })();
+        let currentEditTourId = null;
         
         function initDarkMode() {
             const btn = document.getElementById('darkModeBtn');
@@ -493,6 +523,81 @@
             });
         }
         
+        // Open edit modal with tour data
+        window.openEditModal = async (id) => {
+            currentEditTourId = id;
+            try {
+                const res = await fetch(`/api/tours/${id}/full`);
+                if (res.ok) {
+                    const tour = await res.json();
+                    document.getElementById('editTourId').value = tour.id;
+                    document.getElementById('editName').value = tour.name || '';
+                    document.getElementById('editDays').value = tour.days || '';
+                    document.getElementById('editPriceEgyptian').value = tour.priceEgyptian || '';
+                    document.getElementById('editPriceForeign').value = tour.priceForeign || '';
+                    document.getElementById('editImage').value = tour.image || '';
+                    document.getElementById('editDescription').value = tour.description || '';
+                    document.getElementById('editItinerary').value = (tour.itinerary || []).join('\n');
+                    document.getElementById('editIncludes').value = (tour.includes || []).join('\n');
+                    document.getElementById('editExcludes').value = (tour.excludes || []).join('\n');
+                    document.getElementById('editFaq').value = (tour.faq || []).map(f => `${f.q}|${f.a}`).join('\n');
+                    document.getElementById('editGallery').value = (tour.gallery || []).join('\n');
+                    document.getElementById('editTourModal').style.display = 'flex';
+                }
+            } catch(e) { alert('❌ حدث خطأ في تحميل البيانات'); }
+        };
+        
+        function closeEditModal() {
+            document.getElementById('editTourModal').style.display = 'none';
+        }
+        
+        // Save full tour details
+        document.getElementById('fullTourForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = getToken();
+            if (!token) return;
+            
+            const itinerary = document.getElementById('editItinerary').value.split('\n').filter(l => l.trim());
+            const includes = document.getElementById('editIncludes').value.split('\n').filter(l => l.trim());
+            const excludes = document.getElementById('editExcludes').value.split('\n').filter(l => l.trim());
+            const gallery = document.getElementById('editGallery').value.split('\n').filter(l => l.trim());
+            
+            const faqLines = document.getElementById('editFaq').value.split('\n').filter(l => l.trim());
+            const faq = faqLines.map(line => {
+                const [q, a] = line.split('|');
+                return { q: q?.trim() || '', a: a?.trim() || '' };
+            }).filter(f => f.q && f.a);
+            
+            const tourData = {
+                name: document.getElementById('editName').value,
+                description: document.getElementById('editDescription').value,
+                days: parseInt(document.getElementById('editDays').value),
+                priceEgyptian: parseFloat(document.getElementById('editPriceEgyptian').value),
+                priceForeign: parseFloat(document.getElementById('editPriceForeign').value),
+                image: document.getElementById('editImage').value || '',
+                itinerary: itinerary,
+                includes: includes,
+                excludes: excludes,
+                faq: faq,
+                gallery: gallery
+            };
+            
+            try {
+                const res = await fetch(`/api/tours/${currentEditTourId}/full`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(tourData)
+                });
+                if (res.ok) {
+                    alert('✅ تم حفظ جميع التفاصيل بنجاح');
+                    closeEditModal();
+                    loadTours();
+                } else {
+                    alert('❌ حدث خطأ في الحفظ');
+                }
+            } catch(e) { alert('❌ حدث خطأ'); }
+        });
+        
         // ============= TOURS MANAGEMENT =============
         document.getElementById('addTourForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -506,7 +611,12 @@
                 days: parseInt(document.getElementById('tourDays').value),
                 priceEgyptian: parseFloat(document.getElementById('tourPriceEgyptian').value),
                 priceForeign: parseFloat(document.getElementById('tourPriceForeign').value),
-                image: (imageValue && imageValue.trim() !== '') ? imageValue : ''
+                image: (imageValue && imageValue.trim() !== '') ? imageValue : '',
+                itinerary: [],
+                includes: [],
+                excludes: [],
+                faq: [],
+                gallery: []
             };
             
             try {
@@ -523,10 +633,36 @@
                     const err = await res.json();
                     alert('❌ حدث خطأ: ' + (err.error || 'يرجى المحاولة مرة أخرى'));
                 }
-            } catch(e) { 
-                alert('❌ حدث خطأ');
-            }
+            } catch(e) { alert('❌ حدث خطأ'); }
         });
+        
+        async function loadTours() {
+            const token = getToken();
+            if (!token) return;
+            try {
+                const res = await fetch('/api/tours', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) { allTours = await res.json(); displayTours(); document.getElementById('totalTours').textContent = allTours.length; }
+            } catch(e) { console.error(e); }
+        }
+        
+        function displayTours() {
+            const tbody = document.getElementById('toursTableBody');
+            if (!tbody) return;
+            if (allTours.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">📭 لا توجد جولات</td></tr>'; return; }
+            tbody.innerHTML = allTours.map(t => `
+                <tr>
+                    <td>${escapeHtml(t.name)}</td>
+                    <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(t.description?.substring(0,50) || '')}...</td>
+                    <td>${t.days || '-'}</td>
+                    <td>${t.priceEgyptian || 0} جنيه</td>
+                    <td>${t.priceForeign || 0} $</td>
+                    <td>
+                        <button class="btn-warning" onclick="openEditModal('${t.id}')"><i class="fas fa-edit"></i> تفاصيل كاملة</button>
+                        <button class="btn-danger" onclick="deleteTour('${t.id}')"><i class="fas fa-trash"></i> حذف</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
         
         window.deleteTour = async (id) => {
             if (!confirm('⚠️ هل أنت متأكد من حذف هذه الجولة؟')) return;
@@ -538,142 +674,6 @@
                 else { alert('❌ حدث خطأ'); }
             } catch(e) { alert('❌ حدث خطأ'); }
         };
-        
-        // تحسين تعديل الجولات - Modal احترافي
-        function showEditModal(tour) {
-            // إزالة أي مودال موجود مسبقاً
-            const existingModal = document.querySelector('.modal-overlay');
-            if (existingModal) existingModal.remove();
-            
-            // إنشاء المودال
-            const modalOverlay = document.createElement('div');
-            modalOverlay.className = 'modal-overlay';
-            
-            modalOverlay.innerHTML = `
-                <div class="modal-container">
-                    <div class="modal-header">
-                        <h3><i class="fas fa-edit"></i> تعديل الجولة</h3>
-                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label>اسم الرحلة</label>
-                            <input type="text" id="editTourName" value="${escapeHtml(tour.name)}" required>
-                        </div>
-                        <div class="form-group">
-                            <label>تفاصيل الرحلة</label>
-                            <textarea id="editTourDescription" rows="4" required>${escapeHtml(tour.description)}</textarea>
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>عدد الأيام</label>
-                                <input type="number" id="editTourDays" value="${tour.days}" required>
-                            </div>
-                            <div class="form-group">
-                                <label>السعر للمصري (EGP)</label>
-                                <input type="number" id="editTourPriceEgyptian" value="${tour.priceEgyptian}" required>
-                            </div>
-                            <div class="form-group">
-                                <label>السعر للأجنبي (USD)</label>
-                                <input type="number" id="editTourPriceForeign" value="${tour.priceForeign}" required>
-                            </div>
-                            <div class="form-group">
-                                <label>رابط الصورة</label>
-                                <input type="text" id="editTourImage" value="${escapeHtml(tour.image || '')}" placeholder="https://...">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-secondary" onclick="this.closest('.modal-overlay').remove()">إلغاء</button>
-                        <button class="btn-primary" id="saveEditBtn">حفظ التعديلات</button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modalOverlay);
-            
-            // إضافة حدث الحفظ
-            const saveBtn = modalOverlay.querySelector('#saveEditBtn');
-            saveBtn.addEventListener('click', async () => {
-                const updatedData = {
-                    name: modalOverlay.querySelector('#editTourName').value,
-                    description: modalOverlay.querySelector('#editTourDescription').value,
-                    days: parseInt(modalOverlay.querySelector('#editTourDays').value),
-                    priceEgyptian: parseFloat(modalOverlay.querySelector('#editTourPriceEgyptian').value),
-                    priceForeign: parseFloat(modalOverlay.querySelector('#editTourPriceForeign').value),
-                    image: modalOverlay.querySelector('#editTourImage').value
-                };
-                
-                if (!updatedData.name || !updatedData.description || isNaN(updatedData.days) || isNaN(updatedData.priceEgyptian) || isNaN(updatedData.priceForeign)) {
-                    alert('❌ الرجاء تعبئة جميع الحقول المطلوبة');
-                    return;
-                }
-                
-                const token = getToken();
-                if (!token) return;
-                
-                try {
-                    const res = await fetch(`/api/tours/${tour.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify(updatedData)
-                    });
-                    if (res.ok) {
-                        alert('✅ تم تعديل الجولة بنجاح');
-                        modalOverlay.remove();
-                        loadTours();
-                    } else {
-                        const err = await res.json();
-                        alert('❌ حدث خطأ: ' + (err.error || 'يرجى المحاولة مرة أخرى'));
-                    }
-                } catch(e) {
-                    alert('❌ حدث خطأ');
-                }
-            });
-            
-            // إغلاق المودال عند الضغط على الخلفية
-            modalOverlay.addEventListener('click', (e) => {
-                if (e.target === modalOverlay) modalOverlay.remove();
-            });
-        }
-        
-        window.editTour = (id) => {
-            const tour = allTours.find(t => t.id === id);
-            if (!tour) return;
-            showEditModal(tour);
-        };
-        
-        async function loadTours() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch('/api/tours', { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) { allTours = await res.json(); displayTours(); updateTourStats(); }
-            } catch(e) { console.error(e); }
-        }
-        
-        function displayTours() {
-            const tbody = document.getElementById('toursTableBody');
-            if (!tbody) return;
-            if (allTours.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">📭 لا توجد جولات</td></tr>'; return; }
-            tbody.innerHTML = allTours.map(tour => `
-                <tr>
-                    <td><strong>${escapeHtml(tour.name)}</strong></td>
-                    <td>${escapeHtml(tour.description.substring(0, 50))}${tour.description.length > 50 ? '...' : ''}</td>
-                    <td>${tour.days} يوم</td>
-                    <td>${tour.priceEgyptian} جنيه</td>
-                    <td>${tour.priceForeign} $</td>
-                    <td>
-                        <button class="btn-warning" onclick="editTour('${tour.id}')"><i class="fas fa-edit"></i> تعديل</button>
-                        <button class="btn-danger" onclick="deleteTour('${tour.id}')"><i class="fas fa-trash"></i> حذف</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-        
-        function updateTourStats() {
-            document.getElementById('totalTours').textContent = allTours.length;
-        }
         
         // ============= BOOKINGS =============
         async function loadBookings() {
@@ -828,13 +828,13 @@
                     })
                 });
                 if (res.ok) {
-                    msg.className = 'success-message';
+                    msg.style.color = '#4caf50';
                     msg.innerHTML = '✅ تم الإرسال بنجاح!';
                     e.target.reset();
                     setTimeout(() => msg.style.display = 'none', 3000);
                 } else { throw new Error(); }
             } catch(err) {
-                msg.className = 'error-message';
+                msg.style.color = '#f44336';
                 msg.innerHTML = '❌ حدث خطأ';
             }
         });
@@ -856,6 +856,12 @@
         loadBookings();
         loadRankingsAdmin();
         loadContactsAdmin();
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('editTourModal');
+            if (event.target === modal) closeEditModal();
+        }
     </script>
 </body>
 </html>
