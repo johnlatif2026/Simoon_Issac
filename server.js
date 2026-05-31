@@ -428,135 +428,165 @@ app.post('/api/confirm-payment', async (req, res) => {
   try {
     const { bookingId, email, name, tour, persons, date, totalAmount, currency, transferNumber } = req.body;
     
-    console.log(`💰 تأكيد الدفع للحجز: ${bookingId}, البريد: ${email}`);
+    console.log('📥 Received payment confirmation:', { bookingId, email, name, tour, persons, date, totalAmount, currency, transferNumber });
     
-    // Update booking payment status in database
+    // Validate required fields
+    if (!email || !name || !tour) {
+      console.log('❌ Missing required fields');
+      return res.status(400).json({ error: 'بيانات ناقصة، يرجى المحاولة مرة أخرى' });
+    }
+    
+    // Update or create booking record
+    let savedBooking = null;
+    
     if (db) {
-      const bookingRef = db.collection('bookings').doc(bookingId);
-      const bookingDoc = await bookingRef.get();
-      
-      if (bookingDoc.exists) {
-        await bookingRef.update({
-          paymentStatus: 'completed',
-          paymentConfirmedAt: new Date().toISOString(),
-          transferNumber: transferNumber
-        });
-      } else {
-        // If booking not found, create a record
-        await db.collection('bookings').add({
-          id: bookingId,
-          name,
-          email,
-          tourName: tour,
-          persons: parseInt(persons),
-          date,
-          totalAmount: totalAmount,
-          currency,
-          transferNumber,
-          paymentStatus: 'completed',
-          paymentConfirmedAt: new Date().toISOString(),
-          createdAt: new Date().toISOString()
-        });
-      }
-    } else {
-      // Memory storage
-      const existingBooking = memoryStorage.bookings.find(b => b.id === bookingId);
-      if (existingBooking) {
-        existingBooking.paymentStatus = 'completed';
-        existingBooking.paymentConfirmedAt = new Date().toISOString();
-        existingBooking.transferNumber = transferNumber;
-      } else {
-        memoryStorage.bookings.push({
-          id: bookingId,
-          name,
-          email,
-          tourName: tour,
-          persons: parseInt(persons),
-          date,
-          totalAmount,
-          currency,
-          transferNumber,
-          paymentStatus: 'completed',
-          paymentConfirmedAt: new Date().toISOString(),
-          createdAt: new Date().toISOString()
-        });
+      // Firebase mode
+      try {
+        if (bookingId) {
+          const bookingRef = db.collection('bookings').doc(bookingId);
+          const bookingDoc = await bookingRef.get();
+          
+          if (bookingDoc.exists) {
+            await bookingRef.update({
+              paymentStatus: 'completed',
+              paymentConfirmedAt: new Date().toISOString(),
+              transferNumber: transferNumber || null
+            });
+            savedBooking = { id: bookingId, ...bookingDoc.data() };
+            console.log(`✅ Updated booking ${bookingId} with payment status`);
+          } else {
+            // Create new if not found
+            const newBooking = {
+              name, email, phone: req.body.phone || '',
+              tourName: tour, persons: parseInt(persons) || 1,
+              date: date || new Date().toISOString().split('T')[0],
+              totalAmount: totalAmount || 0, currency: currency || 'USD',
+              transferNumber: transferNumber || null,
+              paymentStatus: 'completed',
+              paymentConfirmedAt: new Date().toISOString(),
+              createdAt: new Date().toISOString()
+            };
+            const docRef = await db.collection('bookings').add(newBooking);
+            savedBooking = { id: docRef.id, ...newBooking };
+            console.log(`✅ Created new booking ${docRef.id} with payment`);
+          }
+        } else {
+          // Create new booking
+          const newBooking = {
+            name, email, phone: req.body.phone || '',
+            tourName: tour, persons: parseInt(persons) || 1,
+            date: date || new Date().toISOString().split('T')[0],
+            totalAmount: totalAmount || 0, currency: currency || 'USD',
+            transferNumber: transferNumber || null,
+            paymentStatus: 'completed',
+            paymentConfirmedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString()
+          };
+          const docRef = await db.collection('bookings').add(newBooking);
+          savedBooking = { id: docRef.id, ...newBooking };
+          console.log(`✅ Created new booking ${docRef.id} (no ID provided)`);
+        }
+      } catch (firebaseError) {
+        console.error('Firebase error:', firebaseError.message);
+        // Fall back to memory storage
+        db = null;
       }
     }
     
-    // Send confirmation email to customer
+    // Memory storage mode (or fallback)
+    if (!db) {
+      const newMemoryBooking = {
+        id: bookingId || Date.now().toString(),
+        name, email, phone: req.body.phone || '',
+        tourName: tour, persons: parseInt(persons) || 1,
+        date: date || new Date().toISOString().split('T')[0],
+        totalAmount: totalAmount || 0, currency: currency || 'USD',
+        transferNumber: transferNumber || null,
+        paymentStatus: 'completed',
+        paymentConfirmedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+      
+      const existingIndex = memoryStorage.bookings.findIndex(b => b.id === newMemoryBooking.id);
+      if (existingIndex !== -1) {
+        memoryStorage.bookings[existingIndex] = { ...memoryStorage.bookings[existingIndex], ...newMemoryBooking };
+        console.log(`✅ Updated memory booking ${newMemoryBooking.id}`);
+      } else {
+        memoryStorage.bookings.push(newMemoryBooking);
+        console.log(`✅ Created new memory booking ${newMemoryBooking.id}`);
+      }
+      savedBooking = newMemoryBooking;
+    }
+    
+    // Send confirmation email (don't let email failure break the payment)
     try {
-      const customerEmailHtml = `
-        <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
-        <head>
-          <meta charset="UTF-8">
-          <title>تأكيد الدفع - رحلة في مصر</title>
-          <style>
-            body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
-            .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-            .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 30px; text-align: center; }
-            .content { padding: 30px; }
-            .payment-details { background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #D4AF37; }
-            .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header"><h1>🇪🇬 رحلة في مصر مع سيمون</h1></div>
-            <div class="content">
-              <h3>✅ تم تأكيد دفعك بنجاح!</h3>
-              <div class="payment-details">
-                <p><strong>🏝️ الرحلة:</strong> ${tour}</p>
-                <p><strong>👤 الاسم:</strong> ${name}</p>
-                <p><strong>📧 البريد:</strong> ${email}</p>
-                <p><strong>👥 عدد الأفراد:</strong> ${persons}</p>
-                <p><strong>📅 التاريخ:</strong> ${date}</p>
-                <p><strong>💰 المبلغ المدفوع:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه' : '$'}</p>
-                <p><strong>🔢 رقم التحويل:</strong> ${transferNumber}</p>
+      if (transporter && process.env.SMTP_USER) {
+        const customerEmailHtml = `
+          <!DOCTYPE html>
+          <html dir="rtl" lang="ar">
+          <head><meta charset="UTF-8"><title>تأكيد الدفع - رحلة في مصر</title></head>
+          <body style="font-family: 'Cairo', Tahoma, sans-serif; direction: rtl; padding: 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+              <div style="background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 30px; text-align: center;">
+                <h1>🇪🇬 رحلة في مصر مع سيمون</h1>
               </div>
-              <p>شكراً لثقتكم بنا. سيتم إرسال تفاصيل الرحلة النهائية خلال 24 ساعة.</p>
-              <p>مع تحيات فريق <strong>رحلة في مصر مع سيمون</strong></p>
+              <div style="padding: 30px;">
+                <h3>✅ تم تأكيد دفعك بنجاح!</h3>
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #D4AF37;">
+                  <p><strong>🏝️ الرحلة:</strong> ${escapeHtml(tour)}</p>
+                  <p><strong>👤 الاسم:</strong> ${escapeHtml(name)}</p>
+                  <p><strong>📧 البريد:</strong> ${escapeHtml(email)}</p>
+                  <p><strong>👥 عدد الأفراد:</strong> ${persons || 1}</p>
+                  <p><strong>📅 التاريخ:</strong> ${date || '-'}</p>
+                  <p><strong>💰 المبلغ المدفوع:</strong> ${totalAmount || 0} ${currency === 'EGP' ? 'جنيه' : '$'}</p>
+                  <p><strong>🔢 رقم التحويل:</strong> ${transferNumber || 'غير محدد'}</p>
+                </div>
+                <p>شكراً لثقتكم بنا. سيتم إرسال تفاصيل الرحلة النهائية خلال 24 ساعة.</p>
+                <p>مع تحيات فريق <strong>رحلة في مصر مع سيمون</strong></p>
+              </div>
             </div>
-            <div class="footer"><p>© 2026 رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p></div>
-          </div>
-        </body>
-        </html>
-      `;
-      
-      await transporter.sendMail({
-        from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-        to: email,
-        subject: '✅ تم تأكيد دفعة رحلتك - رحلة في مصر مع سيمون',
-        html: customerEmailHtml
-      });
-      console.log(`📧 Payment confirmation email sent to ${email}`);
-      
-      // Send notification email to admin
-      await transporter.sendMail({
-        from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-        to: process.env.ADMIN_EMAIL || process.env.SMTP_USER,
-        subject: '💰 دفع جديد تم تأكيده - رحلة في مصر',
-        html: `
-          <h3>تم تأكيد دفع جديد</h3>
-          <p><strong>العميل:</strong> ${name}</p>
-          <p><strong>البريد:</strong> ${email}</p>
-          <p><strong>الرحلة:</strong> ${tour}</p>
-          <p><strong>المبلغ:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه' : '$'}</p>
-          <p><strong>رقم التحويل:</strong> ${transferNumber}</p>
-        `
-      });
-      
+          </body>
+          </html>
+        `;
+        
+        await transporter.sendMail({
+          from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
+          to: email,
+          subject: '✅ تم تأكيد دفعة رحلتك - رحلة في مصر مع سيمون',
+          html: customerEmailHtml
+        });
+        console.log(`📧 Payment email sent to ${email}`);
+      } else {
+        console.log('⚠️ Email not configured, skipping email send');
+      }
     } catch (emailError) {
-      console.log('Email error:', emailError.message);
+      // Don't fail the payment if email fails
+      console.error('Email error (non-critical):', emailError.message);
     }
     
-    res.json({ success: true, message: 'تم تأكيد الدفع بنجاح' });
+    // Send success response
+    res.json({ success: true, message: 'تم تأكيد الدفع بنجاح', booking: savedBooking });
     
   } catch (error) {
-    console.error('Confirm payment error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('❌ Confirm payment error:', error);
+    // Send detailed error for debugging (remove in production)
+    res.status(500).json({ 
+      error: 'حدث خطأ داخلي في الخادم', 
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
   }
 });
+
+// Helper function for escaping HTML (add this at the top of your file with other helpers)
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
