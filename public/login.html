@@ -16,6 +16,10 @@
             --text-primary: #2c1810;
             --text-secondary: #5c3a2a;
             --shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            --modal-overlay: rgba(0, 0, 0, 0.5);
+            --input-border: rgba(212, 175, 55, 0.3);
+            --error-bg: linear-gradient(135deg, #f44336, #d32f2f);
+            --success-bg: linear-gradient(135deg, #4caf50, #388e3c);
         }
         
         body.dark-mode {
@@ -23,6 +27,7 @@
             --card-bg: rgba(30, 30, 50, 0.98);
             --text-primary: #f0e6d2;
             --text-secondary: #d4a373;
+            --modal-overlay: rgba(0, 0, 0, 0.7);
         }
         
         * {
@@ -40,6 +45,7 @@
             justify-content: center;
             padding: 2rem;
             transition: background 0.3s ease;
+            position: relative;
         }
         
         .login-container {
@@ -111,7 +117,7 @@
         .input-group input {
             width: 100%;
             padding: 1rem 3rem 1rem 1rem;
-            border: 2px solid rgba(212, 175, 55, 0.3);
+            border: 2px solid var(--input-border);
             border-radius: 15px;
             background: transparent;
             color: var(--text-primary);
@@ -145,8 +151,52 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
         
+        .secondary-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .secondary-btn {
+            background: transparent;
+            border: 2px solid #D4AF37;
+            color: #D4AF37;
+            padding: 0.8rem;
+            border-radius: 15px;
+            cursor: pointer;
+            width: 50%;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .secondary-btn:hover {
+            background: linear-gradient(135deg, #D4AF37, #FF8C00);
+            color: #2c1810;
+            transform: translateY(-2px);
+        }
+        
+        body.dark-mode .secondary-btn {
+            color: #D4AF37;
+            border-color: #D4AF37;
+        }
+        
+        body.dark-mode .secondary-btn:hover {
+            color: #2c1810;
+        }
+        
         .error-message {
-            background: linear-gradient(135deg, #f44336, #d32f2f);
+            background: var(--error-bg);
+            color: #fff;
+            padding: 0.8rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .success-message {
+            background: var(--success-bg);
             color: #fff;
             padding: 0.8rem;
             border-radius: 12px;
@@ -169,11 +219,151 @@
             color: #fff;
             font-size: 1.3rem;
             transition: all 0.3s;
+            z-index: 1000;
         }
         
         .dark-mode-toggle:hover {
             background: #D4AF37;
             transform: scale(1.05);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 30px;
+            padding: 2rem;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: var(--shadow);
+            animation: slideUp 0.3s ease;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #D4AF37;
+        }
+        
+        .modal-header h3 {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+        
+        .modal-close:hover {
+            color: #D4AF37;
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+        
+        .modal-btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #D4AF37, #FF8C00);
+            color: #2c1810;
+        }
+        
+        .modal-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+        
+        .modal-btn-secondary {
+            background: transparent;
+            border: 2px solid #D4AF37;
+            color: #D4AF37;
+        }
+        
+        .modal-btn-secondary:hover {
+            background: #D4AF37;
+            color: #2c1810;
+        }
+        
+        .modal-error {
+            background: var(--error-bg);
+            color: #fff;
+            padding: 0.7rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+        
+        .modal-success {
+            background: var(--success-bg);
+            color: #fff;
+            padding: 0.7rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            text-align: center;
         }
         
         @media (max-width: 500px) {
@@ -185,6 +375,15 @@
             }
             .login-header h2 {
                 font-size: 1.4rem;
+            }
+            .secondary-buttons {
+                flex-direction: column;
+            }
+            .secondary-btn {
+                width: 100%;
+            }
+            .modal-content {
+                padding: 1.5rem;
             }
         }
     </style>
@@ -217,12 +416,108 @@
                 <button type="submit" class="login-btn">
                     <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
                 </button>
+                <div class="secondary-buttons">
+                    <button type="button" id="changeUsernameBtn" class="secondary-btn">
+                        <i class="fas fa-user-edit"></i> تغيير اسم المستخدم
+                    </button>
+                    <button type="button" id="changePasswordBtn" class="secondary-btn">
+                        <i class="fas fa-key"></i> تغيير كلمة المرور
+                    </button>
+                </div>
                 <div id="loginError" class="error-message" style="display: none;"></div>
             </form>
         </div>
     </div>
 
+    <!-- Modal تغيير اسم المستخدم -->
+    <div id="usernameModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-edit"></i> تغيير اسم المستخدم</h3>
+                <button class="modal-close" onclick="closeModal('usernameModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>اسم المستخدم الحالي</label>
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="currentUsername" placeholder="أدخل اسم المستخدم الحالي">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>كلمة المرور الحالية</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="currentPasswordForUsername" placeholder="أدخل كلمة المرور الحالية">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>اسم المستخدم الجديد</label>
+                    <div class="input-group">
+                        <i class="fas fa-user-plus"></i>
+                        <input type="text" id="newUsername" placeholder="أدخل اسم المستخدم الجديد">
+                    </div>
+                    <small style="color: #D4AF37;">يجب أن لا يقل عن 4 أحرف</small>
+                </div>
+                <div id="usernameModalMessage"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" onclick="closeModal('usernameModal')">إلغاء</button>
+                <button class="modal-btn modal-btn-primary" onclick="submitUsernameChange()">تغيير</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal تغيير كلمة المرور -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-key"></i> تغيير كلمة المرور</h3>
+                <button class="modal-close" onclick="closeModal('passwordModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>اسم المستخدم الحالي</label>
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="currentUsernameForPassword" placeholder="أدخل اسم المستخدم الحالي">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>كلمة المرور الحالية</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="currentPasswordForPassword" placeholder="أدخل كلمة المرور الحالية">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>كلمة المرور الجديدة</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="newPassword" placeholder="أدخل كلمة المرور الجديدة">
+                    </div>
+                    <small style="color: #D4AF37;">يجب أن لا تقل عن 8 أحرف</small>
+                </div>
+                <div class="form-group">
+                    <label>تأكيد كلمة المرور الجديدة</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="confirmNewPassword" placeholder="أعد إدخال كلمة المرور الجديدة">
+                    </div>
+                </div>
+                <div id="passwordModalMessage"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" onclick="closeModal('passwordModal')">إلغاء</button>
+                <button class="modal-btn modal-btn-primary" onclick="submitPasswordChange()">تغيير</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        const API_URL = window.location.origin;
+
+        // Dark Mode
         function initDarkMode() {
             const btn = document.getElementById('darkModeToggle');
             const isDark = localStorage.getItem('darkMode') === 'true';
@@ -238,8 +533,176 @@
             });
         }
 
-        const API_URL = window.location.origin;
+        // Modal functions
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('show');
+            // Clear previous messages
+            const messageDiv = document.getElementById(modalId === 'usernameModal' ? 'usernameModalMessage' : 'passwordModalMessage');
+            if (messageDiv) messageDiv.innerHTML = '';
+            // Clear inputs
+            if (modalId === 'usernameModal') {
+                document.getElementById('currentUsername').value = '';
+                document.getElementById('currentPasswordForUsername').value = '';
+                document.getElementById('newUsername').value = '';
+            } else {
+                document.getElementById('currentUsernameForPassword').value = '';
+                document.getElementById('currentPasswordForPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmNewPassword').value = '';
+            }
+        }
 
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('show');
+            }
+        }
+
+        // Show message in modal
+        function showModalMessage(modalId, message, isError = true) {
+            const messageDiv = document.getElementById(modalId === 'usernameModal' ? 'usernameModalMessage' : 'passwordModalMessage');
+            messageDiv.innerHTML = `<div class="${isError ? 'modal-error' : 'modal-success'}">${message}</div>`;
+            setTimeout(() => {
+                if (messageDiv.innerHTML) messageDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        // Submit username change
+        async function submitUsernameChange() {
+            const currentUsername = document.getElementById('currentUsername').value;
+            const currentPassword = document.getElementById('currentPasswordForUsername').value;
+            const newUsername = document.getElementById('newUsername').value;
+
+            if (!currentUsername || !currentPassword || !newUsername) {
+                showModalMessage('usernameModal', '❌ جميع الحقول مطلوبة');
+                return;
+            }
+
+            if (newUsername.length < 4) {
+                showModalMessage('usernameModal', '❌ اسم المستخدم الجديد يجب أن لا يقل عن 4 أحرف');
+                return;
+            }
+
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                showModalMessage('usernameModal', '❌ الرجاء تسجيل الدخول أولاً');
+                setTimeout(() => {
+                    window.location.href = 'login';
+                }, 1500);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/change-username', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ currentUsername, currentPassword, newUsername })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showModalMessage('usernameModal', '✅ ' + data.message, false);
+                    // Update token in localStorage
+                    if (data.token) {
+                        localStorage.setItem('adminToken', data.token);
+                    }
+                    setTimeout(() => {
+                        closeModal('usernameModal');
+                        // Show success message on main form
+                        const errorDiv = document.getElementById('loginError');
+                        errorDiv.textContent = '✅ تم تغيير اسم المستخدم بنجاح! الرجاء تسجيل الدخول مرة أخرى';
+                        errorDiv.className = 'success-message';
+                        errorDiv.style.display = 'block';
+                        setTimeout(() => {
+                            errorDiv.style.display = 'none';
+                            errorDiv.className = 'error-message';
+                        }, 3000);
+                    }, 2000);
+                } else {
+                    showModalMessage('usernameModal', '❌ ' + (data.error || 'حدث خطأ'));
+                }
+            } catch (error) {
+                showModalMessage('usernameModal', '❌ خطأ في الاتصال بالخادم');
+            }
+        }
+
+        // Submit password change
+        async function submitPasswordChange() {
+            const currentUsername = document.getElementById('currentUsernameForPassword').value;
+            const currentPassword = document.getElementById('currentPasswordForPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            if (!currentUsername || !currentPassword || !newPassword || !confirmNewPassword) {
+                showModalMessage('passwordModal', '❌ جميع الحقول مطلوبة');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                showModalMessage('passwordModal', '❌ كلمة المرور الجديدة يجب أن لا تقل عن 8 أحرف');
+                return;
+            }
+
+            if (newPassword !== confirmNewPassword) {
+                showModalMessage('passwordModal', '❌ كلمتا المرور غير متطابقتين');
+                return;
+            }
+
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                showModalMessage('passwordModal', '❌ الرجاء تسجيل الدخول أولاً');
+                setTimeout(() => {
+                    window.location.href = 'login';
+                }, 1500);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ currentUsername, currentPassword, newPassword })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showModalMessage('passwordModal', '✅ ' + data.message, false);
+                    setTimeout(() => {
+                        closeModal('passwordModal');
+                        // Show success message on main form
+                        const errorDiv = document.getElementById('loginError');
+                        errorDiv.textContent = '✅ تم تغيير كلمة المرور بنجاح! الرجاء تسجيل الدخول مرة أخرى';
+                        errorDiv.className = 'success-message';
+                        errorDiv.style.display = 'block';
+                        setTimeout(() => {
+                            errorDiv.style.display = 'none';
+                            errorDiv.className = 'error-message';
+                        }, 3000);
+                    }, 2000);
+                } else {
+                    showModalMessage('passwordModal', '❌ ' + (data.error || 'حدث خطأ'));
+                }
+            } catch (error) {
+                showModalMessage('passwordModal', '❌ خطأ في الاتصال بالخادم');
+            }
+        }
+
+        // Check authentication
         function checkAuth() {
             const token = localStorage.getItem('adminToken');
             if (token) {
@@ -252,11 +715,10 @@
                         localStorage.removeItem('adminToken');
                     }
                 });
-            } else if (window.location.pathname.includes('dashboard')) {
-                window.location.href = 'login';
             }
         }
 
+        // Login form handler
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
             loginForm.addEventListener('submit', async (e) => {
@@ -279,7 +741,7 @@
                         localStorage.setItem('adminToken', data.token);
                         window.location.href = 'dashboard';
                     } else {
-                        errorDiv.textContent = data.message || 'خطأ في اسم المستخدم أو كلمة المرور';
+                        errorDiv.textContent = data.error || 'خطأ في اسم المستخدم أو كلمة المرور';
                         errorDiv.style.display = 'block';
                         setTimeout(() => errorDiv.style.display = 'none', 3000);
                     }
@@ -291,6 +753,10 @@
                 }
             });
         }
+
+        // Button event listeners
+        document.getElementById('changeUsernameBtn').addEventListener('click', () => openModal('usernameModal'));
+        document.getElementById('changePasswordBtn').addEventListener('click', () => openModal('passwordModal'));
 
         function logout() {
             localStorage.removeItem('adminToken');
