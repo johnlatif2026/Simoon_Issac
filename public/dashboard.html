@@ -403,66 +403,39 @@
         }
         
         // ============= TOURS MANAGEMENT =============
-        async function loadTours() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch('/api/tours', { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.status === 401) { localStorage.removeItem('adminToken'); window.location.href = 'login'; return; }
-                if (res.ok) { allTours = await res.json(); displayToursTable(); updateTourStats(); }
-            } catch(e) { console.error(e); }
-        }
-        
-        function displayToursTable() {
-            const tbody = document.getElementById('toursTableBody');
-            if (!tbody) return;
-            if (allTours.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">📭 لا توجد جولات</td></tr>'; return; }
-            tbody.innerHTML = allTours.map(tour => `
-                <tr>
-                    <td><strong>${escapeHtml(tour.name)}</strong></td>
-                    <td>${escapeHtml(tour.description.substring(0, 50))}${tour.description.length > 50 ? '...' : ''}</td>
-                    <td>${tour.days} يوم</td>
-                    <td>${tour.priceEgyptian} جنيه</td>
-                    <td>${tour.priceForeign} $</td>
-                    <td>
-                        <button class="btn-warning" onclick="editTour('${tour.id}')"><i class="fas fa-edit"></i> تعديل</button>
-                        <button class="btn-danger" onclick="deleteTour('${tour.id}')"><i class="fas fa-trash"></i> حذف</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-        
-        function updateTourStats() {
-            document.getElementById('totalTours').textContent = allTours.length;
-        }
-        
-        document.getElementById('addTourForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const token = getToken();
-            if (!token) return;
-            
-            const tourData = {
-                name: document.getElementById('tourName').value,
-                description: document.getElementById('tourDescription').value,
-                days: parseInt(document.getElementById('tourDays').value),
-                priceEgyptian: parseFloat(document.getElementById('tourPriceEgyptian').value),
-                priceForeign: parseFloat(document.getElementById('tourPriceForeign').value),
-                image: document.getElementById('tourImage').value || 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'
-            };
-            
-            try {
-                const res = await fetch('/api/tours', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(tourData)
-                });
-                if (res.ok) {
-                    alert('✅ تم إضافة الجولة بنجاح');
-                    document.getElementById('addTourForm').reset();
-                    loadTours();
-                } else { alert('❌ حدث خطأ'); }
-            } catch(e) { alert('❌ حدث خطأ'); }
+ document.getElementById('addTourForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = getToken();
+    if (!token) return;
+    
+    const imageValue = document.getElementById('tourImage').value;
+    const tourData = {
+        name: document.getElementById('tourName').value,
+        description: document.getElementById('tourDescription').value,
+        days: parseInt(document.getElementById('tourDays').value),
+        priceEgyptian: parseFloat(document.getElementById('tourPriceEgyptian').value),
+        priceForeign: parseFloat(document.getElementById('tourPriceForeign').value),
+        image: (imageValue && imageValue.trim() !== '') ? imageValue : ''  // ← لو فارغ، يبعت string فاضي
+    };
+    
+    try {
+        const res = await fetch('/api/tours', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(tourData)
         });
+        if (res.ok) {
+            alert('✅ تم إضافة الجولة بنجاح');
+            document.getElementById('addTourForm').reset();
+            loadTours();
+        } else { 
+            const err = await res.json();
+            alert('❌ حدث خطأ: ' + (err.error || 'يرجى المحاولة مرة أخرى'));
+        }
+    } catch(e) { 
+        alert('❌ حدث خطأ');
+    }
+});
         
         window.deleteTour = async (id) => {
             if (!confirm('⚠️ هل أنت متأكد من حذف هذه الجولة؟')) return;
