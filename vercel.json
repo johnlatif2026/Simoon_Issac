@@ -38,6 +38,10 @@
       "dest": "/public/dashboard.html"
     },
     {
+      "src": "/tour-details",
+      "dest": "/public/tour-details.html"
+    },
+    {
       "src": "/rate",
       "dest": "/public/rate.html"
     },
