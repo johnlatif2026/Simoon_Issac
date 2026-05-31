@@ -2,46 +2,864 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>التقييمات - شاركنا رأيك</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>التقييمات - رحلة في مصر مع سيمون | شاركنا رأيك</title>
+    <link rel="icon" href="https://i.postimg.cc/d0Pfc81d/Logo.jpg" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#faf6e9 0%,#f0e6d2 100%);min-height:100vh;padding:2rem}
-        body.dark-mode{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#f0e6d2}
-        .container{max-width:800px;margin:0 auto}
-        .card{background:#fff;border-radius:30px;padding:2rem;margin-bottom:2rem;box-shadow:0 20px 40px rgba(0,0,0,0.1)}
-        body.dark-mode .card{background:#2d2d44}
-        h2{text-align:center;margin-bottom:1.5rem;background:linear-gradient(135deg,#D4AF37,#FF8C00);-webkit-background-clip:text;background-clip:text;color:transparent}
-        .rating-input{display:flex;gap:0.5rem;justify-content:center;margin:1rem 0}
-        .rating-input i{font-size:2rem;cursor:pointer;color:#D4AF37}
-        .form-group{margin-bottom:1rem}
-        .form-group input,.form-group select,.form-group textarea{width:100%;padding:0.9rem;border:2px solid #e0d5c0;border-radius:15px;font-family:'Cairo',sans-serif}
-        .submit-btn{background:linear-gradient(135deg,#D4AF37,#FF8C00);color:#2c1810;border:none;padding:1rem;border-radius:15px;cursor:pointer;width:100%;font-weight:700;font-size:1.1rem}
-        .rating-card{background:rgba(212,175,55,0.05);border-radius:20px;padding:1rem;margin-bottom:1rem;border:1px solid #e0d5c0}
-        .rating-header{display:flex;justify-content:space-between;margin-bottom:0.5rem}
-        .stars{color:#D4AF37}
-        .dark-mode-toggle{position:fixed;top:20px;right:20px;background:rgba(0,0,0,0.3);border:none;width:45px;height:45px;border-radius:50%;cursor:pointer;color:#fff}
-        @media (max-width:600px){body{padding:1rem}}
+        :root {
+            --primary-gradient: linear-gradient(135deg, #D4AF37, #B8860B);
+            --bg-gradient: linear-gradient(135deg, #faf6e9 0%, #f0e6d2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-primary: #2c1810;
+            --text-secondary: #5c3a2a;
+            --border-color: rgba(212, 175, 55, 0.3);
+            --shadow: 0 20px 40px rgba(0,0,0,0.1);
+            --shadow-hover: 0 30px 50px rgba(0,0,0,0.15);
+            --navbar-bg: rgba(44, 24, 16, 0.97);
+            --footer-bg: #1a0f0a;
+        }
+        
+        body.dark-mode {
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --card-bg: rgba(30, 30, 50, 0.95);
+            --text-primary: #f0e6d2;
+            --text-secondary: #d4a373;
+            --border-color: rgba(212, 175, 55, 0.5);
+            --navbar-bg: rgba(10, 10, 20, 0.98);
+            --footer-bg: #0a0a15;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--text-secondary); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 10px; }
+        
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: var(--navbar-bg);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            padding: 0.8rem 0;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .navbar.scrolled {
+            padding: 0.5rem 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+        
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .logo-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #D4AF37;
+        }
+        
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #D4AF37, #FFD700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-menu a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .nav-menu a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #D4AF37, #FFD700);
+            transition: width 0.3s;
+        }
+        
+        .nav-menu a:hover::after,
+        .nav-menu a.active::after {
+            width: 100%;
+        }
+        
+        .nav-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .icon-btn {
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+        
+        .icon-btn:hover {
+            background: #D4AF37;
+            color: #2c1810;
+            transform: scale(1.05);
+        }
+        
+        .lang-btn {
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            padding: 0.3rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+        
+        .lang-btn:hover {
+            background: #D4AF37;
+            color: #2c1810;
+        }
+        
+        .nav-toggle {
+            display: none;
+            cursor: pointer;
+        }
+        
+        .nav-toggle span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: #D4AF37;
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            position: relative;
+            font-weight: 700;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, #D4AF37, #FF8C00);
+            border-radius: 3px;
+        }
+        
+        /* Rank Card */
+        .rank-card {
+            background: var(--card-bg);
+            border-radius: 30px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .rank-form .form-group {
+            margin-bottom: 1.2rem;
+        }
+        
+        .rank-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .rank-form input,
+        .rank-form textarea,
+        .rank-form select {
+            width: 100%;
+            padding: 0.9rem;
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s;
+        }
+        
+        .rank-form input:focus,
+        .rank-form textarea:focus {
+            outline: none;
+            border-color: #D4AF37;
+        }
+        
+        .rating-input {
+            display: flex;
+            gap: 0.5rem;
+            direction: ltr;
+            justify-content: center;
+            padding: 0.5rem;
+        }
+        
+        .rating-input i {
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #D4AF37;
+        }
+        
+        .rating-input i:hover {
+            transform: scale(1.1);
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #D4AF37, #FF8C00);
+            color: #2c1810;
+            border: none;
+            padding: 1rem;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 700;
+            width: 100%;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+        
+        .success-message {
+            background: #4caf50;
+            color: #fff;
+            padding: 1rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        /* Rankings Section */
+        .rankings-section {
+            background: rgba(212, 175, 55, 0.05);
+        }
+        
+        .rankings-filter {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            padding: 0.6rem 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: linear-gradient(135deg, #D4AF37, #FF8C00);
+            color: #2c1810;
+            border-color: transparent;
+        }
+        
+        .rankings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .ranking-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+        
+        .ranking-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+        
+        .ranking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .ranking-user {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .ranking-user i {
+            font-size: 2rem;
+            color: #D4AF37;
+        }
+        
+        .ranking-user h4 {
+            font-size: 1.1rem;
+        }
+        
+        .country {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .ranking-rating {
+            color: #D4AF37;
+        }
+        
+        .ranking-message {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(212, 175, 55, 0.05);
+            border-radius: 15px;
+            line-height: 1.6;
+        }
+        
+        .ranking-message i {
+            color: #D4AF37;
+            margin-left: 0.5rem;
+            opacity: 0.7;
+        }
+        
+        .ranking-date {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .empty-rankings {
+            text-align: center;
+            padding: 3rem;
+            background: var(--card-bg);
+            border-radius: 20px;
+        }
+        
+        .empty-rankings i {
+            font-size: 3rem;
+            color: #D4AF37;
+            margin-bottom: 1rem;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--footer-bg);
+            color: #fff;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-toggle {
+                display: block;
+            }
+            
+            .nav-menu {
+                position: fixed;
+                right: -100%;
+                top: 70px;
+                flex-direction: column;
+                background: var(--navbar-bg);
+                backdrop-filter: blur(15px);
+                width: 100%;
+                text-align: center;
+                transition: 0.3s;
+                padding: 2rem 0;
+                gap: 1.5rem;
+            }
+            
+            .nav-menu.active {
+                right: 0;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+            }
+            
+            .container {
+                padding: 2rem 1rem;
+            }
+            
+            .rankings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .rating-input i {
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
-<button class="dark-mode-toggle" id="darkModeToggle"><i class="fas fa-moon"></i></button>
-<div class="container">
-    <div class="card"><h2>✨ أضف تقييمك ✨</h2><form id="ratingForm"><div class="form-group"><input type="text" id="rateName" placeholder="الاسم الكامل" required></div><div class="form-group"><input type="text" id="rateCountry" placeholder="الدولة" required></div><div class="form-group"><select id="rateTourId" required><option value="">اختر الرحلة</option></select></div><div class="rating-input" id="starsContainer"><i class="far fa-star" data-rating="1"></i><i class="far fa-star" data-rating="2"></i><i class="far fa-star" data-rating="3"></i><i class="far fa-star" data-rating="4"></i><i class="far fa-star" data-rating="5"></i></div><input type="hidden" id="rateRating" required><div class="form-group"><textarea id="rateMessage" rows="4" placeholder="شاركنا تجربتك..." required></textarea></div><button type="submit" class="submit-btn">📝 إرسال التقييم</button></form><div id="successMsg" style="display:none;background:#4caf50;color:#fff;padding:1rem;border-radius:15px;margin-top:1rem;text-align:center"></div></div>
-    <div class="card"><h2>💬 آراء العملاء</h2><div id="ratingsList"><div style="text-align:center;padding:2rem"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div></div></div>
-</div>
-<script>
-const API_URL=window.location.origin;
-function initDarkMode(){const btn=document.getElementById('darkModeToggle');if(localStorage.getItem('darkMode')==='true'){document.body.classList.add('dark-mode');btn.innerHTML='<i class="fas fa-sun"></i>';}btn.addEventListener('click',()=>{document.body.classList.toggle('dark-mode');const isDark=document.body.classList.contains('dark-mode');localStorage.setItem('darkMode',isDark);btn.innerHTML=isDark?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';});}
-let tours=[];
-async function loadToursForSelect(){try{const res=await fetch('/api/tours');tours=await res.json();const select=document.getElementById('rateTourId');select.innerHTML='<option value="">اختر الرحلة</option>'+tours.map(t=>`<option value="${t.id}">${escapeHtml(t.title)}</option>`).join('');}catch(e){console.error(e);}}
-async function loadRatings(){try{const res=await fetch('/api/rankings');const ratings=await res.json();const container=document.getElementById('ratingsList');if(ratings.length===0){container.innerHTML='<div style="text-align:center;padding:2rem">📭 لا توجد تقييمات بعد</div>';return;}container.innerHTML=ratings.map(r=>{const tour=tours.find(t=>t.id===r.tourId);const tourName=tour?tour.title:'رحلة';return `<div class="rating-card"><div class="rating-header"><div><strong>${escapeHtml(r.name)}</strong> (${escapeHtml(r.country)})</div><div class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div></div><div><small>${tourName}</small></div><div style="margin-top:0.5rem">${escapeHtml(r.review||r.message)}</div><div style="font-size:0.8rem;color:#999;margin-top:0.5rem">${new Date(r.createdAt).toLocaleDateString('ar-EG')}</div></div>`;}).join('');}catch(e){console.error(e);}}
-const stars=document.querySelectorAll('#starsContainer i');let ratingInput=document.getElementById('rateRating');stars.forEach(star=>{star.addEventListener('click',function(){const rating=this.dataset.rating;ratingInput.value=rating;stars.forEach((s,i)=>{s.className=i<rating?'fas fa-star':'far fa-star';});});star.addEventListener('mouseover',function(){const rating=this.dataset.rating;stars.forEach((s,i)=>{s.className=i<rating?'fas fa-star':'far fa-star';});});star.addEventListener('mouseout',function(){const current=ratingInput.value;stars.forEach((s,i)=>{s.className=i<current?'fas fa-star':'far fa-star';});});});
-document.getElementById('ratingForm').addEventListener('submit',async(e)=>{e.preventDefault();const rating=ratingInput.value;if(!rating){alert('الرجاء اختيار تقييم');return;}const payload={tourId:document.getElementById('rateTourId').value,name:document.getElementById('rateName').value,country:document.getElementById('rateCountry').value,rating:parseInt(rating),review:document.getElementById('rateMessage').value,message:document.getElementById('rateMessage').value,createdAt:new Date().toISOString()};try{const res=await fetch('/api/rankings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(res.ok){const msgDiv=document.getElementById('successMsg');msgDiv.textContent='✅ تم إضافة تقييمك بنجاح! شكراً لك.';msgDiv.style.display='block';e.target.reset();ratingInput.value='';stars.forEach(s=>s.className='far fa-star');setTimeout(()=>msgDiv.style.display='none',3000);loadRatings();}else{alert('حدث خطأ');}}catch(err){alert('خطأ في الاتصال');}});
-function escapeHtml(str){if(!str)return '';return str.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
-initDarkMode();loadToursForSelect();loadRatings();
-</script>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="https://i.postimg.cc/d0Pfc81d/Logo.jpg" alt="Logo" class="logo-img">
+                <span class="logo-text" data-key="logo">رحلة في مصر</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html#home" data-key="nav_home">الرئيسية</a></li>
+                <li><a href="index.html#about" data-key="nav_about">نبذة عنا</a></li>
+                <li><a href="index.html#tours" data-key="nav_tours">الجولات</a></li>
+                <li><a href="index.html#gallery" data-key="nav_gallery">المعرض</a></li>
+                <li><a href="rate" data-key="nav_ratings">التقييمات</a></li>
+                <li><a href="index.html#contact" data-key="nav_contact">اتصل بنا</a></li>
+            </ul>
+            <div class="nav-controls">
+                <button class="icon-btn" id="darkModeBtn"><i class="fas fa-moon"></i></button>
+                <button class="lang-btn" id="langBtn">🇬🇧 EN</button>
+                <div class="nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="rank-section">
+        <div class="container">
+            <h2 class="section-title" data-key="add_review_title">✨ أضف تقييمك ✨</h2>
+            <div class="rank-card">
+                <form id="rankForm" class="rank-form">
+                    <div class="form-group">
+                        <label data-key="full_name">الاسم الكامل</label>
+                        <input type="text" id="rankName" placeholder="أدخل اسمك" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-key="country">الدولة</label>
+                        <input type="text" id="rankCountry" placeholder="مثال: مصر، السعودية، إنجلترا" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-key="your_rating">تقييمك</label>
+                        <div class="rating-input">
+                            <i class="far fa-star" data-rating="1"></i>
+                            <i class="far fa-star" data-rating="2"></i>
+                            <i class="far fa-star" data-rating="3"></i>
+                            <i class="far fa-star" data-rating="4"></i>
+                            <i class="far fa-star" data-rating="5"></i>
+                        </div>
+                        <input type="hidden" id="rankRating" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-key="your_message">رسالتك</label>
+                        <textarea id="rankMessage" rows="4" placeholder="شاركنا تجربتك مع رحلة في مصر..." required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn" data-key="submit_review">📝 إرسال التقييم</button>
+                </form>
+                <div id="rankMessageSuccess" class="success-message" style="display: none;"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="rankings-section">
+        <div class="container">
+            <h2 class="section-title" data-key="client_reviews">💬 آراء عملائنا</h2>
+            <div class="rankings-filter">
+                <button class="filter-btn active" data-filter="all" data-key="all">الكل</button>
+                <button class="filter-btn" data-filter="5">★★★★★ (5)</button>
+                <button class="filter-btn" data-filter="4">★★★★☆ (4)</button>
+                <button class="filter-btn" data-filter="3">★★★☆☆ (3)</button>
+            </div>
+            <div class="rankings-grid" id="rankingsGrid">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> جاري تحميل التقييمات...
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p data-key="copyright">&copy; 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة</p>
+        </div>
+    </footer>
+
+    <script>
+        const API_URL = window.location.origin;
+        
+        // Mobile menu toggle
+        const navToggle = document.querySelector('.nav-toggle');
+        const navMenu = document.querySelector('.nav-menu');
+        if (navToggle) {
+            navToggle.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+            });
+        }
+        
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
+        });
+        
+        // Dark Mode
+        function initDarkMode() {
+            const darkModeBtn = document.getElementById('darkModeBtn');
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+                darkModeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+            darkModeBtn.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const isDarkNow = document.body.classList.contains('dark-mode');
+                localStorage.setItem('darkMode', isDarkNow);
+                darkModeBtn.innerHTML = isDarkNow ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            });
+        }
+        
+        // Language System
+        const translations = {
+            ar: {
+                logo: "رحلة في مصر",
+                nav_home: "الرئيسية",
+                nav_about: "نبذة عنا",
+                nav_tours: "الجولات",
+                nav_gallery: "المعرض",
+                nav_ratings: "التقييمات",
+                nav_contact: "اتصل بنا",
+                add_review_title: "أضف تقييمك",
+                full_name: "الاسم الكامل",
+                country: "الدولة",
+                your_rating: "تقييمك",
+                your_message: "رسالتك",
+                submit_review: "إرسال التقييم",
+                client_reviews: "آراء عملائنا",
+                all: "الكل",
+                copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة"
+            },
+            en: {
+                logo: "Journey in Egypt",
+                nav_home: "Home",
+                nav_about: "About",
+                nav_tours: "Tours",
+                nav_gallery: "Gallery",
+                nav_ratings: "Ratings",
+                nav_contact: "Contact",
+                add_review_title: "Add Your Review",
+                full_name: "Full Name",
+                country: "Country",
+                your_rating: "Your Rating",
+                your_message: "Your Message",
+                submit_review: "Submit Review",
+                client_reviews: "Client Reviews",
+                all: "All",
+                copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved"
+            }
+        };
+        
+        let currentLang = localStorage.getItem('language') || 'ar';
+        
+        function updateLanguage() {
+            const elements = document.querySelectorAll('[data-key]');
+            elements.forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (translations[currentLang][key]) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = translations[currentLang][key];
+                    } else {
+                        el.textContent = translations[currentLang][key];
+                    }
+                }
+            });
+            
+            const langBtn = document.getElementById('langBtn');
+            langBtn.innerHTML = currentLang === 'ar' ? '🇬🇧 EN' : '🇸🇦 AR';
+            document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = currentLang;
+            localStorage.setItem('language', currentLang);
+        }
+        
+        function initLanguage() {
+            const langBtn = document.getElementById('langBtn');
+            langBtn.addEventListener('click', () => {
+                currentLang = currentLang === 'ar' ? 'en' : 'ar';
+                updateLanguage();
+            });
+            updateLanguage();
+        }
+        
+        // Rating stars functionality
+        function initRatingStars() {
+            const stars = document.querySelectorAll('.rating-input i');
+            const ratingInput = document.getElementById('rankRating');
+            
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = this.getAttribute('data-rating');
+                    ratingInput.value = rating;
+                    stars.forEach((s, index) => {
+                        s.className = index < rating ? 'fas fa-star' : 'far fa-star';
+                    });
+                });
+                
+                star.addEventListener('mouseover', function() {
+                    const rating = this.getAttribute('data-rating');
+                    stars.forEach((s, index) => {
+                        s.className = index < rating ? 'fas fa-star' : 'far fa-star';
+                    });
+                });
+                
+                star.addEventListener('mouseout', function() {
+                    const currentRating = ratingInput.value;
+                    stars.forEach((s, index) => {
+                        s.className = index < currentRating ? 'fas fa-star' : 'far fa-star';
+                    });
+                });
+            });
+        }
+        
+        // Load rankings
+        async function loadRankings() {
+            try {
+                const response = await fetch('/api/rankings');
+                if (response.ok) {
+                    const rankings = await response.json();
+                    displayRankings(rankings);
+                }
+            } catch (error) {
+                console.error('Error loading rankings:', error);
+            }
+        }
+        
+        function displayRankings(rankings) {
+            const grid = document.getElementById('rankingsGrid');
+            if (!grid) return;
+            
+            if (rankings.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-rankings">
+                        <i class="fas fa-comment-dots"></i>
+                        <h3>📭 لا توجد تقييمات بعد</h3>
+                        <p>كن أول من يضيف تقييماً!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = rankings.map(ranking => `
+                <div class="ranking-card" data-rating="${ranking.rating}">
+                    <div class="ranking-header">
+                        <div class="ranking-user">
+                            <i class="fas fa-user-circle"></i>
+                            <div>
+                                <h4>${escapeHtml(ranking.name)}</h4>
+                                <span class="country">📍 ${escapeHtml(ranking.country)}</span>
+                            </div>
+                        </div>
+                        <div class="ranking-rating">
+                            ${generateStars(ranking.rating)}
+                        </div>
+                    </div>
+                    <div class="ranking-message">
+                        <i class="fas fa-quote-right"></i>
+                        <p>${escapeHtml(ranking.message)}</p>
+                    </div>
+                    <div class="ranking-date">
+                        <i class="far fa-calendar-alt"></i>
+                        <span>${formatDate(ranking.createdAt)}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            setupFilter();
+        }
+        
+        function generateStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += i <= rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+            }
+            return stars;
+        }
+        
+        function setupFilter() {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const cards = document.querySelectorAll('.ranking-card');
+            
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    const filter = btn.getAttribute('data-filter');
+                    cards.forEach(card => {
+                        if (filter === 'all') {
+                            card.style.display = 'block';
+                        } else {
+                            const rating = card.getAttribute('data-rating');
+                            card.style.display = rating === filter ? 'block' : 'none';
+                        }
+                    });
+                });
+            });
+        }
+        
+        // Submit ranking
+        const rankForm = document.getElementById('rankForm');
+        if (rankForm) {
+            rankForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const name = document.getElementById('rankName').value;
+                const country = document.getElementById('rankCountry').value;
+                const rating = document.getElementById('rankRating').value;
+                const message = document.getElementById('rankMessage').value;
+                const successDiv = document.getElementById('rankMessageSuccess');
+                
+                if (!rating) {
+                    alert('الرجاء اختيار تقييم');
+                    return;
+                }
+                
+                const rankingData = {
+                    name: name,
+                    country: country,
+                    rating: parseInt(rating),
+                    message: message,
+                    createdAt: new Date().toISOString()
+                };
+                
+                try {
+                    const response = await fetch('/api/rankings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(rankingData)
+                    });
+                    
+                    if (response.ok) {
+                        successDiv.textContent = '✅ تم إضافة تقييمك بنجاح! شكراً لك.';
+                        successDiv.style.display = 'block';
+                        rankForm.reset();
+                        const stars = document.querySelectorAll('.rating-input i');
+                        stars.forEach(star => star.className = 'far fa-star');
+                        document.getElementById('rankRating').value = '';
+                        
+                        setTimeout(() => {
+                            successDiv.style.display = 'none';
+                            loadRankings();
+                        }, 2000);
+                    } else {
+                        const error = await response.json();
+                        alert(error.message || 'حدث خطأ في إرسال التقييم');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('حدث خطأ في الاتصال بالخادم');
+                }
+            });
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+        
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+        
+        initDarkMode();
+        initLanguage();
+        initRatingStars();
+        loadRankings();
+    </script>
 </body>
 </html>
