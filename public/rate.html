@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التقييمات - شاركنا رأيك</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#faf6e9 0%,#f0e6d2 100%);min-height:100vh;padding:2rem}
+        body.dark-mode{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#f0e6d2}
+        .container{max-width:800px;margin:0 auto}
+        .card{background:#fff;border-radius:30px;padding:2rem;margin-bottom:2rem;box-shadow:0 20px 40px rgba(0,0,0,0.1)}
+        body.dark-mode .card{background:#2d2d44}
+        h2{text-align:center;margin-bottom:1.5rem;background:linear-gradient(135deg,#D4AF37,#FF8C00);-webkit-background-clip:text;background-clip:text;color:transparent}
+        .rating-input{display:flex;gap:0.5rem;justify-content:center;margin:1rem 0}
+        .rating-input i{font-size:2rem;cursor:pointer;color:#D4AF37}
+        .form-group{margin-bottom:1rem}
+        .form-group input,.form-group select,.form-group textarea{width:100%;padding:0.9rem;border:2px solid #e0d5c0;border-radius:15px;font-family:'Cairo',sans-serif}
+        .submit-btn{background:linear-gradient(135deg,#D4AF37,#FF8C00);color:#2c1810;border:none;padding:1rem;border-radius:15px;cursor:pointer;width:100%;font-weight:700;font-size:1.1rem}
+        .rating-card{background:rgba(212,175,55,0.05);border-radius:20px;padding:1rem;margin-bottom:1rem;border:1px solid #e0d5c0}
+        .rating-header{display:flex;justify-content:space-between;margin-bottom:0.5rem}
+        .stars{color:#D4AF37}
+        .dark-mode-toggle{position:fixed;top:20px;right:20px;background:rgba(0,0,0,0.3);border:none;width:45px;height:45px;border-radius:50%;cursor:pointer;color:#fff}
+        @media (max-width:600px){body{padding:1rem}}
+    </style>
+</head>
+<body>
+<button class="dark-mode-toggle" id="darkModeToggle"><i class="fas fa-moon"></i></button>
+<div class="container">
+    <div class="card"><h2>✨ أضف تقييمك ✨</h2><form id="ratingForm"><div class="form-group"><input type="text" id="rateName" placeholder="الاسم الكامل" required></div><div class="form-group"><input type="text" id="rateCountry" placeholder="الدولة" required></div><div class="form-group"><select id="rateTourId" required><option value="">اختر الرحلة</option></select></div><div class="rating-input" id="starsContainer"><i class="far fa-star" data-rating="1"></i><i class="far fa-star" data-rating="2"></i><i class="far fa-star" data-rating="3"></i><i class="far fa-star" data-rating="4"></i><i class="far fa-star" data-rating="5"></i></div><input type="hidden" id="rateRating" required><div class="form-group"><textarea id="rateMessage" rows="4" placeholder="شاركنا تجربتك..." required></textarea></div><button type="submit" class="submit-btn">📝 إرسال التقييم</button></form><div id="successMsg" style="display:none;background:#4caf50;color:#fff;padding:1rem;border-radius:15px;margin-top:1rem;text-align:center"></div></div>
+    <div class="card"><h2>💬 آراء العملاء</h2><div id="ratingsList"><div style="text-align:center;padding:2rem"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div></div></div>
+</div>
+<script>
+const API_URL=window.location.origin;
+function initDarkMode(){const btn=document.getElementById('darkModeToggle');if(localStorage.getItem('darkMode')==='true'){document.body.classList.add('dark-mode');btn.innerHTML='<i class="fas fa-sun"></i>';}btn.addEventListener('click',()=>{document.body.classList.toggle('dark-mode');const isDark=document.body.classList.contains('dark-mode');localStorage.setItem('darkMode',isDark);btn.innerHTML=isDark?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';});}
+let tours=[];
+async function loadToursForSelect(){try{const res=await fetch('/api/tours');tours=await res.json();const select=document.getElementById('rateTourId');select.innerHTML='<option value="">اختر الرحلة</option>'+tours.map(t=>`<option value="${t.id}">${escapeHtml(t.title)}</option>`).join('');}catch(e){console.error(e);}}
+async function loadRatings(){try{const res=await fetch('/api/rankings');const ratings=await res.json();const container=document.getElementById('ratingsList');if(ratings.length===0){container.innerHTML='<div style="text-align:center;padding:2rem">📭 لا توجد تقييمات بعد</div>';return;}container.innerHTML=ratings.map(r=>{const tour=tours.find(t=>t.id===r.tourId);const tourName=tour?tour.title:'رحلة';return `<div class="rating-card"><div class="rating-header"><div><strong>${escapeHtml(r.name)}</strong> (${escapeHtml(r.country)})</div><div class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div></div><div><small>${tourName}</small></div><div style="margin-top:0.5rem">${escapeHtml(r.review||r.message)}</div><div style="font-size:0.8rem;color:#999;margin-top:0.5rem">${new Date(r.createdAt).toLocaleDateString('ar-EG')}</div></div>`;}).join('');}catch(e){console.error(e);}}
+const stars=document.querySelectorAll('#starsContainer i');let ratingInput=document.getElementById('rateRating');stars.forEach(star=>{star.addEventListener('click',function(){const rating=this.dataset.rating;ratingInput.value=rating;stars.forEach((s,i)=>{s.className=i<rating?'fas fa-star':'far fa-star';});});star.addEventListener('mouseover',function(){const rating=this.dataset.rating;stars.forEach((s,i)=>{s.className=i<rating?'fas fa-star':'far fa-star';});});star.addEventListener('mouseout',function(){const current=ratingInput.value;stars.forEach((s,i)=>{s.className=i<current?'fas fa-star':'far fa-star';});});});
+document.getElementById('ratingForm').addEventListener('submit',async(e)=>{e.preventDefault();const rating=ratingInput.value;if(!rating){alert('الرجاء اختيار تقييم');return;}const payload={tourId:document.getElementById('rateTourId').value,name:document.getElementById('rateName').value,country:document.getElementById('rateCountry').value,rating:parseInt(rating),review:document.getElementById('rateMessage').value,message:document.getElementById('rateMessage').value,createdAt:new Date().toISOString()};try{const res=await fetch('/api/rankings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(res.ok){const msgDiv=document.getElementById('successMsg');msgDiv.textContent='✅ تم إضافة تقييمك بنجاح! شكراً لك.';msgDiv.style.display='block';e.target.reset();ratingInput.value='';stars.forEach(s=>s.className='far fa-star');setTimeout(()=>msgDiv.style.display='none',3000);loadRatings();}else{alert('حدث خطأ');}}catch(err){alert('خطأ في الاتصال');}});
+function escapeHtml(str){if(!str)return '';return str.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+initDarkMode();loadToursForSelect();loadRatings();
+</script>
+</body>
+</html>

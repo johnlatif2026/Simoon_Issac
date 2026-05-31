@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - إدارة الرحلات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root{--primary:#D4AF37;--bg:#f5f5f5;--card:#fff;--text:#2c1810;--text-light:#5c3a2a;--border:#e0d5c0;--danger:#f44336;--success:#4caf50}
+        body.dark-mode{--bg:#1a1a2e;--card:#2d2d44;--text:#f0e6d2;--text-light:#d4a373;--border:#3d3d5c}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);transition:all 0.3s}
+        .navbar{background:#2c1810;padding:1rem 0;position:fixed;top:0;width:100%;z-index:100}
+        .nav-container{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 2rem}
+        .logo{font-size:1.3rem;font-weight:800;color:#D4AF37}
+        .nav-actions{display:flex;gap:1rem}
+        .icon-btn{background:rgba(212,175,55,0.2);border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;color:#D4AF37}
+        .logout-btn{background:#f44336;color:#fff;border:none;padding:0.5rem 1.2rem;border-radius:10px;cursor:pointer}
+        .dashboard-container{margin-top:80px;padding:2rem;max-width:1400px;margin-left:auto;margin-right:auto}
+        .dashboard-header{background:linear-gradient(135deg,#D4AF37,#FF8C00);padding:2rem;border-radius:20px;margin-bottom:2rem;color:#2c1810}
+        .stats-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin-bottom:2rem}
+        .stat-card{background:var(--card);padding:1.5rem;border-radius:20px;display:flex;align-items:center;gap:1rem;border:1px solid var(--border)}
+        .stat-card i{font-size:2.5rem;color:#D4AF37}
+        .stat-card h3{font-size:0.8rem;color:var(--text-light)}
+        .stat-card p{font-size:1.8rem;font-weight:800}
+        .dashboard-tabs{display:flex;gap:0.5rem;margin-bottom:2rem;border-bottom:2px solid var(--border);flex-wrap:wrap}
+        .tab-btn{background:none;border:none;padding:0.8rem 1.8rem;font-size:1rem;font-weight:600;cursor:pointer;color:var(--text-light);border-radius:10px}
+        .tab-btn.active{background:linear-gradient(135deg,#D4AF37,#FF8C00);color:#2c1810}
+        .tab-content{display:none}
+        .tab-content.active{display:block}
+        .card{background:var(--card);border-radius:20px;padding:1.5rem;border:1px solid var(--border)}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:1rem;text-align:right;border-bottom:1px solid var(--border)}
+        th{background:rgba(212,175,55,0.1)}
+        .delete-btn{background:var(--danger);color:#fff;border:none;padding:0.3rem 0.8rem;border-radius:8px;cursor:pointer}
+        .edit-btn{background:#2196f3;color:#fff;border:none;padding:0.3rem 0.8rem;border-radius:8px;cursor:pointer;margin-left:0.5rem}
+        .form-group{margin-bottom:1rem}
+        .form-group input,.form-group textarea,.form-group select{width:100%;padding:0.8rem;border:2px solid var(--border);border-radius:10px;background:var(--card);color:var(--text)}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        .btn-primary{background:linear-gradient(135deg,#D4AF37,#FF8C00);color:#2c1810;border:none;padding:0.8rem 1.5rem;border-radius:10px;cursor:pointer;font-weight:700}
+        .tour-card-admin{background:rgba(212,175,55,0.05);border-radius:15px;padding:1rem;margin-bottom:1rem;border:1px solid var(--border)}
+        @media (max-width:768px){.dashboard-container{padding:1rem}.stats-cards{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<nav class="navbar"><div class="nav-container"><div class="logo">👑 لوحة التحكم - رحلة في مصر</div><div class="nav-actions"><button id="darkModeBtn" class="icon-btn"><i class="fas fa-moon"></i></button><button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> خروج</button></div></div></nav>
+<div class="dashboard-container">
+    <div class="dashboard-header"><h1>🌟 مرحباً بك</h1><p>إدارة الرحلات، الحجوزات، والتقييمات</p></div>
+    <div class="stats-cards"><div class="stat-card"><i class="fas fa-tree"></i><div><h3>إجمالي الرحلات</h3><p id="totalTours">0</p></div></div><div class="stat-card"><i class="fas fa-calendar-check"></i><div><h3>إجمالي الحجوزات</h3><p id="totalBookings">0</p></div></div><div class="stat-card"><i class="fas fa-star"></i><div><h3>متوسط التقييمات</h3><p id="avgRating">0</p></div></div></div>
+    <div class="dashboard-tabs"><button class="tab-btn active" data-tab="tours"><i class="fas fa-tree"></i> الرحلات</button><button class="tab-btn" data-tab="bookings"><i class="fas fa-calendar"></i> الحجوزات</button><button class="tab-btn" data-tab="ratings"><i class="fas fa-star"></i> التقييمات</button><button class="tab-btn" data-tab="add-tour"><i class="fas fa-plus"></i> إضافة رحلة</button></div>
+    <div id="tours-tab" class="tab-content active"><div class="card"><h2>📋 قائمة الرحلات</h2><div id="toursList"></div></div></div>
+    <div id="bookings-tab" class="tab-content"><div class="card"><h2>📋 قائمة الحجوزات</h2><div class="table-responsive"><table id="bookingsTable"><thead><tr><th>الاسم</th><th>البريد</th><th>الهاتف</th><th>الرحلة</th><th>الأفراد</th><th>السعر</th><th>الحالة</th><th></th></tr></thead><tbody id="bookingsBody"></tbody></table></div></div></div>
+    <div id="ratings-tab" class="tab-content"><div class="card"><h2>⭐ التقييمات</h2><div id="ratingsList"></div></div></div>
+    <div id="add-tour-tab" class="tab-content"><div class="card"><h2>➕ إضافة رحلة جديدة</h2><form id="addTourForm"><div class="form-row"><div class="form-group"><input type="text" id="tourTitle" placeholder="اسم الرحلة" required></div><div class="form-group"><input type="text" id="tourSlug" placeholder="slug (مثال: pyramids-tour)" required></div></div><div class="form-group"><textarea id="tourShortDesc" rows="2" placeholder="وصف قصير"></textarea></div><div class="form-group"><textarea id="tourFullDesc" rows="4" placeholder="وصف كامل"></textarea></div><div class="form-row"><div class="form-group"><input type="text" id="tourDuration" placeholder="المدة (مثال: 4 ساعات)"></div><div class="form-group"><input type="text" id="tourMainImage" placeholder="رابط الصورة الرئيسية"></div></div><div class="form-row"><div class="form-group"><input type="number" id="tourPriceEgyptian" placeholder="سعر المصري (EGP)"></div><div class="form-group"><input type="number" id="tourPriceForeigner" placeholder="سعر الأجنبي (USD)"></div></div><div class="form-group"><textarea id="tourItinerary" rows="3" placeholder="برنامج الرحلة"></textarea></div><div class="form-group"><textarea id="tourIncluded" rows="2" placeholder="المشمول (مفصول بفواصل)"></textarea></div><div class="form-group"><textarea id="tourExcluded" rows="2" placeholder="غير المشمول (مفصول بفواصل)"></textarea></div><div class="form-row"><div class="form-group"><input type="text" id="tourDepartureLocation" placeholder="مكان الانطلاق"></div><div class="form-group"><input type="text" id="tourDepartureTime" placeholder="وقت الانطلاق"></div></div><div class="form-group"><textarea id="tourCancellationPolicy" rows="2" placeholder="سياسة الإلغاء"></textarea></div><button type="submit" class="btn-primary">➕ إضافة الرحلة</button></form></div></div>
+</div>
+<script>
+const API_URL=window.location.origin;let token=localStorage.getItem('adminToken');if(!token)window.location.href='/login';
+function checkAuth(){fetch('/api/verify-token',{headers:{'Authorization':`Bearer ${token}`}}).catch(()=>{localStorage.removeItem('adminToken');window.location.href='/login';});}
+function initDarkMode(){const btn=document.getElementById('darkModeBtn');if(localStorage.getItem('darkMode')==='true'){document.body.classList.add('dark-mode');btn.innerHTML='<i class="fas fa-sun"></i>';}btn.addEventListener('click',()=>{document.body.classList.toggle('dark-mode');const isDark=document.body.classList.contains('dark-mode');localStorage.setItem('darkMode',isDark);btn.innerHTML=isDark?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';});}
+document.querySelectorAll('.tab-btn').forEach(btn=>{btn.addEventListener('click',()=>{const tabId=btn.dataset.tab;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById(`${tabId}-tab`).classList.add('active');if(tabId==='tours')loadTours();if(tabId==='bookings')loadBookings();if(tabId==='ratings')loadRatings();});});
+async function loadTours(){try{const res=await fetch('/api/tours',{headers:{'Authorization':`Bearer ${token}`}});const tours=await res.json();document.getElementById('totalTours').innerText=tours.length;const container=document.getElementById('toursList');if(tours.length===0){container.innerHTML='<p>لا توجد رحلات</p>';return;}container.innerHTML=tours.map(tour=>`<div class="tour-card-admin"><div><strong>${escapeHtml(tour.title)}</strong> (${escapeHtml(tour.slug)})</div><div>السعر: ${tour.priceEgyptian||0} ج.م / ${tour.priceForeigner||0} $</div><div><button class="edit-btn" onclick="editTour('${tour.id}')"><i class="fas fa-edit"></i> تعديل</button><button class="delete-btn" onclick="deleteTour('${tour.id}')"><i class="fas fa-trash"></i> حذف</button></div></div>`).join('');}catch(e){console.error(e);}}
+async function loadBookings(){try{const res=await fetch('/api/bookings',{headers:{'Authorization':`Bearer ${token}`}});const bookings=await res.json();document.getElementById('totalBookings').innerText=bookings.length;const tbody=document.getElementById('bookingsBody');if(bookings.length===0){tbody.innerHTML='<tr><td colspan="8">لا توجد حجوزات</td></tr>';return;}tbody.innerHTML=bookings.map(b=>`<tr><td>${escapeHtml(b.name)}</td><td>${escapeHtml(b.email)}</td><td>${escapeHtml(b.phone)}</td><td>${escapeHtml(b.tourName||'')}</td><td>${b.persons||1}</td><td>${b.totalPrice||0} ${b.currency||'USD'}</td><td><span style="background:${b.paymentStatus==='completed'?'#4caf50':'#ff9800'};color:#fff;padding:2px 8px;border-radius:20px">${b.paymentStatus||'pending'}</span></td><td><button class="delete-btn" onclick="deleteBooking('${b.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');}catch(e){console.error(e);}}
+async function loadRatings(){try{const res=await fetch('/api/rankings',{headers:{'Authorization':`Bearer ${token}`}});const ratings=await res.json();const avg=ratings.length?(ratings.reduce((s,r)=>s+r.rating,0)/ratings.length).toFixed(1):0;document.getElementById('avgRating').innerText=avg;const container=document.getElementById('ratingsList');if(ratings.length===0){container.innerHTML='<p>لا توجد تقييمات</p>';return;}container.innerHTML=ratings.map(r=>`<div class="tour-card-admin"><div><strong>${escapeHtml(r.name)}</strong> (${escapeHtml(r.country)}) - ${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div><div>${escapeHtml(r.message)}</div><div><small>${new Date(r.createdAt).toLocaleDateString('ar-EG')}</small><button class="delete-btn" style="float:left" onclick="deleteRating('${r.id}')">حذف</button></div></div>`).join('');}catch(e){console.error(e);}}
+async function deleteTour(id){if(!confirm('هل أنت متأكد من حذف هذه الرحلة؟'))return;try{await fetch(`/api/tours/${id}`,{method:'DELETE',headers:{'Authorization':`Bearer ${token}`}});loadTours();}catch(e){alert('خطأ في الحذف');}}
+async function deleteBooking(id){if(!confirm('حذف الحجز؟'))return;try{await fetch(`/api/bookings/${id}`,{method:'DELETE',headers:{'Authorization':`Bearer ${token}`}});loadBookings();}catch(e){alert('خطأ');}}
+async function deleteRating(id){if(!confirm('حذف التقييم؟'))return;try{await fetch(`/api/rankings/${id}`,{method:'DELETE',headers:{'Authorization':`Bearer ${token}`}});loadRatings();}catch(e){alert('خطأ');}}
+function editTour(id){alert(`تعديل الرحلة ${id} - سيتم فتح نافذة تعديل قريباً`);}
+document.getElementById('addTourForm')?.addEventListener('submit',async(e)=>{e.preventDefault();const payload={title:document.getElementById('tourTitle').value,slug:document.getElementById('tourSlug').value,shortDescription:document.getElementById('tourShortDesc').value,fullDescription:document.getElementById('tourFullDesc').value,duration:document.getElementById('tourDuration').value,mainImage:document.getElementById('tourMainImage').value,priceEgyptian:parseInt(document.getElementById('tourPriceEgyptian').value)||0,priceForeigner:parseInt(document.getElementById('tourPriceForeigner').value)||0,itinerary:document.getElementById('tourItinerary').value,included:document.getElementById('tourIncluded').value.split(','),excluded:document.getElementById('tourExcluded').value.split(','),departureLocation:document.getElementById('tourDepartureLocation').value,departureTime:document.getElementById('tourDepartureTime').value,cancellationPolicy:document.getElementById('tourCancellationPolicy').value,createdAt:new Date().toISOString()};try{const res=await fetch('/api/tours',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify(payload)});if(res.ok){alert('✅ تم إضافة الرحلة بنجاح');e.target.reset();loadTours();}else alert('❌ حدث خطأ');}catch(err){alert('خطأ في الاتصال');}});
+document.getElementById('logoutBtn')?.addEventListener('click',()=>{localStorage.removeItem('adminToken');window.location.href='/login';});
+function escapeHtml(str){if(!str)return '';return str.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+setInterval(()=>{if(document.querySelector('.tab-btn.active').dataset.tab==='bookings')loadBookings();},10000);
+initDarkMode();checkAuth();loadTours();loadBookings();loadRatings();
+</script>
+</body>
+</html>

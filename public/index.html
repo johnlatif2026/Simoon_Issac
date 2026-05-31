@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>رحلة في مصر | اكتشف عظمة الفراعنة مع سيمون</title>
+  <link rel="icon" type="image/jpeg" href="https://i.postimg.cc/d0Pfc81d/Logo.jpg">
+  <meta name="description" content="أفضل الرحلات السياحية في مصر مع المرشدة سيمون. الأهرامات، الأقصر، الغردقة. عروض حصرية وحجز آمن.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://simoon-issac.vercel.app/">
+  <meta property="og:title" content="رحلة في مصر | عروض سياحية مميزة 2026">
+  <meta property="og:image" content="https://i.postimg.cc/d0Pfc81d/Logo.jpg">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root{--primary-gradient:linear-gradient(135deg,#D4AF37,#B8860B);--bg-gradient:linear-gradient(135deg,#faf6e9 0%,#f0e6d2 100%);--card-bg:rgba(255,255,255,0.95);--text-primary:#2c1810;--text-secondary:#5c3a2a;--border-color:rgba(212,175,55,0.3);--shadow:0 20px 40px rgba(0,0,0,0.1);--navbar-bg:rgba(44,24,16,0.97);--footer-bg:#1a0f0a}
+    body.dark-mode{--bg-gradient:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);--card-bg:rgba(30,30,50,0.95);--text-primary:#f0e6d2;--text-secondary:#d4a373;--navbar-bg:rgba(10,10,20,0.98);--footer-bg:#0a0a15}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Cairo',sans-serif;background:var(--bg-gradient);color:var(--text-primary);overflow-x:hidden;transition:all 0.3s ease}
+    ::-webkit-scrollbar{width:8px}
+    ::-webkit-scrollbar-track{background:var(--text-secondary);border-radius:10px}
+    ::-webkit-scrollbar-thumb{background:#D4AF37;border-radius:10px}
+    .navbar{position:fixed;top:0;width:100%;background:var(--navbar-bg);backdrop-filter:blur(15px);z-index:1000;padding:0.8rem 0;transition:all 0.3s;border-bottom:1px solid var(--border-color)}
+    .navbar.scrolled{padding:0.5rem 0;box-shadow:0 5px 20px rgba(0,0,0,0.2)}
+    .nav-container{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 2rem}
+    .nav-logo{display:flex;align-items:center;gap:0.8rem}
+    .logo-img{width:45px;height:45px;border-radius:50%;object-fit:cover;border:2px solid #D4AF37}
+    .logo-text{font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#D4AF37,#FFD700);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .nav-menu{display:flex;list-style:none;gap:2rem}
+    .nav-menu a{color:var(--text-primary);text-decoration:none;font-size:1rem;font-weight:500;transition:all 0.3s;position:relative}
+    .nav-menu a::after{content:'';position:absolute;bottom:-5px;left:0;width:0;height:2px;background:linear-gradient(90deg,#D4AF37,#FFD700);transition:width 0.3s}
+    .nav-menu a:hover::after,.nav-menu a.active::after{width:100%}
+    .nav-controls{display:flex;gap:1rem;align-items:center}
+    .icon-btn{background:rgba(212,175,55,0.2);border:1px solid var(--border-color);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-primary);transition:all 0.3s}
+    .icon-btn:hover{background:#D4AF37;color:#2c1810;transform:scale(1.05)}
+    .lang-btn{background:rgba(212,175,55,0.2);border:1px solid var(--border-color);border-radius:25px;padding:0.3rem 1rem;font-weight:600;cursor:pointer;color:var(--text-primary);transition:all 0.3s}
+    .lang-btn:hover{background:#D4AF37;color:#2c1810}
+    .nav-toggle{display:none;cursor:pointer}
+    .nav-toggle span{display:block;width:25px;height:3px;background:#D4AF37;margin:5px 0;transition:0.3s}
+    .hero{min-height:100vh;background:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.5)),url('https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?auto=format&fit=crop&w=1950&q=80');background-size:cover;background-position:center;background-attachment:fixed;display:flex;align-items:center;justify-content:center}
+    .hero-content{text-align:center;color:#fff;padding:2rem;animation:fadeInUp 1s ease}
+    .hero-title{font-size:4rem;margin-bottom:1rem;font-weight:800}
+    .hero-subtitle{font-size:1.2rem;margin-bottom:2rem;max-width:600px;margin-left:auto;margin-right:auto}
+    .cta-button{background:linear-gradient(135deg,#D4AF37,#FF8C00);color:#2c1810;border:none;padding:1rem 2rem;font-size:1.1rem;font-weight:700;border-radius:50px;cursor:pointer;transition:all 0.3s}
+    .cta-button:hover{transform:translateY(-3px)}
+    .container{max-width:1400px;margin:0 auto;padding:4rem 2rem}
+    .section-title{text-align:center;font-size:2.5rem;margin-bottom:3rem;position:relative;font-weight:700}
+    .section-title::after{content:'';position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:80px;height:3px;background:linear-gradient(90deg,#D4AF37,#FF8C00);border-radius:3px}
+    .tours{background:rgba(212,175,55,0.05)}
+    .tours-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:2rem}
+    .tour-card{background:var(--card-bg);border-radius:20px;overflow:hidden;box-shadow:var(--shadow);transition:all 0.3s;border:1px solid var(--border-color)}
+    .tour-card:hover{transform:translateY(-10px)}
+    .tour-image{overflow:hidden;height:250px}
+    .tour-image img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s}
+    .tour-card:hover .tour-image img{transform:scale(1.1)}
+    .tour-info{padding:1.5rem}
+    .tour-info h3{margin-bottom:0.5rem}
+    .tour-details{display:flex;justify-content:space-between;margin:1rem 0;color:var(--text-secondary);font-size:0.9rem;flex-wrap:wrap}
+    .tour-details i{color:#D4AF37}
+    .rating-summary{margin:0.5rem 0;color:#D4AF37;font-size:0.85rem}
+    .tour-actions{display:flex;gap:0.8rem;margin-top:1rem}
+    .details-btn,.book-btn{flex:1;padding:0.7rem;border-radius:50px;border:none;font-weight:700;cursor:pointer}
+    .details-btn{background:#2c1810;color:#fff}
+    .book-btn{background:linear-gradient(135deg,#D4AF37,#FF8C00);color:#2c1810}
+    .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+    .gallery-item{overflow:hidden;border-radius:15px;cursor:pointer}
+    .gallery-item img{width:100%;height:250px;object-fit:cover;transition:transform 0.5s}
+    .gallery-item:hover img{transform:scale(1.1)}
+    .contact-content{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+    .contact-info,.booking-form{background:var(--card-bg);padding:2rem;border-radius:20px;box-shadow:var(--shadow);border:1px solid var(--border-color)}
+    .contact-info a{display:flex;align-items:center;gap:0.8rem;margin:1rem 0;color:var(--text-primary);text-decoration:none}
+    .contact-info a:hover{color:#D4AF37}
+    .contact-info i{width:30px;color:#D4AF37}
+    .form-group{margin-bottom:1rem}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:0.9rem;border:2px solid var(--border-color);border-radius:10px;background:var(--card-bg);color:var(--text-primary);font-family:'Cairo',sans-serif}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#D4AF37}
+    .submit-btn{background:linear-gradient(135deg,#D4AF37,#FF8C00);color:#2c1810;border:none;padding:1rem;border-radius:10px;cursor:pointer;font-weight:700;width:100%;font-size:1rem}
+    .whatsapp-btn{position:fixed;bottom:30px;left:30px;background:#25D366;color:#fff;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;z-index:1000;text-decoration:none}
+    .modal{display:none;position:fixed;z-index:2000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(5px)}
+    .modal-content{background:var(--card-bg);margin:5% auto;padding:2rem;width:90%;max-width:500px;border-radius:20px;position:relative}
+    .close{position:absolute;top:15px;right:20px;font-size:1.8rem;cursor:pointer}
+    footer{background:var(--footer-bg);color:#fff;text-align:center;padding:2rem;margin-top:2rem}
+    .loading-spinner{text-align:center;padding:3rem;color:#D4AF37}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+    @media (max-width:768px){.nav-toggle{display:block}.nav-menu{position:fixed;right:-100%;top:70px;flex-direction:column;background:var(--navbar-bg);width:100%;text-align:center;transition:0.3s;padding:2rem 0}.nav-menu.active{right:0}.hero-title{font-size:1.8rem}.container{padding:2rem 1rem}.contact-content{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<nav class="navbar"><div class="nav-container"><div class="nav-logo"><img src="https://i.postimg.cc/d0Pfc81d/Logo.jpg" alt="Logo" class="logo-img"><span class="logo-text">رحلة في مصر</span></div><ul class="nav-menu"><li><a href="#home">الرئيسية</a></li><li><a href="#tours">الجولات</a></li><li><a href="#gallery">المعرض</a></li><li><a href="#contact">اتصل بنا</a></li></ul><div class="nav-controls"><button class="icon-btn" id="darkModeBtn"><i class="fas fa-moon"></i></button><div class="nav-toggle"><span></span><span></span><span></span></div></div></div></nav>
+<section id="home" class="hero"><div class="hero-content"><h1 class="hero-title">اكتشف جمال مصر</h1><p class="hero-subtitle">مع مرشدة سياحية محترفة، رحلة لا تُنسى في قلب التاريخ</p><button class="cta-button" onclick="scrollToSection('contact')">احجز رحلتك الآن</button></div></section>
+<section id="tours" class="tours"><div class="container"><h2 class="section-title">الجولات السياحية</h2><div id="toursContainer" class="tours-grid"><div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> جاري تحميل الرحلات...</div></div></div></section>
+<section id="gallery" class="gallery"><div class="container"><h2 class="section-title">معرض الصور</h2><div class="gallery-grid"><div class="gallery-item"><img src="https://i.postimg.cc/XJGm4g5k/1.jpg" alt="معرض 1" loading="lazy"></div><div class="gallery-item"><img src="https://i.postimg.cc/Bb2z1QNY/2.jpg" alt="معرض 2" loading="lazy"></div><div class="gallery-item"><img src="https://i.postimg.cc/jjWZ7SSk/3.jpg" alt="معرض 3" loading="lazy"></div><div class="gallery-item"><img src="https://i.postimg.cc/FK2GgXfF/4.jpg" alt="معرض 4" loading="lazy"></div></div></div></section>
+<section id="contact" class="contact"><div class="container"><h2 class="section-title">اتصل بنا</h2><div class="contact-content"><div class="contact-info"><h3>معلومات الاتصال</h3><a href="tel:01229971386"><i class="fas fa-phone"></i> 01229971386</a><a href="mailto:simoon.issac@gmail.com"><i class="fas fa-envelope"></i> simoon.issac@gmail.com</a><a href="https://wa.me/201229971386"><i class="fab fa-whatsapp"></i> واتساب</a></div><form id="contactForm" class="booking-form"><h3>أرسل رسالتك</h3><div class="form-group"><input type="text" id="contactName" placeholder="الاسم الكامل" required></div><div class="form-group"><input type="email" id="contactEmail" placeholder="البريد الإلكتروني" required></div><div class="form-group"><textarea id="contactMessage" rows="5" placeholder="رسالتك" required></textarea></div><button type="submit" class="submit-btn">إرسال الرسالة</button></form></div></div></section>
+<a href="https://wa.me/201229971386" class="whatsapp-btn" target="_blank"><i class="fab fa-whatsapp"></i></a>
+<div id="bookingModal" class="modal"><div class="modal-content"><span class="close">&times;</span><h2>تأكيد الحجز</h2><form id="modalBookingForm"><div class="form-group"><input type="text" id="modalName" placeholder="الاسم الكامل" required></div><div class="form-group"><input type="email" id="modalEmail" placeholder="البريد الإلكتروني" required></div><div class="form-group"><input type="tel" id="modalPhone" placeholder="رقم الهاتف" required></div><div class="form-group"><input type="text" id="modalTour" readonly></div><div class="form-group"><input type="hidden" id="modalTourId"></div><div class="form-group"><select id="modalNationality" required><option value="">اختر الجنسية</option><option value="egyptian">🇪🇬 مصري / عربي</option><option value="foreigner">🌍 أجنبي</option></select></div><div class="form-group"><input type="number" id="modalPersons" min="1" placeholder="عدد الأفراد" required></div><div class="form-group"><input type="date" id="modalDate" required></div><div class="form-group"><textarea id="modalMessage" rows="3" placeholder="ملاحظات إضافية"></textarea></div><button type="submit" class="submit-btn">تأكيد الحجز</button></form></div></div>
+<footer><div class="container"><p>© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة</p></div></footer>
+<script>
+const API_URL = window.location.origin;
+const navToggle = document.querySelector('.nav-toggle');
+const navMenu = document.querySelector('.nav-menu');
+if(navToggle) navToggle.addEventListener('click',()=>navMenu.classList.toggle('active'));
+document.querySelectorAll('.nav-menu a').forEach(link=>link.addEventListener('click',()=>navMenu.classList.remove('active')));
+function scrollToSection(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth'});navMenu.classList.remove('active');}
+window.addEventListener('scroll',()=>{const navbar=document.querySelector('.navbar');if(window.scrollY>50)navbar.classList.add('scrolled');else navbar.classList.remove('scrolled');});
+function initDarkMode(){const btn=document.getElementById('darkModeBtn');if(localStorage.getItem('darkMode')==='true'){document.body.classList.add('dark-mode');btn.innerHTML='<i class="fas fa-sun"></i>';}btn.addEventListener('click',()=>{document.body.classList.toggle('dark-mode');const isDark=document.body.classList.contains('dark-mode');localStorage.setItem('darkMode',isDark);btn.innerHTML=isDark?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';});}
+async function loadTours(){try{const res=await fetch('/api/tours');if(!res.ok)throw new Error();const tours=await res.json();const container=document.getElementById('toursContainer');if(!container)return;if(tours.length===0){container.innerHTML='<div style="text-align:center;padding:3rem"><p>لا توجد رحلات متاحة حالياً</p></div>';return;}container.innerHTML=tours.map(tour=>`<div class="tour-card"><div class="tour-image"><img src="${tour.mainImage||'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?w=400&h=250&fit=crop'}" loading="lazy" alt="${escapeHtml(tour.title)}"></div><div class="tour-info"><h3>${escapeHtml(tour.title)}</h3><p>${escapeHtml(tour.shortDescription||'')}</p><div class="tour-details"><span><i class="fas fa-clock"></i> ${escapeHtml(tour.duration||'يوم كامل')}</span><span><i class="fas fa-tag"></i> ${tour.priceEgyptian||0} ج.م / ${tour.priceForeigner||0} $</span></div><div class="rating-summary"><i class="fas fa-star"></i> ${tour.avgRating||0} (${tour.reviewsCount||0} تقييم)</div><div class="tour-actions"><button class="details-btn" onclick="viewTourDetails('${tour.slug}')">تفاصيل</button><button class="book-btn" onclick="openBookingModal('${escapeHtml(tour.title)}','${tour.id}')">احجز الآن</button></div></div></div>`).join('');}catch(e){console.error(e);document.getElementById('toursContainer').innerHTML='<div style="text-align:center;padding:3rem"><p>حدث خطأ في تحميل الرحلات</p></div>';}}
+function viewTourDetails(slug){window.location.href=`/tour-details.html?slug=${encodeURIComponent(slug)}`;}
+function openBookingModal(title,id){document.getElementById('modalTour').value=title;document.getElementById('modalTourId').value=id;document.getElementById('bookingModal').style.display='block';}
+document.querySelector('.close')?.addEventListener('click',()=>document.getElementById('bookingModal').style.display='none');
+window.onclick=(e)=>{if(e.target===document.getElementById('bookingModal'))document.getElementById('bookingModal').style.display='none';};
+document.getElementById('modalBookingForm')?.addEventListener('submit',async(e)=>{e.preventDefault();const tourId=document.getElementById('modalTourId').value;if(!tourId){alert('خطأ: يرجى إعادة المحاولة');return;}const payload={tourId,name:document.getElementById('modalName').value,email:document.getElementById('modalEmail').value,phone:document.getElementById('modalPhone').value,nationality:document.getElementById('modalNationality').value,persons:parseInt(document.getElementById('modalPersons').value),date:document.getElementById('modalDate').value,notes:document.getElementById('modalMessage').value};try{const res=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(res.ok){const booking=await res.json();localStorage.setItem('tempBookingId',booking.id);window.location.href='/pay.html';}else{alert('فشل إنشاء الحجز');}}catch(err){alert('خطأ في الاتصال');}});
+document.getElementById('contactForm')?.addEventListener('submit',async(e)=>{e.preventDefault();const payload={name:document.getElementById('contactName').value,email:document.getElementById('contactEmail').value,message:document.getElementById('contactMessage').value,createdAt:new Date().toISOString(),status:'unread'};try{const res=await fetch('/api/contacts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(res.ok){alert('✅ تم إرسال رسالتك بنجاح!');e.target.reset();}else alert('❌ حدث خطأ');}catch(err){alert('خطأ في الاتصال');}});
+function escapeHtml(str){if(!str)return '';return str.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+initDarkMode();loadTours();
+</script>
+</body>
+</html>

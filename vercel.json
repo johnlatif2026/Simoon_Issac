@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "server.js", "use": "@vercel/node" },
+    { "src": "public/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/server.js" },
+    { "src": "/login", "dest": "/public/login.html" },
+    { "src": "/dashboard", "dest": "/public/dashboard.html" },
+    { "src": "/pay", "dest": "/public/pay.html" },
+    { "src": "/rate", "dest": "/public/rate.html" },
+    { "src": "/tour-details", "dest": "/public/tour-details.html" },
+    { "src": "/(.*)", "dest": "/public/index.html" }
+  ]
+}

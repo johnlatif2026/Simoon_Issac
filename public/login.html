@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - لوحة التحكم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+        .login-card{background:rgba(255,255,255,0.98);border-radius:30px;padding:2.5rem;width:100%;max-width:450px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);text-align:center}
+        .logo-img{width:90px;height:90px;border-radius:50%;margin-bottom:1rem;border:3px solid #D4AF37}
+        h2{background:linear-gradient(135deg,#D4AF37,#FF8C00);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:0.5rem}
+        .input-group{position:relative;margin-bottom:1.2rem}
+        .input-group i{position:absolute;right:15px;top:50%;transform:translateY(-50%);color:#D4AF37}
+        .input-group input{width:100%;padding:1rem 3rem 1rem 1rem;border:2px solid rgba(212,175,55,0.3);border-radius:15px;font-family:'Cairo',sans-serif;font-size:1rem;transition:all 0.3s}
+        .input-group input:focus{outline:none;border-color:#D4AF37}
+        button{background:linear-gradient(135deg,#D4AF37,#FF8C00);color:#2c1810;border:none;padding:1rem;border-radius:15px;cursor:pointer;width:100%;font-weight:700;font-size:1.1rem;margin-top:0.5rem}
+        .error{background:#f44336;color:#fff;padding:0.8rem;border-radius:12px;margin-top:1rem;display:none}
+        .dark-mode-toggle{position:fixed;top:20px;right:20px;background:rgba(0,0,0,0.3);border:none;width:45px;height:45px;border-radius:50%;cursor:pointer;color:#fff;font-size:1.2rem}
+    </style>
+</head>
+<body>
+    <button class="dark-mode-toggle" id="darkModeToggle"><i class="fas fa-moon"></i></button>
+    <div class="login-card">
+        <img src="https://i.postimg.cc/d0Pfc81d/Logo.jpg" alt="Logo" class="logo-img">
+        <h2>تسجيل الدخول</h2>
+        <p>الرجاء إدخال بيانات الاعتماد</p>
+        <form id="loginForm">
+            <div class="input-group"><i class="fas fa-user"></i><input type="text" id="username" placeholder="اسم المستخدم" required></div>
+            <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="password" placeholder="كلمة المرور" required></div>
+            <button type="submit"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</button>
+            <div id="loginError" class="error"></div>
+        </form>
+    </div>
+    <script>
+        function initDarkMode(){const btn=document.getElementById('darkModeToggle');const isDark=localStorage.getItem('darkMode')==='true';if(isDark){document.body.classList.add('dark-mode');btn.innerHTML='<i class="fas fa-sun"></i>';}btn.addEventListener('click',()=>{document.body.classList.toggle('dark-mode');const isDarkNow=document.body.classList.contains('dark-mode');localStorage.setItem('darkMode',isDarkNow);btn.innerHTML=isDarkNow?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';});}
+        const token=localStorage.getItem('adminToken');if(token){fetch('/api/verify-token',{headers:{'Authorization':`Bearer ${token}`}}).then(res=>{if(res.ok)window.location.href='/dashboard';else localStorage.removeItem('adminToken');});}
+        document.getElementById('loginForm').addEventListener('submit',async(e)=>{e.preventDefault();const username=document.getElementById('username').value;const password=document.getElementById('password').value;const errorDiv=document.getElementById('loginError');try{const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});const data=await res.json();if(res.ok){localStorage.setItem('adminToken',data.token);window.location.href='/dashboard';}else{errorDiv.textContent=data.message||'خطأ في اسم المستخدم أو كلمة المرور';errorDiv.style.display='block';setTimeout(()=>errorDiv.style.display='none',3000);}}catch(err){errorDiv.textContent='حدث خطأ في الاتصال';errorDiv.style.display='block';}});
+        initDarkMode();
+    </script>
+</body>
+</html>

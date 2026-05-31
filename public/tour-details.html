@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل الرحلة | رحلة في مصر</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root{--primary:#D4AF37;--bg:#faf6e9;--card:#fff;--text:#2c1810;--text-light:#5c3a2a;--border:#e0d5c0}
+        body.dark-mode{--bg:#1a1a2e;--card:#2d2d44;--text:#f0e6d2;--text-light:#d4a373;--border:#3d3d5c}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);transition:all 0.3s}
+        .navbar{background:rgba(44,24,16,0.97);padding:0.8rem 0;position:fixed;top:0;width:100%;z-index:1000;backdrop-filter:blur(15px)}
+        .nav-container{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 2rem}
+        .logo-img{width:45px;height:45px;border-radius:50%;border:2px solid #D4AF37}
+        .logo-text{font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#D4AF37,#FFD700);-webkit-background-clip:text;background-clip:text;color:transparent}
+        .nav-menu{display:flex;list-style:none;gap:2rem}
+        .nav-menu a{color:var(--text);text-decoration:none}
+        .container{max-width:1200px;margin:0 auto;padding:2rem}
+        .tour-hero{margin-top:80px;background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),var(--bg);background-size:cover;border-radius:30px;overflow:hidden}
+        .tour-hero img{width:100%;height:400px;object-fit:cover}
+        .tour-content{display:grid;grid-template-columns:2fr 1fr;gap:2rem;margin-top:2rem}
+        .tour-info{background:var(--card);border-radius:20px;padding:1.5rem;border:1px solid var(--border)}
+        .booking-card{background:var(--card);border-radius:20px;padding:1.5rem;border:1px solid var(--border);position:sticky;top:100px}
+        .price{font-size:2rem;color:#D4AF37;font-weight:800;margin:1rem 0}
+        .form-group{margin-bottom:1rem}
+        .form-group input,.form-group select,.form-group textarea{width:100%;padding:0.8rem;border:2px solid var(--border);border-radius:10px;background:var(--card);color:var(--text)}
+        .book-btn{background:linear-gradient(135deg,#D4AF37,#FF8C00);color:#2c1810;border:none;padding:1rem;border-radius:10px;cursor:pointer;width:100%;font-weight:700;font-size:1.1rem}
+        .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1rem}
+        .gallery-grid img{width:100%;height:150px;object-fit:cover;border-radius:15px;cursor:pointer}
+        .loading{text-align:center;padding:3rem}
+        @media (max-width:768px){.tour-content{grid-template-columns:1fr}.nav-menu{display:none}}
+    </style>
+</head>
+<body>
+<nav class="navbar"><div class="nav-container"><div class="nav-logo" style="display:flex;align-items:center;gap:0.8rem"><img src="https://i.postimg.cc/d0Pfc81d/Logo.jpg" class="logo-img"><span class="logo-text">رحلة في مصر</span></div><ul class="nav-menu"><li><a href="/">الرئيسية</a></li><li><a href="/#contact">اتصل بنا</a></li></ul><button id="darkModeBtn" style="background:rgba(212,175,55,0.2);border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;color:#D4AF37"><i class="fas fa-moon"></i></button></div></nav>
+<div class="container" id="tourContainer"><div class="loading"><i class="fas fa-spinner fa-spin"></i> جاري تحميل تفاصيل الرحلة...</div></div>
+<script>
+const API_URL=window.location.origin;
+function initDarkMode(){const btn=document.getElementById('darkModeBtn');if(localStorage.getItem('darkMode')==='true'){document.body.classList.add('dark-mode');btn.innerHTML='<i class="fas fa-sun"></i>';}btn.addEventListener('click',()=>{document.body.classList.toggle('dark-mode');const isDark=document.body.classList.contains('dark-mode');localStorage.setItem('darkMode',isDark);btn.innerHTML=isDark?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';});}
+const urlParams=new URLSearchParams(window.location.search);const slug=urlParams.get('slug');if(!slug){window.location.href='/';}
+async function loadTour(){try{const res=await fetch(`/api/tours/slug/${encodeURIComponent(slug)}`);if(!res.ok)throw new Error();const tour=await res.json();displayTour(tour);}catch(e){document.getElementById('tourContainer').innerHTML='<div class="loading"><p>⚠️ لم يتم العثور على الرحلة</p><a href="/">العودة للرئيسية</a></div>';}}
+function displayTour(tour){const includedList=tour.included?tour.included.map(i=>`<li>${escapeHtml(i)}</li>`).join(''):'';const excludedList=tour.excluded?tour.excluded.map(i=>`<li>${escapeHtml(i)}</li>`).join(''):'';const html=`<div class="tour-hero"><img src="${tour.mainImage||'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?w=1200&h=400&fit=crop'}" alt="${escapeHtml(tour.title)}"></div><div class="tour-content"><div class="tour-info"><h1>${escapeHtml(tour.title)}</h1><p>${escapeHtml(tour.fullDescription||tour.shortDescription||'')}</p><h3><i class="fas fa-clock"></i> المدة: ${escapeHtml(tour.duration||'يوم كامل')}</h3><h3><i class="fas fa-map-marker-alt"></i> مكان الانطلاق: ${escapeHtml(tour.departureLocation||'القاهرة')}</h3><h3><i class="fas fa-clock"></i> وقت الانطلاق: ${escapeHtml(tour.departureTime||'8:00 صباحاً')}</h3><h3>📋 برنامج الرحلة</h3><p>${escapeHtml(tour.itinerary||'سيتم إعلامك بالبرنامج التفصيلي عند الحجز')}</p><h3>✅ المشمول</h3><ul>${includedList||'<li>سيتم إعلامك</li>'}</ul><h3>❌ غير المشمول</h3><ul>${excludedList||'<li>سيتم إعلامك</li>'}</ul><h3>📜 سياسة الإلغاء</h3><p>${escapeHtml(tour.cancellationPolicy||'يمكنك الإلغاء قبل 24 ساعة من موعد الرحلة لاسترداد المبلغ بالكامل.')}</p></div><div class="booking-card"><h2>احجز الآن</h2><div class="price">${tour.priceEgyptian||0} ج.م <span style="font-size:1rem">للمصري</span><br>${tour.priceForeigner||0} $ <span style="font-size:1rem">للأجنبي</span></div><form id="bookingForm"><input type="hidden" id="tourId" value="${tour.id}"><div class="form-group"><input type="text" id="name" placeholder="الاسم الكامل" required></div><div class="form-group"><input type="email" id="email" placeholder="البريد الإلكتروني" required></div><div class="form-group"><input type="tel" id="phone" placeholder="رقم الهاتف" required></div><div class="form-group"><select id="nationality" required><option value="">اختر الجنسية</option><option value="egyptian">🇪🇬 مصري / عربي</option><option value="foreigner">🌍 أجنبي</option></select></div><div class="form-group"><input type="number" id="persons" min="1" placeholder="عدد الأفراد" required></div><div class="form-group"><input type="date" id="date" required></div><div class="form-group"><textarea id="notes" rows="2" placeholder="ملاحظات إضافية"></textarea></div><button type="submit" class="book-btn">تأكيد الحجز</button></form></div></div>`;document.getElementById('tourContainer').innerHTML=html;attachFormHandler(tour.id);}
+function attachFormHandler(tourId){document.getElementById('bookingForm').addEventListener('submit',async(e)=>{e.preventDefault();const payload={tourId,name:document.getElementById('name').value,email:document.getElementById('email').value,phone:document.getElementById('phone').value,nationality:document.getElementById('nationality').value,persons:parseInt(document.getElementById('persons').value),date:document.getElementById('date').value,notes:document.getElementById('notes').value};try{const res=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(res.ok){const booking=await res.json();localStorage.setItem('tempBookingId',booking.id);window.location.href='/pay.html';}else{alert('فشل إنشاء الحجز');}}catch(err){alert('خطأ في الاتصال');}});}
+function escapeHtml(str){if(!str)return '';return str.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+initDarkMode();loadTour();
+</script>
+</body>
+</html>

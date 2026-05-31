@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الدفع - تأكيد الحجز</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:2rem}
+        .payment-container{max-width:600px;margin:0 auto}
+        .payment-card{background:#fff;border-radius:30px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25)}
+        .payment-header{background:linear-gradient(135deg,#2c1810,#5c2e1a);color:#D4AF37;padding:2rem;text-align:center}
+        .payment-body{padding:2rem}
+        .booking-details{background:#f8f9fa;border-radius:20px;padding:1.5rem;margin-bottom:1.5rem}
+        .detail-row{display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px dashed #ddd}
+        .total-price{font-size:2rem;font-weight:800;color:#2c1810;text-align:center;margin:1rem 0}
+        .payment-method{background:#fff3e0;border-radius:20px;padding:1.5rem;margin-bottom:1.5rem;text-align:center}
+        .payment-method h3{color:#2c1810;margin-bottom:1rem}
+        .mobile-number{background:#2c1810;color:#D4AF37;padding:1rem;border-radius:15px;font-size:1.3rem;font-family:monospace;margin:1rem 0}
+        .copy-btn{background:#D4AF37;color:#2c1810;border:none;padding:0.5rem 1.5rem;border-radius:10px;cursor:pointer;margin:0.5rem}
+        .btn-confirm{background:linear-gradient(135deg,#D4AF37,#FF8C00);color:#2c1810;border:none;padding:1rem;border-radius:15px;cursor:pointer;width:100%;font-weight:700;font-size:1.1rem;margin-top:1rem}
+        .btn-wa{background:#25D366;color:#fff;border:none;padding:1rem;border-radius:15px;cursor:pointer;width:100%;font-weight:700;margin-top:1rem;text-decoration:none;display:inline-block;text-align:center}
+        .loading{text-align:center;padding:3rem;color:#fff}
+        @media (max-width:600px){body{padding:1rem}}
+    </style>
+</head>
+<body>
+<div class="payment-container" id="paymentContainer"><div class="loading"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل بيانات الحجز...</p></div></div>
+<script>
+const bookingId=localStorage.getItem('tempBookingId');
+if(!bookingId){window.location.href='/';}
+async function loadBooking(){try{const res=await fetch(`/api/bookings/${bookingId}`);if(!res.ok)throw new Error();const booking=await res.json();displayPaymentPage(booking);}catch(e){document.getElementById('paymentContainer').innerHTML='<div class="payment-card"><div class="payment-header"><h1>خطأ</h1></div><div class="payment-body"><p>لم يتم العثور على الحجز</p><a href="/" class="btn-wa">العودة للرئيسية</a></div></div>';}}
+function displayPaymentPage(booking){const total=booking.totalPrice||0;const currency=booking.currency||'USD';const transferNumber='REF'+Date.now()+Math.floor(Math.random()*10000);const html=`<div class="payment-card"><div class="payment-header"><h1><i class="fas fa-receipt"></i> إتمام الدفع</h1></div><div class="payment-body"><div class="booking-details"><div class="detail-row"><span>الاسم:</span><span>${escapeHtml(booking.name)}</span></div><div class="detail-row"><span>الرحلة:</span><span>${escapeHtml(booking.tourName||'')}</span></div><div class="detail-row"><span>عدد الأفراد:</span><span>${booking.persons}</span></div><div class="detail-row"><span>التاريخ:</span><span>${booking.date||''}</span></div></div><div class="total-price">${total} ${currency==='EGP'?'ج.م':'$'}</div><div class="payment-method"><h3><i class="fas fa-mobile-alt"></i> الدفع عبر أورنج كاش</h3><p>رقم المحفظة:</p><div class="mobile-number" id="mobileNumber">01229971386</div><button class="copy-btn" onclick="copyNumber()"><i class="fas fa-copy"></i> نسخ</button><p><strong>اسم المستفيد:</strong> سيمون اسحاق</p><p><strong>الرقم المرجعي:</strong> <span id="refNumber">${transferNumber}</span></p><button class="copy-btn" onclick="copyRef()"><i class="fas fa-copy"></i> نسخ المرجع</button></div><a href="https://wa.me/201229971386?text=مرحباً، تم تحويل مبلغ ${total} ${currency} للحجز باسم ${escapeHtml(booking.name)} والرقم المرجعي ${transferNumber}" class="btn-wa" target="_blank"><i class="fab fa-whatsapp"></i> إرسال إيصال التحويل عبر واتساب</a><button class="btn-confirm" onclick="confirmPayment('${booking.id}','${transferNumber}')"><i class="fas fa-check"></i> تأكيد الدفع</button></div></div>`;document.getElementById('paymentContainer').innerHTML=html;}
+async function confirmPayment(bookingId,transferNumber){const btn=event.target;btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري التأكيد...';try{const res=await fetch('/api/payment/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bookingId,transferNumber})});if(res.ok){localStorage.removeItem('tempBookingId');alert('✅ تم تأكيد حجزك! سيصلك إيميل التأكيد قريباً.');window.location.href='/';}else{alert('❌ حدث خطأ، يرجى المحاولة مرة أخرى');btn.disabled=false;btn.innerHTML='<i class="fas fa-check"></i> تأكيد الدفع';}}catch(err){alert('خطأ في الاتصال');btn.disabled=false;btn.innerHTML='<i class="fas fa-check"></i> تأكيد الدفع';}}
+function copyNumber(){const text=document.getElementById('mobileNumber').innerText;navigator.clipboard.writeText(text);alert('✅ تم نسخ الرقم');}
+function copyRef(){const text=document.getElementById('refNumber').innerText;navigator.clipboard.writeText(text);alert('✅ تم نسخ الرقم المرجعي');}
+function escapeHtml(str){if(!str)return '';return str.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+loadBooking();
+</script>
+</body>
+</html>
