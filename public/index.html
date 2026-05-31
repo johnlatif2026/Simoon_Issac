@@ -1444,12 +1444,11 @@ function updateLanguage() {
   }
   
   // تحميل أولي للرحلات
-  document.addEventListener('DOMContentLoaded', loadToursFromAPI);
-  
-  // تحديث تلقائي كل دقيقتين (بدون ريفرش للصفحة)
-  setInterval(() => {
+ document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
     loadToursFromAPI();
-  }, 5000);
+  }
+});
   
   // Smooth Scroll for anchor links
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
