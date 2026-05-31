@@ -3,60 +3,12 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const admin = require('firebase-admin');
-const fs = require('fs').promises;
-const path = require('path');
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
-
-// ============= CREDENTIALS MANAGEMENT =============
-const CREDENTIALS_FILE = path.join(__dirname, 'credentials.json');
-
-// Initialize credentials.json from .env if it doesn't exist
-async function initCredentials() {
-    try {
-        // Check if credentials.json exists
-        await fs.access(CREDENTIALS_FILE);
-        console.log('✅ credentials.json found');
-    } catch (error) {
-        // File doesn't exist, create it from .env
-        console.log('📝 Creating credentials.json from .env...');
-        const initialCredentials = {
-            username: process.env.ADMIN_USERNAME,
-            password: process.env.ADMIN_PASSWORD
-        };
-        await fs.writeFile(CREDENTIALS_FILE, JSON.stringify(initialCredentials, null, 2));
-        console.log('✅ credentials.json created successfully');
-    }
-}
-
-// Read credentials from file
-async function getCredentials() {
-    try {
-        const data = await fs.readFile(CREDENTIALS_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        console.error('Error reading credentials:', error);
-        throw new Error('Failed to read credentials');
-    }
-}
-
-// Update credentials in file
-async function updateCredentials(newUsername, newPassword) {
-    try {
-        const credentials = await getCredentials();
-        if (newUsername !== undefined) credentials.username = newUsername;
-        if (newPassword !== undefined) credentials.password = newPassword;
-        await fs.writeFile(CREDENTIALS_FILE, JSON.stringify(credentials, null, 2));
-        return true;
-    } catch (error) {
-        console.error('Error updating credentials:', error);
-        throw new Error('Failed to update credentials');
-    }
-}
 
 // Initialize Firebase Admin
 let db;
@@ -112,104 +64,23 @@ const verifyToken = (req, res, next) => {
 };
 
 // ============= AUTH ENDPOINTS =============
-// Login endpoint - uses credentials.json
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   
-  try {
-    const credentials = await getCredentials();
-    
-    if (username === credentials.username && password === credentials.password) {
-      const token = jwt.sign(
-        { username, role: 'admin' },
-        process.env.JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-      res.json({ success: true, token });
-    } else {
-      res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-    }
-  } catch (error) {
-    res.status(500).json({ success: false, error: 'خطأ في الخادم' });
+  if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
+    const token = jwt.sign(
+      { username, role: 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    res.json({ success: true, token });
+  } else {
+    res.status(401).json({ success: false, error: 'Invalid credentials' });
   }
 });
 
 app.post('/api/verify-token', verifyToken, (req, res) => {
   res.json({ valid: true, user: req.user });
-});
-
-// Change Username endpoint
-app.post('/api/change-username', verifyToken, async (req, res) => {
-  const { currentUsername, currentPassword, newUsername } = req.body;
-  
-  // Validation
-  if (!currentUsername || !currentPassword || !newUsername) {
-    return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
-  }
-  
-  if (newUsername.length < 4) {
-    return res.status(400).json({ error: 'اسم المستخدم الجديد يجب أن لا يقل عن 4 أحرف' });
-  }
-  
-  try {
-    const credentials = await getCredentials();
-    
-    // Verify current credentials
-    if (currentUsername !== credentials.username || currentPassword !== credentials.password) {
-      return res.status(401).json({ error: 'اسم المستخدم الحالي أو كلمة المرور غير صحيحة' });
-    }
-    
-    // Update username
-    await updateCredentials(newUsername, null);
-    
-    // Generate new token with updated username
-    const newToken = jwt.sign(
-      { username: newUsername, role: 'admin' },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-    
-    res.json({ 
-      success: true, 
-      message: 'تم تغيير اسم المستخدم بنجاح',
-      token: newToken
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'حدث خطأ أثناء تغيير اسم المستخدم' });
-  }
-});
-
-// Change Password endpoint
-app.post('/api/change-password', verifyToken, async (req, res) => {
-  const { currentUsername, currentPassword, newPassword } = req.body;
-  
-  // Validation
-  if (!currentUsername || !currentPassword || !newPassword) {
-    return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
-  }
-  
-  if (newPassword.length < 8) {
-    return res.status(400).json({ error: 'كلمة المرور الجديدة يجب أن لا تقل عن 8 أحرف' });
-  }
-  
-  try {
-    const credentials = await getCredentials();
-    
-    // Verify current credentials
-    if (currentUsername !== credentials.username || currentPassword !== credentials.password) {
-      return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور الحالية غير صحيحة' });
-    }
-    
-    // Update password
-    await updateCredentials(null, newPassword);
-    
-    res.json({ 
-      success: true, 
-      message: 'تم تغيير كلمة المرور بنجاح'
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'حدث خطأ أثناء تغيير كلمة المرور' });
-  }
 });
 
 // ============= TOURS MANAGEMENT ENDPOINTS (CRUD) =============
@@ -255,6 +126,7 @@ app.post('/api/tours', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
     }
     
+    // فقط لو المستخدم حط رابط صورة، نخزنه. لو فاضي نخزنه كـ string فاضي
     let imageValue = '';
     if (image && image.trim() !== '' && image !== 'null' && image !== 'undefined') {
       imageValue = image;
@@ -266,7 +138,7 @@ app.post('/api/tours', verifyToken, async (req, res) => {
       days: parseInt(days),
       priceEgyptian: parseFloat(priceEgyptian),
       priceForeign: parseFloat(priceForeign),
-      image: imageValue,
+      image: imageValue,  // ← من غير صورة افتراضية خالص
       createdAt: new Date().toISOString()
     };
     
@@ -289,6 +161,7 @@ app.put('/api/tours/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     
+    // لو الصورة جاية فاضية، نخليها فاضية
     if (updates.image === '' || updates.image === null || updates.image === undefined) {
       updates.image = '';
     }
@@ -574,6 +447,9 @@ app.post('/api/confirm-payment', async (req, res) => {
     
     console.log('📝 Payment confirmation received:', { bookingId, email, name, tour, totalAmount, currency });
     
+    // Here you can update the booking status in your database if needed
+    // For now, we'll just send a confirmation email
+    
     const confirmationHtml = `
       <!DOCTYPE html>
       <html dir="rtl" lang="ar">
@@ -613,6 +489,7 @@ app.post('/api/confirm-payment', async (req, res) => {
       </html>
     `;
     
+    // Send confirmation email
     try {
       await transporter.sendMail({
         from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
@@ -623,6 +500,7 @@ app.post('/api/confirm-payment', async (req, res) => {
       console.log(`📧 Payment confirmation email sent to ${email}`);
     } catch (emailError) {
       console.log('Email error:', emailError.message);
+      // Don't fail the request if email fails
     }
     
     res.json({ success: true, message: 'تم تأكيد الدفع بنجاح' });
@@ -632,17 +510,10 @@ app.post('/api/confirm-payment', async (req, res) => {
   }
 });
 
-// Initialize credentials and start server
-async function startServer() {
-  await initCredentials();
-  
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📱 Main site: http://localhost:${PORT}/`);
-    console.log(`🔐 Login: http://localhost:${PORT}/login`);
-    console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
-  });
-}
-
-startServer();
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📱 Main site: http://localhost:${PORT}/`);
+  console.log(`🔐 Login: http://localhost:${PORT}/login`);
+  console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
+});
