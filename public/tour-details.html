@@ -692,6 +692,15 @@
                 }
             }
             
+            document.getElementById('fullName').placeholder =
+                translations[currentLang].full_name_label;
+            
+            document.getElementById('email').placeholder =
+                translations[currentLang].email_label;
+
+            document.getElementById('phone').placeholder =
+                translations[currentLang].phone_label;
+
             document.getElementById('langBtn').innerHTML = currentLang === 'ar' ? 'EN' : 'AR';
             document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
             document.documentElement.lang = currentLang;
