@@ -1,7 +1,7 @@
 {
   "name": "egypt-tourism-website",
-  "version": "2.0.0",
-  "description": "Professional tourism website with dynamic tours, booking system and admin dashboard",
+  "version": "1.0.0",
+  "description": "Professional tourism website with booking system and admin dashboard",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -18,6 +18,14 @@
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["tourism", "egypt", "booking", "admin-dashboard", "dynamic-tours"],
+  "keywords": [
+    "tourism",
+    "egypt",
+    "booking",
+    "admin-dashboard",
+    "smtp",
+    "email"
+  ],
+  "author": "",
   "license": "MIT"
 }
