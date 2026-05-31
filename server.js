@@ -126,13 +126,19 @@ app.post('/api/tours', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
     }
     
+    // فقط لو المستخدم حط رابط صورة، نخزنه. لو فاضي نخزنه كـ string فاضي
+    let imageValue = '';
+    if (image && image.trim() !== '' && image !== 'null' && image !== 'undefined') {
+      imageValue = image;
+    }
+    
     const newTour = {
       name,
       description,
       days: parseInt(days),
       priceEgyptian: parseFloat(priceEgyptian),
       priceForeign: parseFloat(priceForeign),
-      image: image && image.trim() !== '' ? image : '',  // ← تعديل: لو مفيش صورة، تخليها فارغة
+      image: imageValue,  // ← من غير صورة افتراضية خالص
       createdAt: new Date().toISOString()
     };
     
@@ -154,6 +160,11 @@ app.put('/api/tours/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
+    
+    // لو الصورة جاية فاضية، نخليها فاضية
+    if (updates.image === '' || updates.image === null || updates.image === undefined) {
+      updates.image = '';
+    }
     
     if (db) {
       await db.collection('tours').doc(id).update(updates);
