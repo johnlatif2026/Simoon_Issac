@@ -1,5 +1,3 @@
-public/tour-details.html
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -428,85 +426,100 @@ public/tour-details.html
             `;
         }
         
-        // Handle booking submission
-        const bookingForm = document.getElementById('bookingForm');
-        if (bookingForm) {
-            bookingForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const submitBtn = bookingForm.querySelector('.submit-btn');
-                const originalText = submitBtn.textContent;
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'جاري المعالجة...';
-                
-                const nationality = document.getElementById('nationality').value;
-                const persons = parseInt(document.getElementById('persons').value);
-                const tourIdVal = document.getElementById('tourId').value;
-                const tourNameVal = document.getElementById('tourName').value;
-                
-                if (!nationality) {
-                    alert('❌ الرجاء اختيار الجنسية');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
-                    return;
-                }
-                
-                // Get price from current tour or default
-                let pricePerPerson = nationality === 'egyptian' ? 2500 : 50;
-                if (currentTour) {
-                    pricePerPerson = nationality === 'egyptian' ? currentTour.priceEgyptian : currentTour.priceForeign;
-                }
-                
-                const totalPrice = pricePerPerson * persons;
-                const currency = nationality === 'egyptian' ? 'EGP' : 'USD';
-                
-                const bookingData = {
-                    tourId: tourIdVal,
-                    tourName: tourNameVal,
-                    name: document.getElementById('fullName').value,
-                    email: document.getElementById('email').value,
-                    phone: document.getElementById('phone').value,
-                    nationality: nationality,
-                    persons: persons,
-                    date: document.getElementById('tripDate').value,
-                    message: document.getElementById('message').value || '',
-                    totalPrice: totalPrice,
-                    currency: currency
-                };
-                
-                // Validation
-                if (!bookingData.name || !bookingData.email || !bookingData.phone || !bookingData.date) {
-                    alert('❌ الرجاء تعبئة جميع الحقول المطلوبة');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
-                    return;
-                }
-                
-                try {
-                    const response = await fetch('/api/bookings', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(bookingData)
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        alert(`✅ تم تأكيد حجزك بنجاح!\n\n📋 تفاصيل الحجز:\n🏝️ الرحلة: ${tourNameVal}\n👥 عدد الأفراد: ${persons}\n💰 السعر الإجمالي: ${totalPrice} ${currency === 'EGP' ? 'جنيه' : '$'}\n\nسنقوم بالتواصل معك قريباً لتأكيد التفاصيل.`);
-                        bookingForm.reset();
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    } else {
-                        alert('❌ حدث خطأ في تأكيد الحجز: ' + (result.error || 'يرجى المحاولة مرة أخرى'));
-                    }
-                } catch(error) {
-                    console.error('Booking error:', error);
-                    alert('❌ حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.');
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
-                }
-            });
+// Handle booking submission
+const bookingForm = document.getElementById('bookingForm');
+if (bookingForm) {
+    bookingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const submitBtn = bookingForm.querySelector('.submit-btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'جاري المعالجة...';
+        
+        const nationality = document.getElementById('nationality').value;
+        const persons = parseInt(document.getElementById('persons').value);
+        const tourIdVal = document.getElementById('tourId').value;
+        const tourNameVal = document.getElementById('tourName').value;
+        
+        if (!nationality) {
+            alert('❌ الرجاء اختيار الجنسية');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            return;
         }
+        
+        // Get price from current tour or default
+        let pricePerPerson = nationality === 'egyptian' ? 2500 : 50;
+        if (currentTour) {
+            pricePerPerson = nationality === 'egyptian' ? currentTour.priceEgyptian : currentTour.priceForeign;
+        }
+        
+        const totalPrice = pricePerPerson * persons;
+        const currency = nationality === 'egyptian' ? 'EGP' : 'USD';
+        
+        const bookingData = {
+            tourId: tourIdVal,
+            tourName: tourNameVal,
+            name: document.getElementById('fullName').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            nationality: nationality,
+            persons: persons,
+            date: document.getElementById('tripDate').value,
+            message: document.getElementById('message').value || '',
+            totalPrice: totalPrice,
+            currency: currency
+        };
+        
+        // Validation
+        if (!bookingData.name || !bookingData.email || !bookingData.phone || !bookingData.date) {
+            alert('❌ الرجاء تعبئة جميع الحقول المطلوبة');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                // ✅ حفظ بيانات الحجز في localStorage عشان صفحة الدفع
+                const paymentData = {
+                    bookingId: result.booking?.id || Date.now().toString(),
+                    name: bookingData.name,
+                    email: bookingData.email,
+                    phone: bookingData.phone,
+                    tour: bookingData.tourName,
+                    persons: persons,
+                    date: bookingData.date,
+                    totalPrice: totalPrice,
+                    currency: currency,
+                    nationality: nationality,
+                    transferNumber: result.booking?.transferNumber || 'TR-' + Date.now()
+                };
+                localStorage.setItem('bookingData', JSON.stringify(paymentData));
+                
+                // ✅ التوجيه لصفحة الدفع
+                window.location.href = '/pay';
+            } else {
+                alert('❌ حدث خطأ في تأكيد الحجز: ' + (result.error || 'يرجى المحاولة مرة أخرى'));
+            }
+        } catch(error) {
+            console.error('Booking error:', error);
+            alert('❌ حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
+}
         
         function escapeHtml(str) {
             if (!str) return '';
