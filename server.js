@@ -29,7 +29,7 @@ try {
   db = null;
 }
 
-// In-memory storage fallback
+// In-memory storage fallback with demo tours
 const memoryStorage = {
   tours: [
     {
@@ -113,7 +113,11 @@ app.get('/api/tours', async (req, res) => {
     if (db) {
       const snapshot = await db.collection('tours').get();
       const tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      res.json(tours);
+      if (tours.length === 0) {
+        res.json(memoryStorage.tours);
+      } else {
+        res.json(tours);
+      }
     } else {
       res.json(memoryStorage.tours);
     }
@@ -127,7 +131,11 @@ app.get('/api/tours/:id', async (req, res) => {
     const { id } = req.params;
     if (db) {
       const doc = await db.collection('tours').doc(id).get();
-      if (!doc.exists) return res.status(404).json({ error: 'Tour not found' });
+      if (!doc.exists) {
+        const tour = memoryStorage.tours.find(t => t.id === id);
+        if (tour) return res.json(tour);
+        return res.status(404).json({ error: 'Tour not found' });
+      }
       res.json({ id: doc.id, ...doc.data() });
     } else {
       const tour = memoryStorage.tours.find(t => t.id === id);
@@ -203,7 +211,7 @@ app.post('/api/bookings', async (req, res) => {
       memoryStorage.bookings.push(savedBooking);
     }
     
-    // Send beautiful email notification to customer
+    // Send email notification to customer
     try {
       const tourName = booking.tour || 'رحلة سياحية';
       const emailHtml = `
@@ -234,6 +242,8 @@ app.post('/api/bookings', async (req, res) => {
                 <div class="detail-row"><span>📞 رقم الهاتف:</span><span>${booking.phone || '-'}</span></div>
                 <div class="detail-row"><span>👥 عدد الأشخاص:</span><span>${booking.persons || '1'} شخص</span></div>
                 <div class="detail-row"><span>📅 تاريخ الرحلة:</span><span>${booking.date || '-'}</span></div>
+                <div class="detail-row"><span>💰 المبلغ:</span><span>${booking.totalAmount || 0} ${booking.currency === 'EGP' ? 'جنيه' : '$'}</span></div>
+                <div class="detail-row"><span>🔢 رقم التحويل:</span><span>${booking.transferNumber || '-'}</span></div>
               </div>
               <p style="text-align: center;"><strong>مع تحيات فريق جولات استكشافية في مصر</strong></p>
             </div>
@@ -385,6 +395,7 @@ app.post('/api/contacts', async (req, res) => {
           </html>
         `
       });
+      console.log(`📧 Contact confirmation email sent to ${contact.email}`);
     } catch (emailError) {
       console.log('Email error:', emailError.message);
     }
@@ -468,8 +479,10 @@ app.post('/api/admin/send-email', verifyToken, async (req, res) => {
       html: emailHtml
     });
     
+    console.log(`📧 Admin email sent to: ${email} - Subject: ${subject}`);
     res.json({ success: true, message: 'تم إرسال البريد بنجاح' });
   } catch (error) {
+    console.error('Email error:', error);
     res.status(500).json({ error: 'فشل إرسال البريد: ' + error.message });
   }
 });
@@ -477,9 +490,8 @@ app.post('/api/admin/send-email', verifyToken, async (req, res) => {
 // ============= CONFIRM PAYMENT ENDPOINT =============
 app.post('/api/confirm-payment', async (req, res) => {
   try {
-    const { bookingId, email, name, tour, persons, date, totalAmount, currency, transferNumber } = req.body;
+    const { email, name, tour, totalAmount, currency, transferNumber } = req.body;
     
-    // Send confirmation email
     const emailHtml = `
       <!DOCTYPE html>
       <html dir="rtl" lang="ar">
@@ -500,6 +512,8 @@ app.post('/api/confirm-payment', async (req, res) => {
             <div class="success-box">
               <h2>✅ تم تأكيد حجزك بنجاح!</h2>
               <p>شكراً لحجزك معنا. سيتم التواصل معك قريباً لتأكيد التفاصيل النهائية.</p>
+              <p><strong>رقم التحويل المرجعي:</strong> ${transferNumber}</p>
+              <p><strong>المبلغ:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه' : 'دولار'}</p>
             </div>
             <p style="text-align: center;"><strong>مع تحيات فريق جولات استكشافية في مصر</strong></p>
           </div>
@@ -516,8 +530,10 @@ app.post('/api/confirm-payment', async (req, res) => {
       html: emailHtml
     });
     
+    console.log(`📧 Payment confirmation email sent to ${email}`);
     res.json({ success: true });
   } catch (error) {
+    console.error('Confirm payment email error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -528,4 +544,5 @@ app.listen(PORT, () => {
   console.log(`📱 Main site: http://localhost:${PORT}/`);
   console.log(`🔐 Login: http://localhost:${PORT}/login`);
   console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
+  console.log(`✨ Demo tours loaded - 2 tours available`);
 });
