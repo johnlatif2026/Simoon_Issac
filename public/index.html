@@ -853,22 +853,31 @@ alert("عدد الجولات: " + tours.length);
                         <h3>${escapeHtml(tour.name)}</h3>
 const desc = tour.description || '';
 
-return `
-  <div class="tour-card reveal">
-    ...
-    <h3>${escapeHtml(tour.name)}</h3>
-    <p>${escapeHtml(desc.substring(0, 80))}${desc.length > 80 ? '...' : ''}</p>
-    ...
-  </div>
-`;
-                        <div class="tour-details">
-                            <span><i class="fas fa-dollar-sign"></i> الأجنبي: ${tour.priceForeign}$</span>
-                            <span><i class="fas fa-pound-sign"></i> المصري: ${tour.priceEgyptian} جنيه</span>
-                        </div>
-                        <a href="tour-details?id=${tour.id}" class="book-btn">احجز الآن</a>
-                    </div>
+container.innerHTML = tours.map(tour => {
+    const desc = tour.description || '';
+
+    return `
+        <div class="tour-card reveal">
+            <div class="tour-image">
+                <img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}">
+                <div class="tour-badge">${tour.days} أيام</div>
+            </div>
+
+            <div class="tour-info">
+                <h3>${escapeHtml(tour.name)}</h3>
+
+                <p>${escapeHtml(desc.substring(0, 80))}${desc.length > 80 ? '...' : ''}</p>
+
+                <div class="tour-details">
+                    <span>💲 الأجنبي: ${tour.priceForeign}$</span>
+                    <span>£ المصري: ${tour.priceEgyptian}</span>
                 </div>
-            `).join('');
+
+                <a href="tour-details?id=${tour.id}" class="book-btn">احجز الآن</a>
+            </div>
+        </div>
+    `;
+}).join('');
             
             // Re-trigger reveal animations
             document.querySelectorAll('.reveal:not(.active)').forEach(el => {
