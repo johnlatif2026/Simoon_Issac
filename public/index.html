@@ -828,11 +828,9 @@ async function loadToursFromAPI() {
     const container = document.getElementById('toursContainer');
     if (!container) return;
     
-    // 1. خليها تظهر loading الأول
     container.innerHTML = '<div style="text-align:center; width:100%;"><i class="fas fa-spinner fa-spin"></i> جاري تحميل الجولات...</div>';
     
     try {
-        // 2. جرب تجيب البيانات من API بتاعك
         const response = await fetch('/api/tours');
         
         if (!response.ok) {
@@ -841,7 +839,6 @@ async function loadToursFromAPI() {
         
         const tours = await response.json();
         
-        // 3. لو الجولات موجودة في الداتابيز، اعرضها
         if (tours && tours.length > 0) {
             container.innerHTML = tours.map(tour => `
                 <div class="tour-card reveal">
@@ -861,13 +858,11 @@ async function loadToursFromAPI() {
                 </div>
             `).join('');
         } 
-        // 4. لو مفيش جولات في الداتابيز، اعرض رسالة
         else {
             container.innerHTML = `
                 <div style="text-align:center; padding: 3rem; background: var(--card-bg); border-radius: 20px;">
                     <i class="fas fa-info-circle" style="font-size: 3rem; color: #D4AF37;"></i>
                     <p style="margin-top: 1rem;">📭 لا توجد جولات مضافة بعد</p>
-                    <p style="font-size: 0.9rem;">أضف جولات جديدة من لوحة التحكم</p>
                 </div>
             `;
         }
@@ -882,7 +877,6 @@ async function loadToursFromAPI() {
         
     } catch (error) {
         console.error('Error loading tours:', error);
-        // 5. لو في مشكلة في الاتصال بالـ API
         container.innerHTML = `
             <div style="text-align:center; padding: 3rem; background: var(--card-bg); border-radius: 20px;">
                 <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ff9800;"></i>
