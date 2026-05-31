@@ -488,7 +488,7 @@
             </ul>
             <div class="nav-controls">
                 <button class="icon-btn" id="darkModeBtn"><i class="fas fa-moon"></i></button>
-                <button class="lang-btn" id="langBtn">🇬🇧 EN</button>
+                <button class="lang-btn" id="langBtn">EN</button>
                 <div class="nav-toggle">
                     <span></span>
                     <span></span>
@@ -505,11 +505,11 @@
                 <form id="rankForm" class="rank-form">
                     <div class="form-group">
                         <label data-key="full_name">الاسم الكامل</label>
-                        <input type="text" id="rankName" placeholder="أدخل اسمك" required>
+                       <input type="text" id="rankName" data-key="name_placeholder" required>
                     </div>
                     <div class="form-group">
                         <label data-key="country">الدولة</label>
-                        <input type="text" id="rankCountry" placeholder="مثال: مصر، السعودية، إنجلترا" required>
+                        <input type="text" id="rankCountry" data-key="country_placeholder" required>
                     </div>
                     <div class="form-group">
                         <label data-key="your_rating">تقييمك</label>
@@ -591,66 +591,89 @@
         }
         
         // Language System
-        const translations = {
-            ar: {
-                logo: "رحلة في مصر",
-                nav_home: "الرئيسية",
-                nav_about: "نبذة عنا",
-                nav_tours: "الجولات",
-                nav_gallery: "المعرض",
-                nav_ratings: "التقييمات",
-                nav_contact: "اتصل بنا",
-                add_review_title: "أضف تقييمك",
-                full_name: "الاسم الكامل",
-                country: "الدولة",
-                your_rating: "تقييمك",
-                your_message: "رسالتك",
-                submit_review: "إرسال التقييم",
-                client_reviews: "آراء عملائنا",
-                all: "الكل",
-                copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة"
-            },
-            en: {
-                logo: "Journey in Egypt",
-                nav_home: "Home",
-                nav_about: "About",
-                nav_tours: "Tours",
-                nav_gallery: "Gallery",
-                nav_ratings: "Ratings",
-                nav_contact: "Contact",
-                add_review_title: "Add Your Review",
-                full_name: "Full Name",
-                country: "Country",
-                your_rating: "Your Rating",
-                your_message: "Your Message",
-                submit_review: "Submit Review",
-                client_reviews: "Client Reviews",
-                all: "All",
-                copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved"
-            }
-        };
+const translations = {
+    ar: {
+        logo: "رحلة في مصر",
+        nav_home: "الرئيسية",
+        nav_about: "نبذة عنا",
+        nav_tours: "الجولات",
+        nav_gallery: "المعرض",
+        nav_ratings: "التقييمات",
+        nav_contact: "اتصل بنا",
+        add_review_title: "✨ أضف تقييمك ✨",
+        full_name: "الاسم الكامل",
+        country: "الدولة",
+        your_rating: "تقييمك",
+        your_message: "شاركنا تجربتك مع رحلة في مصر...",
+        submit_review: "📝 إرسال التقييم",
+        client_reviews: "💬 آراء عملائنا",
+        all: "الكل",
+        copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة",
+        // إضافة المفاتيح الجديدة
+        name_placeholder: "أدخل اسمك",
+        country_placeholder: "مثال: مصر، السعودية، إنجلترا",
+        message_placeholder: "شاركنا تجربتك مع رحلة في مصر..."
+    },
+    en: {
+        logo: "Journey in Egypt",
+        nav_home: "Home",
+        nav_about: "About",
+        nav_tours: "Tours",
+        nav_gallery: "Gallery",
+        nav_ratings: "Ratings",
+        nav_contact: "Contact",
+        add_review_title: "✨ Add Your Review ✨",
+        full_name: "Full Name",
+        country: "Country",
+        your_rating: "Your Rating",
+        your_message: "Share your experience with Journey in Egypt...",
+        submit_review: "📝 Submit Review",
+        client_reviews: "💬 Client Reviews",
+        all: "All",
+        copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved",
+        // إضافة المفاتيح الجديدة
+        name_placeholder: "Enter your name",
+        country_placeholder: "Example: Egypt, Saudi Arabia, England",
+        message_placeholder: "Share your experience with Journey in Egypt..."
+    }
+};
         
         let currentLang = localStorage.getItem('language') || 'ar';
         
-        function updateLanguage() {
-            const elements = document.querySelectorAll('[data-key]');
-            elements.forEach(el => {
-                const key = el.getAttribute('data-key');
-                if (translations[currentLang][key]) {
-                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                        el.placeholder = translations[currentLang][key];
-                    } else {
-                        el.textContent = translations[currentLang][key];
-                    }
+function updateLanguage() {
+    const elements = document.querySelectorAll('[data-key]');
+    elements.forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (translations[currentLang][key]) {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.placeholder = translations[currentLang][key];
+            } else if (el.tagName === 'INPUT' && el.type === 'text') {
+                // معالجة خاصة لحقول النص العادية
+                if (el.id === 'rankName') {
+                    el.placeholder = translations[currentLang][key];
+                } else if (el.id === 'rankCountry') {
+                    el.placeholder = translations[currentLang][key];
+                } else {
+                    el.placeholder = translations[currentLang][key];
                 }
-            });
-            
-            const langBtn = document.getElementById('langBtn');
-            langBtn.innerHTML = currentLang === 'ar' ? '🇬🇧 EN' : '🇸🇦 AR';
-            document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-            document.documentElement.lang = currentLang;
-            localStorage.setItem('language', currentLang);
+            } else {
+                el.textContent = translations[currentLang][key];
+            }
         }
+    });
+    
+    // تحديث placeholder حقل الرسالة بشكل منفصل للتأكد
+    const messageField = document.getElementById('rankMessage');
+    if (messageField && translations[currentLang]['your_message']) {
+        messageField.placeholder = translations[currentLang]['your_message'];
+    }
+    
+    const langBtn = document.getElementById('langBtn');
+    langBtn.innerHTML = currentLang === 'ar' ? 'EN' : 'AR';
+    document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = currentLang;
+    localStorage.setItem('language', currentLang);
+}
         
         function initLanguage() {
             const langBtn = document.getElementById('langBtn');
