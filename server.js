@@ -10,7 +10,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Initialize Firebase Admin
 let db;
 try {
   if (process.env.FIREBASE_CONFIG) {
@@ -29,46 +28,14 @@ try {
   db = null;
 }
 
-// In-memory storage with demo tours
 const memoryStorage = {
-  tours: [
-    {
-      id: "1",
-      name: "جولة الأهرامات وأبو الهول",
-      description: "استكشف عجائب الدنيا السبع القديمة الأهرامات العظيمة وأبو الهول، مع جولة في المتحف المصري القديم.",
-      days: 3,
-      priceEgyptian: 2500,
-      priceForeign: 75,
-      image: "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: "2",
-      name: "رحلة الأقصر وأسوان",
-      description: "جولة 5 أيام في مدن الجنوب الأقصر وأسوان، زيارة معابد الكرنك، الأقصر، وادي الملوك، معبد أبو سمبل.",
-      days: 5,
-      priceEgyptian: 4500,
-      priceForeign: 150,
-      image: "https://images.unsplash.com/photo-1566740933436-9121a7c2dadd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: "3",
-      name: "رحلة الغردقة والبحر الأحمر",
-      description: "استمتع بأجمل الشواطئ والغطس في البحر الأحمر، رحلة سفاري وبحيرة الأملاح.",
-      days: 4,
-      priceEgyptian: 3500,
-      priceForeign: 120,
-      image: "https://images.unsplash.com/photo-1535739020868-a1106c8fb78a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
-      createdAt: new Date().toISOString()
-    }
-  ],
+  tours: [],
+  packages: [],
   bookings: [],
   contacts: [],
   rankings: []
 };
 
-// Email transporter
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT),
@@ -79,7 +46,6 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Middleware: Verify JWT
 const verifyToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'No token provided' });
@@ -93,7 +59,6 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// ============= AUTH ENDPOINTS =============
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   
@@ -113,15 +78,11 @@ app.post('/api/verify-token', verifyToken, (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
-// ============= TOURS MANAGEMENT ENDPOINTS =============
 app.get('/api/tours', async (req, res) => {
   try {
     if (db) {
       const snapshot = await db.collection('tours').get();
-      let tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      if (tours.length === 0) {
-        tours = memoryStorage.tours;
-      }
+      const tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       res.json(tours);
     } else {
       res.json(memoryStorage.tours);
@@ -136,11 +97,7 @@ app.get('/api/tours/:id', async (req, res) => {
     const { id } = req.params;
     if (db) {
       const doc = await db.collection('tours').doc(id).get();
-      if (!doc.exists) {
-        const tour = memoryStorage.tours.find(t => t.id === id);
-        if (tour) return res.json(tour);
-        return res.status(404).json({ error: 'Tour not found' });
-      }
+      if (!doc.exists) return res.status(404).json({ error: 'Tour not found' });
       res.json({ id: doc.id, ...doc.data() });
     } else {
       const tour = memoryStorage.tours.find(t => t.id === id);
@@ -154,7 +111,7 @@ app.get('/api/tours/:id', async (req, res) => {
 
 app.post('/api/tours', verifyToken, async (req, res) => {
   try {
-    const { name, description, days, priceEgyptian, priceForeign, image } = req.body;
+    const { name, description, days, priceEgyptian, priceForeign, image, itinerary, included, excluded } = req.body;
     
     if (!name || !description || !days || !priceEgyptian || !priceForeign) {
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
@@ -167,6 +124,9 @@ app.post('/api/tours', verifyToken, async (req, res) => {
       priceEgyptian: parseFloat(priceEgyptian),
       priceForeign: parseFloat(priceForeign),
       image: image || 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80',
+      itinerary: itinerary || '',
+      included: included || '',
+      excluded: excluded || '',
       createdAt: new Date().toISOString()
     };
     
@@ -217,72 +177,72 @@ app.delete('/api/tours/:id', verifyToken, async (req, res) => {
   }
 });
 
-// ============= BOOKINGS ENDPOINTS =============
 app.post('/api/bookings', async (req, res) => {
   try {
-    const { tourId, tourName, name, email, phone, persons, date, nationality, totalPrice, currency, message } = req.body;
+    const { tourId, tourName, name, email, phone, persons, date, nationality, totalPrice, currency, message, transferNumber, paymentMethod, paymentStatus } = req.body;
     
     const booking = { 
-      tourId: tourId || '',
+      tourId,
       tourName: tourName || 'رحلة سياحية',
       name, 
       email, 
       phone, 
       persons: parseInt(persons) || 1, 
       date,
-      nationality: nationality || 'foreign',
-      totalAmount: totalPrice || 0,
-      currency: currency || 'USD',
+      nationality,
+      totalAmount: totalPrice,
+      currency,
       message: message || '',
-      transferNumber: 'TR-' + Date.now(),
-      createdAt: new Date().toISOString(),
-      paymentStatus: 'pending'
+      transferNumber: transferNumber || 'TR-' + Date.now(),
+      paymentMethod: paymentMethod || 'pending',
+      paymentStatus: paymentStatus || 'pending',
+      createdAt: new Date().toISOString() 
     };
     
-    let savedBooking;
+    let bookingId;
     if (db) {
       const docRef = await db.collection('bookings').add(booking);
-      savedBooking = { id: docRef.id, ...booking };
+      bookingId = docRef.id;
+      booking.id = docRef.id;
     } else {
-      savedBooking = { id: Date.now().toString(), ...booking };
-      memoryStorage.bookings.push(savedBooking);
+      bookingId = Date.now().toString();
+      booking.id = bookingId;
+      memoryStorage.bookings.push(booking);
     }
     
-    // Send email notification to customer
     try {
       const emailHtml = `
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
-        <head><meta charset="UTF-8"><title>تأكيد الحجز - رحلة في مصر</title>
-        <style>
-          body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
-          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 30px; text-align: center; }
-          .header h1 { margin: 0; font-size: 28px; }
-          .content { padding: 30px; }
-          .tour-details { background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #D4AF37; }
-          .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0; }
-          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
-        </style>
+        <head>
+          <meta charset="UTF-8">
+          <title>تأكيد الحجز</title>
+          <style>
+            body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
+            .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 30px; text-align: center; }
+            .content { padding: 30px; }
+            .tour-details { background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #D4AF37; }
+            .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
+          </style>
         </head>
         <body>
           <div class="container">
-            <div class="header"><h1>🇪🇬 رحلة في مصر مع سيمون</h1><p>اكتشف جمال مصر</p></div>
+            <div class="header"><h1>🇪🇬 رحلة في مصر مع سيمون</h1></div>
             <div class="content">
-              <p>السادة العملاء الكرام،</p>
-              <p>يسعدنا تأكيد حجزكم معنا، ونشكركم لثقتكم بنا.</p>
+              <h3>🎉 تم تأكيد حجزك بنجاح!</h3>
               <div class="tour-details">
-                <div class="detail-row"><span>🏝️ اسم الرحلة:</span><span>${booking.tourName}</span></div>
-                <div class="detail-row"><span>👤 الاسم:</span><span>${booking.name || '-'}</span></div>
-                <div class="detail-row"><span>📧 البريد الإلكتروني:</span><span>${booking.email || '-'}</span></div>
-                <div class="detail-row"><span>📞 رقم الهاتف:</span><span>${booking.phone || '-'}</span></div>
-                <div class="detail-row"><span>👥 عدد الأشخاص:</span><span>${booking.persons} شخص</span></div>
-                <div class="detail-row"><span>📅 تاريخ الرحلة:</span><span>${booking.date || '-'}</span></div>
-                <div class="detail-row"><span>💰 المبلغ الإجمالي:</span><span>${booking.totalAmount} ${booking.currency === 'EGP' ? 'جنيه' : '$'}</span></div>
-                <div class="detail-row"><span>🔢 رقم الحجز:</span><span>${booking.transferNumber}</span></div>
+                <p><strong>🏝️ الرحلة:</strong> ${booking.tourName}</p>
+                <p><strong>👤 الاسم:</strong> ${name}</p>
+                <p><strong>📧 البريد:</strong> ${email}</p>
+                <p><strong>📞 الهاتف:</strong> ${phone}</p>
+                <p><strong>👥 عدد الأشخاص:</strong> ${persons}</p>
+                <p><strong>📅 التاريخ:</strong> ${date}</p>
+                <p><strong>💰 السعر الإجمالي:</strong> ${totalPrice} ${currency === 'EGP' ? 'جنيه' : '$'}</p>
+                <p><strong>🔢 رقم الحجز:</strong> ${booking.transferNumber}</p>
               </div>
               <p>سنقوم بالتواصل معكم خلال 24 ساعة لتأكيد التفاصيل النهائية.</p>
-              <p style="text-align: center;"><strong>مع تحيات فريق رحلة في مصر مع سيمون</strong></p>
+              <p>مع تحيات فريق <strong>رحلة في مصر مع سيمون</strong></p>
             </div>
             <div class="footer"><p>© 2026 رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p></div>
           </div>
@@ -291,19 +251,18 @@ app.post('/api/bookings', async (req, res) => {
       `;
       
       await transporter.sendMail({
-        from: `"رحلة في مصر مع سيمون" <${process.env.SMTP_USER}>`,
-        to: booking.email,
+        from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
+        to: email,
         subject: '🎉 تأكيد حجز رحلتك - رحلة في مصر مع سيمون',
         html: emailHtml
       });
-      console.log(`📧 Booking email sent to ${booking.email}`);
+      console.log(`📧 Booking email sent to ${email}`);
     } catch (emailError) {
       console.log('Email error:', emailError.message);
     }
     
-    res.json({ success: true, booking: savedBooking });
+    res.json({ success: true, booking, id: bookingId });
   } catch (error) {
-    console.error('Booking error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -337,7 +296,69 @@ app.delete('/api/bookings/:id', verifyToken, async (req, res) => {
   }
 });
 
-// ============= CONTACT ENDPOINTS =============
+app.post('/api/confirm-payment', async (req, res) => {
+  try {
+    const { bookingId, email, name, tour, persons, date, totalAmount, currency, transferNumber } = req.body;
+    
+    if (bookingId && db) {
+      await db.collection('bookings').doc(bookingId).update({
+        paymentStatus: 'confirmed',
+        paymentConfirmedAt: new Date().toISOString()
+      });
+    }
+    
+    const confirmationHtml = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <title>تأكيد الدفع - رحلة في مصر</title>
+        <style>
+          body { font-family: 'Cairo', sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 30px; text-align: center; }
+          .content { padding: 30px; }
+          .success-icon { font-size: 60px; color: #4caf50; text-align: center; margin-bottom: 20px; }
+          .details { background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; }
+          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>🇪🇬 رحلة في مصر مع سيمون</h1></div>
+          <div class="content">
+            <div class="success-icon">✅</div>
+            <h3 style="text-align:center;">تم تأكيد دفعة حجزك بنجاح!</h3>
+            <div class="details">
+              <p><strong>🏝️ الرحلة:</strong> ${tour}</p>
+              <p><strong>👤 الاسم:</strong> ${name}</p>
+              <p><strong>👥 عدد الأشخاص:</strong> ${persons}</p>
+              <p><strong>📅 التاريخ:</strong> ${date}</p>
+              <p><strong>💰 المبلغ المدفوع:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه' : '$'}</p>
+              <p><strong>🔢 رقم التحويل:</strong> ${transferNumber}</p>
+            </div>
+            <p>شكراً لثقتكم بنا. سيتم إرسال تفاصيل الرحلة الكاملة قريباً.</p>
+            <p>مع تحيات فريق <strong>رحلة في مصر مع سيمون</strong></p>
+          </div>
+          <div class="footer"><p>© 2026 رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p></div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    await transporter.sendMail({
+      from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: '✅ تم تأكيد دفعة حجزك - رحلة في مصر مع سيمون',
+      html: confirmationHtml
+    });
+    
+    res.json({ success: true, message: 'Payment confirmed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/contact', async (req, res) => {
   try {
     const contact = { ...req.body, createdAt: new Date().toISOString(), status: 'unread' };
@@ -352,10 +373,10 @@ app.post('/api/contact', async (req, res) => {
     
     try {
       await transporter.sendMail({
-        from: `"رحلة في مصر مع سيمون" <${process.env.SMTP_USER}>`,
+        from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
         to: contact.email,
         subject: `📧 شكراً لتواصلك مع رحلة في مصر`,
-        html: `<div style="font-family: 'Cairo', sans-serif; direction: rtl;"><h3>شكراً لتواصلك ${contact.name}</h3><p>سنقوم بالرد عليك في أقرب وقت ممكن.</p><br><p>مع تحيات فريق رحلة في مصر مع سيمون</p></div>`
+        html: `<h3>شكراً لتواصلك ${contact.name}</h3><p>سنقوم بالرد عليك في أقرب وقت ممكن.</p>`
       });
     } catch (e) { console.log('Email error:', e.message); }
     
@@ -393,7 +414,6 @@ app.delete('/api/contacts/:id', verifyToken, async (req, res) => {
   }
 });
 
-// ============= RANKINGS ENDPOINTS =============
 app.post('/api/rankings', async (req, res) => {
   try {
     const ranking = { ...req.body, createdAt: new Date().toISOString() };
@@ -438,18 +458,17 @@ app.delete('/api/rankings/:id', verifyToken, async (req, res) => {
   }
 });
 
-// ============= ADMIN SEND EMAIL ENDPOINT =============
-app.post('/api/admin/send-email', verifyToken, async (req, res) => {
+app.post('/api/send-email', verifyToken, async (req, res) => {
   try {
-    const { email, subject, message } = req.body;
+    const { to, subject, message } = req.body;
     
-    if (!email || !subject || !message) {
+    if (!to || !subject || !message) {
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
     }
     
     await transporter.sendMail({
-      from: `"رحلة في مصر مع سيمون" <${process.env.SMTP_USER}>`,
-      to: email,
+      from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
+      to: to,
       subject: subject,
       html: `<div style="font-family: 'Cairo', sans-serif; direction: rtl;"><h3>${subject}</h3><p>${message.replace(/\n/g, '<br>')}</p><br><p>مع تحيات فريق <strong>رحلة في مصر مع سيمون</strong></p></div>`
     });
@@ -460,60 +479,10 @@ app.post('/api/admin/send-email', verifyToken, async (req, res) => {
   }
 });
 
-// ============= CONFIRM PAYMENT ENDPOINT =============
-app.post('/api/confirm-payment', async (req, res) => {
-  try {
-    const { email, name, tour, totalAmount, currency, transferNumber } = req.body;
-    
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
-      <head><meta charset="UTF-8"><title>تأكيد الدفع - رحلة في مصر</title>
-      <style>
-        body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
-        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 30px; text-align: center; }
-        .content { padding: 30px; }
-        .success-box { background-color: #d4edda; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; color: #155724; }
-        .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
-      </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header"><h1>🇪🇬 رحلة في مصر مع سيمون</h1></div>
-          <div class="content">
-            <div class="success-box">
-              <h2>✅ تم تأكيد حجزك بنجاح!</h2>
-              <p>شكراً لحجزك معنا. سيتم التواصل معك قريباً لتأكيد التفاصيل النهائية.</p>
-              <p><strong>رقم الحجز المرجعي:</strong> ${transferNumber}</p>
-              <p><strong>المبلغ:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه' : 'دولار'}</p>
-            </div>
-            <p style="text-align: center;"><strong>مع تحيات فريق رحلة في مصر مع سيمون</strong></p>
-          </div>
-          <div class="footer"><p>© 2026 رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p></div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    await transporter.sendMail({
-      from: `"رحلة في مصر مع سيمون" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: '✅ تأكيد الدفع - رحلة في مصر مع سيمون',
-      html: emailHtml
-    });
-    
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📱 Main site: http://localhost:${PORT}/`);
   console.log(`🔐 Login: http://localhost:${PORT}/login`);
   console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
-  console.log(`✨ 3 demo tours loaded successfully!`);
 });
