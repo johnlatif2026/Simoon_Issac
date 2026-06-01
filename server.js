@@ -567,47 +567,60 @@ app.get('/api/tours/:id/full', async (req, res) => {
   }
 });
 
-// Sitemap endpoint
 app.get('/sitemap.xml', async (req, res) => {
   try {
+    console.log('🔍 Sitemap requested');
+    
     let tours = [];
     if (db) {
       const snapshot = await db.collection('tours').get();
       tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log(`📦 Found ${tours.length} tours in Firebase`);
     } else {
       tours = memoryStorage.tours;
+      console.log(`📦 Found ${tours.length} tours in memory`);
     }
     
+    // لو مافيش جولات، ضيف على الأقل الصفحات الأساسية
     const baseUrl = 'https://simoon-issac.vercel.app';
     const today = new Date().toISOString().split('T')[0];
     
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
     
-    // الصفحات الثابتة
-    const pages = ['/', '/rate'];
+    // الصفحات الثابتة (دائماً موجودة)
+    const pages = [
+      { url: '/', priority: '1.00' },
+      { url: '/rate', priority: '0.80' }
+    ];
+    
     for (const page of pages) {
       xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}${page}</loc>\n`;
+      xml += `    <loc>${baseUrl}${page.url}</loc>\n`;
       xml += `    <lastmod>${today}</lastmod>\n`;
-      xml += `    <priority>${page === '/' ? '1.00' : '0.80'}</priority>\n`;
+      xml += `    <priority>${page.priority}</priority>\n`;
       xml += `  </url>\n`;
     }
     
-    // إضافة صفحات الجولات الديناميكية
+    // إضافة صفحات الجولات
     for (const tour of tours) {
-      xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}/tour-details?id=${tour.id}</loc>\n`;
-      xml += `    <lastmod>${today}</lastmod>\n`;
-      xml += `    <priority>0.90</priority>\n`;
-      xml += `  </url>\n`;
+      if (tour.id) {
+        xml += `  <url>\n`;
+        xml += `    <loc>${baseUrl}/tour-details?id=${tour.id}</loc>\n`;
+        xml += `    <lastmod>${today}</lastmod>\n`;
+        xml += `    <priority>0.90</priority>\n`;
+        xml += `  </url>\n`;
+      }
     }
     
     xml += '</urlset>';
     
+    console.log(`📤 Sending sitemap with ${pages.length + tours.length} URLs`);
+    
     res.header('Content-Type', 'application/xml');
     res.send(xml);
   } catch (error) {
+    console.error('❌ Sitemap error:', error);
     res.status(500).send(error.message);
   }
 });
