@@ -6,17 +6,14 @@
       "use": "@vercel/node"
     },
     {
-      "src": "public/**",
+      "src": "public/**/*.html",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/sitemap.txt",
-      "dest": "/public/sitemap.txt",
-      "headers": {
-        "Content-Type": "text/plain"
-      }
+      "src": "/sitemap.xml",
+      "dest": "/server.js"
     },
     {
       "src": "/robots.txt",
@@ -30,24 +27,8 @@
       "dest": "/server.js"
     },
     {
-      "src": "/login",
-      "dest": "/public/login.html"
-    },
-    {
-      "src": "/dashboard",
-      "dest": "/public/dashboard.html"
-    },
-    {
-      "src": "/tour-details",
-      "dest": "/public/tour-details.html"
-    },
-    {
-      "src": "/rate",
-      "dest": "/public/rate.html"
-    },
-    {
-      "src": "/pay",
-      "dest": "/public/pay.html"
+      "src": "/(login|dashboard|tour-details|rate|pay)",
+      "dest": "/public/$1.html"
     },
     {
       "src": "/(.*)",
