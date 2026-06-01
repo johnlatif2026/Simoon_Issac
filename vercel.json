@@ -12,8 +12,18 @@
   ],
   "routes": [
     {
-      "src": "/(sitemap.xml|robots.txt)",
-      "dest": "/public/$1"
+      "src": "/sitemap.xml",
+      "headers": {
+        "Content-Type": "application/xml"
+      },
+      "dest": "/sitemap.xml"
+    },
+    {
+      "src": "/robots.txt",
+      "headers": {
+        "Content-Type": "text/plain"
+      },
+      "dest": "/robots.txt"
     },
     {
       "src": "/api/(.*)",
