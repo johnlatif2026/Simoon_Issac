@@ -6,14 +6,22 @@
       "use": "@vercel/node"
     },
     {
-      "src": "public/**",
+      "src": "public/**/*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/sitemap.xml",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/robots.txt",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/sitemap.xml",
-      "dest": "/public/sitemap.txt",
+      "dest": "/public/sitemap.xml",
       "headers": {
         "Content-Type": "application/xml"
       }
@@ -48,6 +56,10 @@
     {
       "src": "/pay",
       "dest": "/public/pay.html"
+    },
+    {
+      "src": "/(.*)\\.(html|css|js|png|jpg|jpeg|svg|ico|webp|woff2?|ttf|eot|xml|txt)",
+      "dest": "/public/$1.$2"
     },
     {
       "src": "/(.*)",
