@@ -251,7 +251,7 @@
             color: var(--text-secondary);
         }
         
-        .faq-answer.show { max-height: 200px; margin-top: 10px; }
+        .faq-answer.show { max-height: 300px; margin-top: 10px; }
         
         .gallery-grid {
             display: grid;
@@ -528,16 +528,55 @@
             faq: []
         };
         
+        // وظيفة تهيئة FAQ - سيتم استدعاؤها بعد تحميل البيانات وتحديث اللغة
         function initFaq() {
-            document.querySelectorAll('.faq-item').forEach(item => {
+            const faqItems = document.querySelectorAll('.faq-item');
+            console.log('Initializing FAQ, items found:', faqItems.length);
+            
+            // إزالة المستمعات القديمة لمنع التكرار
+            faqItems.forEach(item => {
                 const question = item.querySelector('.faq-question');
                 const answer = item.querySelector('.faq-answer');
                 if (question) {
-                    question.addEventListener('click', () => {
-                        answer.classList.toggle('show');
-                        question.classList.toggle('active');
+                    // إزالة المستمع القديم إذا وجد
+                    const newQuestion = question.cloneNode(true);
+                    if (question.parentNode) {
+                        question.parentNode.replaceChild(newQuestion, question);
+                    }
+                    // إضافة المستمع الجديد
+                    newQuestion.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const currentAnswer = this.nextElementSibling;
+                        if (currentAnswer && currentAnswer.classList.contains('faq-answer')) {
+                            currentAnswer.classList.toggle('show');
+                            this.classList.toggle('active');
+                            console.log('FAQ clicked, show class:', currentAnswer.classList.contains('show'));
+                        }
                     });
                 }
+            });
+        }
+        
+        // وظيفة لتهيئة جميع عناصر FAQ مباشرة (بديل)
+        function setupFaqDirectly() {
+            const allFaqQuestions = document.querySelectorAll('.faq-question');
+            console.log('Setting up FAQ directly, found:', allFaqQuestions.length);
+            
+            allFaqQuestions.forEach(question => {
+                // إزالة المستمعات القديمة
+                const newQuestion = question.cloneNode(true);
+                if (question.parentNode) {
+                    question.parentNode.replaceChild(newQuestion, question);
+                }
+                
+                newQuestion.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const answer = this.nextElementSibling;
+                    if (answer && answer.classList.contains('faq-answer')) {
+                        answer.classList.toggle('show');
+                        this.classList.toggle('active');
+                    }
+                });
             });
         }
         
@@ -692,15 +731,10 @@
                 }
             }
             
-            document.getElementById('fullName').placeholder =
-                translations[currentLang].full_name_label;
+            document.getElementById('fullName').placeholder = translations[currentLang].full_name_label;
+            document.getElementById('email').placeholder = translations[currentLang].email_label;
+            document.getElementById('phone').placeholder = translations[currentLang].phone_label;
             
-            document.getElementById('email').placeholder =
-                translations[currentLang].email_label;
-
-            document.getElementById('phone').placeholder =
-                translations[currentLang].phone_label;
-
             document.getElementById('langBtn').innerHTML = currentLang === 'ar' ? 'EN' : 'AR';
             document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
             document.documentElement.lang = currentLang;
@@ -711,6 +745,11 @@
                 displayInfoGrid(currentTour);
                 displayGallery(currentTour);
             }
+            
+            // إعادة تهيئة FAQ بعد تحديث اللغة
+            setTimeout(() => {
+                setupFaqDirectly();
+            }, 100);
         }
         
         function initLanguage() {
@@ -752,7 +791,11 @@
                 document.getElementById('tourPriceEgyptian').value = tour.priceEgyptian || '';
                 document.getElementById('tourPriceForeign').value = tour.priceForeign || '';
                 
-                initFaq();
+                // تهيئة FAQ بعد تحميل البيانات مباشرة
+                setTimeout(() => {
+                    setupFaqDirectly();
+                }, 50);
+                
             } catch (error) {
                 console.error('Error:', error);
                 container.innerHTML = '<div class="no-data" style="text-align:center; padding:3rem;"><i class="fas fa-exclamation-triangle"></i><p data-key="no_data_found">لا توجد بيانات</p></div>';
@@ -834,17 +877,6 @@
             } else {
                 faqList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
             }
-            
-            document.querySelectorAll('.faq-item').forEach(item => {
-                const question = item.querySelector('.faq-question');
-                const answer = item.querySelector('.faq-answer');
-                if (question) {
-                    question.addEventListener('click', () => {
-                        answer.classList.toggle('show');
-                        question.classList.toggle('active');
-                    });
-                }
-            });
         }
         
         function displayGallery(tour) {
@@ -952,6 +984,26 @@
                 return m;
             });
         }
+        
+        // مراقبة التغييرات في DOM لتهيئة FAQ تلقائياً
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    // التحقق مما إذا تم إضافة عناصر FAQ جديدة
+                    const faqQuestions = document.querySelectorAll('.faq-question');
+                    if (faqQuestions.length > 0) {
+                        setTimeout(() => {
+                            setupFaqDirectly();
+                        }, 50);
+                    }
+                }
+            });
+        });
+        
+        // بدء المراقبة بعد تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', () => {
+            observer.observe(document.body, { childList: true, subtree: true });
+        });
         
         window.addEventListener('scroll', () => {
             const navbar = document.querySelector('.navbar');
