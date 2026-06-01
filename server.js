@@ -567,6 +567,51 @@ app.get('/api/tours/:id/full', async (req, res) => {
   }
 });
 
+// Sitemap endpoint
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    let tours = [];
+    if (db) {
+      const snapshot = await db.collection('tours').get();
+      tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } else {
+      tours = memoryStorage.tours;
+    }
+    
+    const baseUrl = 'https://simoon-issac.vercel.app';
+    const today = new Date().toISOString().split('T')[0];
+    
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+    
+    // الصفحات الثابتة
+    const pages = ['/', '/rate'];
+    for (const page of pages) {
+      xml += `  <url>\n`;
+      xml += `    <loc>${baseUrl}${page}</loc>\n`;
+      xml += `    <lastmod>${today}</lastmod>\n`;
+      xml += `    <priority>${page === '/' ? '1.00' : '0.80'}</priority>\n`;
+      xml += `  </url>\n`;
+    }
+    
+    // إضافة صفحات الجولات الديناميكية
+    for (const tour of tours) {
+      xml += `  <url>\n`;
+      xml += `    <loc>${baseUrl}/tour-details?id=${tour.id}</loc>\n`;
+      xml += `    <lastmod>${today}</lastmod>\n`;
+      xml += `    <priority>0.90</priority>\n`;
+      xml += `  </url>\n`;
+    }
+    
+    xml += '</urlset>';
+    
+    res.header('Content-Type', 'application/xml');
+    res.send(xml);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
