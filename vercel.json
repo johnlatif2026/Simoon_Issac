@@ -13,17 +13,17 @@
   "routes": [
     {
       "src": "/sitemap.xml",
+      "dest": "/public/sitemap.xml",
       "headers": {
         "Content-Type": "application/xml"
-      },
-      "dest": "/public/sitemap.xml"
+      }
     },
     {
       "src": "/robots.txt",
+      "dest": "/public/robots.txt",
       "headers": {
         "Content-Type": "text/plain"
-      },
-      "dest": "/public/robots.txt"
+      }
     },
     {
       "src": "/api/(.*)",
