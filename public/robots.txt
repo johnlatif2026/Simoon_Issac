@@ -1,10 +1,12 @@
 User-agent: *
 Allow: /
+Allow: /rate
 
 Sitemap: https://simoon-issac.vercel.app/sitemap.xml
 
-# منع API فقط
 Disallow: /api/
-
-User-agent: bingbot
-Crawl-delay: 1
+Disallow: /dashboard
+Disallow: /login
+Disallow: /pay
+Disallow: /tour-details
+Disallow: /admin
