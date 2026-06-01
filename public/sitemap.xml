@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
   <url>
     <loc>https://simoon-issac.vercel.app/</loc>
     <lastmod>2026-06-01</lastmod>
-    <priority>1.00</priority>
+    <priority>1.0</priority>
   </url>
+
   <url>
     <loc>https://simoon-issac.vercel.app/rate</loc>
     <lastmod>2026-06-01</lastmod>
-    <priority>0.80</priority>
+    <priority>0.8</priority>
   </url>
-  <url>
-    <loc>https://simoon-issac.vercel.app/tour-details</loc>
-    <lastmod>2026-06-01</lastmod>
-    <priority>0.90</priority>
-  </url>
+
 </urlset>
