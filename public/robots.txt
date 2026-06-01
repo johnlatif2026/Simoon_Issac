@@ -5,15 +5,11 @@ Allow: /
 # خريطة الموقع
 Sitemap: https://simoon-issac.vercel.app/sitemap.xml
 
-# منع فهرسة الصفحات الفارغة أو غير المهمة
+# منع فهرسة الصفحات غير المهمة
 Disallow: /rate
 Disallow: /pay
 Disallow: /api/
 
-# انتظر ثانية بين الزحف لكل صفحة (للسرعة)
+# تأخير الزحف لمحركات البحث التي تدعمه (مثل Bing)
+User-agent: bingbot
 Crawl-delay: 1
-
-# لمحرك Google تحديداً
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 0.5
