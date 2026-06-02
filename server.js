@@ -51,143 +51,316 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// ============= EMAIL FUNCTIONS =============
-
-// دالة لإرسال بريد إنشاء الحساب
-async function sendAccountCreatedEmail(email, fullname, username, password) {
-  const emailHtml = `
+// ============= UNIFIED EMAIL TEMPLATE FUNCTION =============
+// دالة موحدة لإنشاء قالب البريد الإلكتروني (شكل واحد لكل الرسائل)
+function generateUnifiedEmailHTML(title, greeting, content, buttonText = null, buttonLink = null) {
+  return `
     <!DOCTYPE html>
     <html dir="rtl" lang="ar">
     <head>
       <meta charset="UTF-8">
-      <title>تم إنشاء حسابك بنجاح</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${title}</title>
       <style>
-        body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
-        .container { max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 25px; text-align: center; }
-        .content { padding: 25px; }
-        .info-box { background-color: #f8f9fa; border-radius: 12px; padding: 15px; margin: 20px 0; border-right: 4px solid #D4AF37; }
-        .footer { background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 11px; color: #999; }
-        .highlight { color: #D4AF37; font-weight: bold; }
+        body {
+          font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
+          background-color: #f0f2f5;
+          margin: 0;
+          padding: 20px;
+          direction: rtl;
+        }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #ffffff;
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        .header {
+          background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+          padding: 30px 20px;
+          text-align: center;
+          color: #2c1810;
+        }
+        .header h1 {
+          margin: 0;
+          font-size: 26px;
+          letter-spacing: 1px;
+        }
+        .header p {
+          margin: 10px 0 0;
+          font-size: 14px;
+          opacity: 0.9;
+        }
+        .content {
+          padding: 30px;
+          background: #ffffff;
+        }
+        .greeting {
+          font-size: 20px;
+          font-weight: bold;
+          color: #2c1810;
+          margin-bottom: 20px;
+          border-right: 4px solid #D4AF37;
+          padding-right: 15px;
+        }
+        .message-box {
+          background-color: #f8f9fa;
+          border-radius: 16px;
+          padding: 20px;
+          margin: 20px 0;
+          line-height: 1.7;
+          color: #333;
+        }
+        .button {
+          display: inline-block;
+          background: linear-gradient(135deg, #D4AF37, #FF8C00);
+          color: #2c1810;
+          text-decoration: none;
+          padding: 12px 30px;
+          border-radius: 30px;
+          font-weight: bold;
+          margin: 20px 0;
+          text-align: center;
+          transition: transform 0.2s;
+        }
+        .button:hover {
+          transform: scale(1.02);
+        }
+        .footer {
+          background-color: #f8f9fa;
+          padding: 20px;
+          text-align: center;
+          font-size: 12px;
+          color: #888;
+          border-top: 1px solid #eee;
+        }
+        .footer p {
+          margin: 5px 0;
+        }
+        .social-links {
+          margin-top: 10px;
+        }
+        hr {
+          border: none;
+          border-top: 1px solid #eee;
+          margin: 20px 0;
+        }
+        @media (max-width: 480px) {
+          .content {
+            padding: 20px;
+          }
+          .header h1 {
+            font-size: 22px;
+          }
+        }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <h2>🇪🇬 رحلة في مصر مع سيمون</h2>
-          <p>مرحباً بك في عائلتنا!</p>
+          <h1>🇪🇬 رحلة في مصر مع سيمون</h1>
+          <p>اكتشف جمال مصر الأصيل</p>
         </div>
         <div class="content">
-          <h3>🎉 تم إنشاء حسابك بنجاح!</h3>
-          <p>أهلاً بك <strong>${fullname}</strong>،</p>
-          <p>نحن سعداء بانضمامك إلى منصة <strong>رحلة في مصر مع سيمون</strong>. يمكنك الآن الوصول إلى لوحة التحكم وإدارة المحتوى.</p>
-          <div class="info-box">
-            <p><strong>📝 بيانات حسابك:</strong></p>
-            <p>👤 <strong>الاسم الكامل:</strong> ${fullname}</p>
-            <p>🔑 <strong>اسم المستخدم:</strong> <span class="highlight">${username}</span></p>
-            <p>🔐 <strong>كلمة المرور:</strong> <span class="highlight">${password}</span></p>
-            <p>📧 <strong>البريد الإلكتروني:</strong> ${email}</p>
+          <div class="greeting">${greeting}</div>
+          <div class="message-box">
+            ${content}
           </div>
-          <p style="color: #f44336; font-size: 12px;">⚠️ يرجى حفظ هذه البيانات في مكان آمن. نوصي بتغيير كلمة المرور بعد تسجيل الدخول الأول.</p>
-          <p>للدخول إلى لوحة التحكم، اضغط على الرابط أدناه:</p>
-          <p style="text-align: center;">
-            <a href="${process.env.SITE_URL || 'http://localhost:3000'}/login" style="background: linear-gradient(135deg, #D4AF37, #FF8C00); color: #2c1810; padding: 10px 25px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">🚀 تسجيل الدخول الآن</a>
-          </p>
+          ${buttonText && buttonLink ? `<div style="text-align: center;"><a href="${buttonLink}" class="button">${buttonText}</a></div>` : ''}
         </div>
         <div class="footer">
-          <p>© 2026 رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p>
-          <p>📍 مصر - القاهرة</p>
+          <p>© ${new Date().getFullYear()} رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p>
+          <p>📍 مصر - القاهرة | 📞 للاستفسارات: ${process.env.SUPPORT_PHONE || '01000000000'}</p>
+          <div class="social-links">
+            🌐 ${process.env.SITE_URL || 'http://localhost:3000'}
+          </div>
         </div>
       </div>
     </body>
     </html>
   `;
-  
+}
+
+// دالة موحدة لإرسال أي بريد باستخدام القالب الموحد
+async function sendUnifiedEmail(to, subject, title, greeting, content, buttonText = null, buttonLink = null) {
   try {
+    const emailHtml = generateUnifiedEmailHTML(title, greeting, content, buttonText, buttonLink);
     await transporter.sendMail({
-      from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: '🎉 ترحيباً بك - تم إنشاء حسابك بنجاح | رحلة في مصر مع سيمون',
+      from: `"رحلة في مصر مع سيمون" <${process.env.SMTP_USER}>`,
+      to: to,
+      subject: subject,
       html: emailHtml
     });
-    console.log(`📧 Account creation email sent to ${email}`);
+    console.log(`📧 Unified email sent to ${to} - Subject: ${subject}`);
     return true;
   } catch (error) {
-    console.log('Account email error:', error.message);
+    console.error('❌ Unified email error:', error.message);
     return false;
   }
 }
 
-// دالة لإرسال بريد استعادة كلمة المرور
-async function sendForgotPasswordEmail(email, fullname, username, newPassword) {
-  const emailHtml = `
-    <!DOCTYPE html>
-    <html dir="rtl" lang="ar">
-    <head>
-      <meta charset="UTF-8">
-      <title>استعادة كلمة المرور</title>
-      <style>
-        body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
-        .container { max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 25px; text-align: center; }
-        .content { padding: 25px; }
-        .info-box { background-color: #e8f5e9; border-radius: 12px; padding: 15px; margin: 20px 0; border-right: 4px solid #4caf50; }
-        .warning-box { background-color: #fff3e0; border-radius: 12px; padding: 15px; margin: 20px 0; border-right: 4px solid #ff9800; }
-        .footer { background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 11px; color: #999; }
-        .highlight { color: #D4AF37; font-weight: bold; }
-        .new-password { font-size: 24px; font-weight: bold; color: #D4AF37; font-family: monospace; background: #f0f0f0; padding: 10px; border-radius: 10px; display: inline-block; letter-spacing: 2px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h2>🇪🇬 رحلة في مصر مع سيمون</h2>
-          <p>استعادة بيانات حسابك</p>
-        </div>
-        <div class="content">
-          <h3>🔐 تم إعادة تعيين كلمة المرور</h3>
-          <p>عزيزي/عزيزتي <strong>${fullname}</strong>،</p>
-          <p>تم إنشاء كلمة مرور جديدة لحسابك بناءً على طلبك.</p>
-          <div class="info-box">
-            <p><strong>📝 بيانات حسابك الجديدة:</strong></p>
-            <p>👤 <strong>الاسم الكامل:</strong> ${fullname}</p>
-            <p>🔑 <strong>اسم المستخدم:</strong> <span class="highlight">${username}</span></p>
-            <p>🔐 <strong>كلمة المرور الجديدة:</strong></p>
-            <p style="text-align: center;"><span class="new-password">${newPassword}</span></p>
-            <p>📧 <strong>البريد الإلكتروني:</strong> ${email}</p>
-          </div>
-          <div class="warning-box">
-            <p><strong>⚠️ تنبيه هام:</strong></p>
-            <p>إذا لم تكن أنت من طلب استعادة كلمة المرور، يرجى تغيير كلمة المرور فوراً من خلال لوحة التحكم.</p>
-            <p>نوصي بتغيير كلمة المرور بعد أول تسجيل دخول.</p>
-          </div>
-          <p>للدخول إلى لوحة التحكم، اضغط على الرابط أدناه:</p>
-          <p style="text-align: center;">
-            <a href="${process.env.SITE_URL || 'http://localhost:3000'}/login" style="background: linear-gradient(135deg, #D4AF37, #FF8C00); color: #2c1810; padding: 10px 25px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">🚀 تسجيل الدخول الآن</a>
-          </p>
-          <p style="color: #999; font-size: 12px;">إذا واجهتك أي مشكلة، يرجى التواصل مع الدعم الفني.</p>
-        </div>
-        <div class="footer">
-          <p>© 2026 رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p>
-        </div>
-      </div>
-    </body>
-    </html>
+// دالة خاصة لإشعارات الأدمن (عندما يرسل زائر رسالة جديدة)
+async function sendAdminNotification(visitorName, visitorEmail, visitorPhone, message) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@egyptwithsimon.com';
+  const content = `
+    <p><strong>📩 لديك رسالة جديدة من موقع رحلة في مصر</strong></p>
+    <hr>
+    <p><strong>👤 الاسم:</strong> ${visitorName}</p>
+    <p><strong>📧 البريد الإلكتروني:</strong> <a href="mailto:${visitorEmail}">${visitorEmail}</a></p>
+    <p><strong>📞 رقم الهاتف:</strong> ${visitorPhone || 'غير مدخل'}</p>
+    <p><strong>💬 نص الرسالة:</strong></p>
+    <p style="background: #f0f0f0; padding: 15px; border-radius: 10px;">${message.replace(/\n/g, '<br>')}</p>
+    <hr>
+    <p>يمكنك الرد على هذا البريد للتواصل مع العميل مباشرة.</p>
   `;
   
-  try {
-    await transporter.sendMail({
-      from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: '🔐 إعادة تعيين كلمة المرور - رحلة في مصر مع سيمون',
-      html: emailHtml
-    });
-    console.log(`📧 Password recovery email sent to ${email}`);
-    return true;
-  } catch (error) {
-    console.log('Recovery email error:', error.message);
-    return false;
-  }
+  return await sendUnifiedEmail(
+    adminEmail,
+    '📬 رسالة جديدة من الموقع - رحلة في مصر',
+    'رسالة جديدة من العميل',
+    `السلام عليكم مدير الموقع،`,
+    content,
+    'الرد على العميل',
+    `mailto:${visitorEmail}`
+  );
+}
+
+// ============= EMAIL FUNCTIONS FOR DIFFERENT TYPES (ALL USING UNIFIED TEMPLATE) =============
+
+// دالة لإرسال بريد إنشاء الحساب
+async function sendAccountCreatedEmail(email, fullname, username, password) {
+  const content = `
+    <p>أهلاً بك في منصة <strong>رحلة في مصر مع سيمون</strong>.</p>
+    <p>تم إنشاء حسابك بنجاح، ويمكنك الآن الوصول إلى لوحة التحكم وإدارة المحتوى بكل سهولة.</p>
+    <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; margin: 15px 0;">
+      <p><strong>📝 بيانات حسابك:</strong></p>
+      <p>👤 <strong>الاسم الكامل:</strong> ${fullname}</p>
+      <p>🔑 <strong>اسم المستخدم:</strong> <span style="color: #D4AF37; font-weight: bold;">${username}</span></p>
+      <p>🔐 <strong>كلمة المرور:</strong> <span style="color: #D4AF37; font-weight: bold;">${password}</span></p>
+      <p>📧 <strong>البريد الإلكتروني:</strong> ${email}</p>
+    </div>
+    <p style="color: #f44336; font-size: 13px;">⚠️ يرجى حفظ هذه البيانات في مكان آمن. نوصي بتغيير كلمة المرور بعد تسجيل الدخول الأول.</p>
+  `;
+  
+  return await sendUnifiedEmail(
+    email,
+    '🎉 ترحيباً بك - تم إنشاء حسابك بنجاح',
+    'مرحباً بك في عائلتنا',
+    `أهلاً بك ${fullname}،`,
+    content,
+    'تسجيل الدخول الآن',
+    `${process.env.SITE_URL || 'http://localhost:3000'}/login`
+  );
+}
+
+// دالة لإرسال بريد استعادة كلمة المرور
+async function sendForgotPasswordEmail(email, fullname, username, newPassword) {
+  const content = `
+    <p>عزيزي/عزيزتي <strong>${fullname}</strong>،</p>
+    <p>تم إنشاء كلمة مرور جديدة لحسابك بناءً على طلبك.</p>
+    <div style="background: #fff3e0; padding: 15px; border-radius: 12px; margin: 15px 0;">
+      <p><strong>📝 بيانات حسابك الجديدة:</strong></p>
+      <p>👤 <strong>الاسم الكامل:</strong> ${fullname}</p>
+      <p>🔑 <strong>اسم المستخدم:</strong> <span style="color: #D4AF37; font-weight: bold;">${username}</span></p>
+      <p>🔐 <strong>كلمة المرور الجديدة:</strong></p>
+      <p style="text-align: center;"><span style="font-size: 24px; font-weight: bold; color: #D4AF37; background: #f0f0f0; padding: 10px 20px; border-radius: 10px; display: inline-block;">${newPassword}</span></p>
+    </div>
+    <div style="background: #ffebee; padding: 12px; border-radius: 10px; margin-top: 15px;">
+      <p><strong>⚠️ تنبيه هام:</strong> إذا لم تكن أنت من طلب استعادة كلمة المرور، يرجى تغيير كلمة المرور فوراً من خلال لوحة التحكم.</p>
+    </div>
+  `;
+  
+  return await sendUnifiedEmail(
+    email,
+    '🔐 إعادة تعيين كلمة المرور - رحلة في مصر',
+    'تم إعادة تعيين كلمة المرور',
+    `السلام عليكم ${fullname}،`,
+    content,
+    'تسجيل الدخول الآن',
+    `${process.env.SITE_URL || 'http://localhost:3000'}/login`
+  );
+}
+
+// دالة إرسال تأكيد الحجز (موحدة)
+async function sendBookingConfirmationEmail(booking) {
+  const { name, email, tourName, persons, date, totalAmount, currency, transferNumber } = booking;
+  
+  const content = `
+    <p>شكراً لثقتكم بنا وحجز رحلتكم مع <strong>رحلة في مصر مع سيمون</strong>.</p>
+    <p>تم استلام طلب حجزكم بنجاح، وسنقوم بالتواصل معكم خلال 24 ساعة لتأكيد التفاصيل النهائية.</p>
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin: 15px 0;">
+      <p><strong>🏝️ تفاصيل الحجز:</strong></p>
+      <p><strong>اسم الرحلة:</strong> ${tourName}</p>
+      <p><strong>👥 عدد الأشخاص:</strong> ${persons}</p>
+      <p><strong>📅 التاريخ:</strong> ${date}</p>
+      <p><strong>💰 السعر الإجمالي:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه مصري' : 'دولار أمريكي'}</p>
+      <p><strong>🔢 رقم الحجز المرجعي:</strong> ${transferNumber}</p>
+    </div>
+    <p>في حالة وجود أي استفسار، يمكنك الرد على هذا البريد أو الاتصال بنا.</p>
+  `;
+  
+  return await sendUnifiedEmail(
+    email,
+    '🎉 تأكيد حجز رحلتك - رحلة في مصر مع سيمون',
+    'تم تأكيد حجزك بنجاح',
+    `عزيزي/عزيزتي ${name}،`,
+    content,
+    'زيارة موقعنا',
+    process.env.SITE_URL || 'http://localhost:3000'
+  );
+}
+
+// دالة إرسال تأكيد الدفع (موحدة)
+async function sendPaymentConfirmationEmail(email, name, tour, persons, date, totalAmount, currency, transferNumber) {
+  const content = `
+    <div style="text-align: center; margin-bottom: 20px;">
+      <span style="font-size: 50px;">✅</span>
+    </div>
+    <p>تم تأكيد عملية الدفع الخاصة برحلتك بنجاح!</p>
+    <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; margin: 15px 0;">
+      <p><strong>🏝️ الرحلة:</strong> ${tour}</p>
+      <p><strong>👥 عدد الأشخاص:</strong> ${persons}</p>
+      <p><strong>📅 التاريخ:</strong> ${date}</p>
+      <p><strong>💰 المبلغ المدفوع:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه مصري' : 'دولار أمريكي'}</p>
+      <p><strong>🔢 رقم التحويل:</strong> ${transferNumber}</p>
+    </div>
+    <p>نشكركم على ثقتكم، وسنقوم بتجهيز كل ما يلزم لرحلتكم.</p>
+  `;
+  
+  return await sendUnifiedEmail(
+    email,
+    '✅ تأكيد الدفع - رحلة في مصر مع سيمون',
+    'تم تأكيد دفعك بنجاح',
+    `عزيزي/عزيزتي ${name}،`,
+    content,
+    'عرض تفاصيل الرحلة',
+    process.env.SITE_URL || 'http://localhost:3000'
+  );
+}
+
+// دالة الرد على رسالة التواصل (شكراً لتواصلك)
+async function sendContactThankYouEmail(email, name, message) {
+  const content = `
+    <p>شكراً لتواصلك معنا عبر موقع <strong>رحلة في مصر مع سيمون</strong>.</p>
+    <p>لقد استلمنا رسالتك التالية:</p>
+    <div style="background: #f0f0f0; padding: 15px; border-radius: 10px; margin: 15px 0;">
+      <p><em>"${message.substring(0, 200)}${message.length > 200 ? '...' : ''}"</em></p>
+    </div>
+    <p>سنقوم بالرد عليك في أقرب وقت ممكن (خلال 24 ساعة كحد أقصى).</p>
+    <p>مع جزيل الشكر،<br>فريق رحلة في مصر مع سيمون</p>
+  `;
+  
+  return await sendUnifiedEmail(
+    email,
+    '📧 شكراً لتواصلك مع رحلة في مصر',
+    'تم استلام رسالتك',
+    `السلام عليكم ${name}،`,
+    content,
+    'تصفح رحلاتنا',
+    `${process.env.SITE_URL || 'http://localhost:3000'}/tours`
+  );
 }
 
 // Middleware: Verify JWT
@@ -211,7 +384,6 @@ async function initDefaultAdmin() {
   const defaultPassword = process.env.ADMIN_PASSWORD || 'admin123';
   const defaultEmail = process.env.ADMIN_EMAIL || 'admin@egyptwithsimon.com';
   
-  // Check if admin exists in Firebase
   if (db) {
     const adminQuery = await db.collection('users').where('username', '==', defaultUsername).get();
     if (adminQuery.empty) {
@@ -227,7 +399,6 @@ async function initDefaultAdmin() {
       console.log('✅ Default admin user created in Firebase');
     }
   } else {
-    // Memory storage
     const existingAdmin = memoryUsers.find(u => u.username === defaultUsername);
     if (!existingAdmin) {
       const hashedPassword = await bcrypt.hash(defaultPassword, 10);
@@ -253,7 +424,6 @@ app.post('/api/register', async (req, res) => {
     const { fullname, username, email, password } = req.body;
     const bcrypt = require('bcryptjs');
     
-    // Validation
     if (!fullname || !username || !email || !password) {
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
     }
@@ -262,64 +432,33 @@ app.post('/api/register', async (req, res) => {
       return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 3 أحرف على الأقل' });
     }
     
-    // Check if user exists in Firebase
     if (db) {
-      const existingUser = await db.collection('users')
-        .where('username', '==', username)
-        .get();
+      const existingUser = await db.collection('users').where('username', '==', username).get();
+      if (!existingUser.empty) return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
       
-      if (!existingUser.empty) {
-        return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
-      }
-      
-      const existingEmail = await db.collection('users')
-        .where('email', '==', email)
-        .get();
-      
-      if (!existingEmail.empty) {
-        return res.status(400).json({ error: 'البريد الإلكتروني موجود بالفعل' });
-      }
+      const existingEmail = await db.collection('users').where('email', '==', email).get();
+      if (!existingEmail.empty) return res.status(400).json({ error: 'البريد الإلكتروني موجود بالفعل' });
       
       const hashedPassword = await bcrypt.hash(password, 10);
       await db.collection('users').add({
-        fullname,
-        username,
-        email,
-        password: hashedPassword,
-        role: 'admin',
-        createdAt: new Date().toISOString()
+        fullname, username, email, password: hashedPassword, role: 'admin', createdAt: new Date().toISOString()
       });
       
-      // إرسال بريد تأكيد إنشاء الحساب
       await sendAccountCreatedEmail(email, fullname, username, password);
-      
       res.json({ success: true, message: 'تم إنشاء الحساب بنجاح' });
     } else {
-      // Memory storage
       const existingUser = memoryUsers.find(u => u.username === username);
-      if (existingUser) {
-        return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
-      }
+      if (existingUser) return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
       
       const existingEmail = memoryUsers.find(u => u.email === email);
-      if (existingEmail) {
-        return res.status(400).json({ error: 'البريد الإلكتروني موجود بالفعل' });
-      }
+      if (existingEmail) return res.status(400).json({ error: 'البريد الإلكتروني موجود بالفعل' });
       
       const hashedPassword = await bcrypt.hash(password, 10);
       memoryUsers.push({
-        id: Date.now().toString(),
-        fullname,
-        username,
-        email,
-        password: hashedPassword,
-        role: 'admin',
-        createdAt: new Date().toISOString()
+        id: Date.now().toString(), fullname, username, email, password: hashedPassword, role: 'admin', createdAt: new Date().toISOString()
       });
       
-      // إرسال بريد تأكيد إنشاء الحساب
       await sendAccountCreatedEmail(email, fullname, username, password);
-      
       res.json({ success: true, message: 'تم إنشاء الحساب بنجاح' });
     }
   } catch (error) {
@@ -335,21 +474,13 @@ app.post('/api/login', async (req, res) => {
   try {
     let user = null;
     
-    // Search in Firebase
     if (db) {
-      const userQuery = await db.collection('users')
-        .where('username', '==', username)
-        .get();
-      
-      if (!userQuery.empty) {
-        user = { id: userQuery.docs[0].id, ...userQuery.docs[0].data() };
-      }
+      const userQuery = await db.collection('users').where('username', '==', username).get();
+      if (!userQuery.empty) user = { id: userQuery.docs[0].id, ...userQuery.docs[0].data() };
     } else {
-      // Search in memory
       user = memoryUsers.find(u => u.username === username);
     }
     
-    // Check password if user exists
     if (user) {
       const isValid = await bcrypt.compare(password, user.password);
       if (isValid) {
@@ -362,13 +493,8 @@ app.post('/api/login', async (req, res) => {
       }
     }
     
-    // Fallback to .env admin credentials for backward compatibility
     if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
-      const token = jwt.sign(
-        { username, role: 'admin' },
-        process.env.JWT_SECRET,
-        { expiresIn: '24h' }
-      );
+      const token = jwt.sign({ username, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '24h' });
       return res.json({ success: true, token });
     }
     
@@ -379,58 +505,35 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Forgot password endpoint
 app.post('/api/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     const bcrypt = require('bcryptjs');
     
-    if (!email) {
-      return res.status(400).json({ error: 'البريد الإلكتروني مطلوب' });
-    }
+    if (!email) return res.status(400).json({ error: 'البريد الإلكتروني مطلوب' });
     
     let user = null;
-    
-    // Search in Firebase
     if (db) {
-      const userQuery = await db.collection('users')
-        .where('email', '==', email)
-        .get();
-      
-      if (!userQuery.empty) {
-        user = { id: userQuery.docs[0].id, ...userQuery.docs[0].data() };
-      }
+      const userQuery = await db.collection('users').where('email', '==', email).get();
+      if (!userQuery.empty) user = { id: userQuery.docs[0].id, ...userQuery.docs[0].data() };
     } else {
-      // Search in memory
       user = memoryUsers.find(u => u.email === email);
     }
     
-    if (!user) {
-      return res.status(404).json({ error: 'هذا البريد الإلكتروني غير مسجل في النظام' });
-    }
+    if (!user) return res.status(404).json({ error: 'هذا البريد الإلكتروني غير مسجل في النظام' });
     
-    // إنشاء كلمة مرور عشوائية جديدة
     const newPassword = Math.random().toString(36).slice(-8);
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     
-    // تحديث كلمة المرور في قاعدة البيانات
     if (db) {
-      await db.collection('users').doc(user.id).update({
-        password: hashedNewPassword,
-        updatedAt: new Date().toISOString()
-      });
+      await db.collection('users').doc(user.id).update({ password: hashedNewPassword, updatedAt: new Date().toISOString() });
     } else {
       const userIndex = memoryUsers.findIndex(u => u.id === user.id);
-      if (userIndex !== -1) {
-        memoryUsers[userIndex].password = hashedNewPassword;
-      }
+      if (userIndex !== -1) memoryUsers[userIndex].password = hashedNewPassword;
     }
     
-    // إرسال البريد مع كلمة المرور الجديدة
     await sendForgotPasswordEmail(email, user.fullname, user.username, newPassword);
-    
     res.json({ success: true, message: 'تم إرسال كلمة المرور الجديدة إلى بريدك الإلكتروني' });
-    
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ error: error.message });
@@ -441,16 +544,11 @@ app.post('/api/verify-token', verifyToken, (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
-// Get all users (admin only)
 app.get('/api/users', verifyToken, async (req, res) => {
   try {
     if (db) {
       const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();
-      const users = snapshot.docs.map(doc => {
-        const user = doc.data();
-        delete user.password;
-        return { id: doc.id, ...user };
-      });
+      const users = snapshot.docs.map(doc => { const user = doc.data(); delete user.password; return { id: doc.id, ...user }; });
       res.json(users);
     } else {
       const users = memoryUsers.map(({ password, ...user }) => user);
@@ -461,11 +559,9 @@ app.get('/api/users', verifyToken, async (req, res) => {
   }
 });
 
-// Delete user (admin only)
 app.delete('/api/users/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    
     if (db) {
       await db.collection('users').doc(id).delete();
       res.json({ success: true });
@@ -480,8 +576,7 @@ app.delete('/api/users/:id', verifyToken, async (req, res) => {
   }
 });
 
-// ============= TOURS MANAGEMENT ENDPOINTS (CRUD) =============
-// Get all tours (public - no auth needed for viewing)
+// ============= TOURS MANAGEMENT ENDPOINTS =============
 app.get('/api/tours', async (req, res) => {
   try {
     if (db) {
@@ -496,7 +591,6 @@ app.get('/api/tours', async (req, res) => {
   }
 });
 
-// Get single tour (public - no auth needed)
 app.get('/api/tours/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -514,36 +608,21 @@ app.get('/api/tours/:id', async (req, res) => {
   }
 });
 
-// Create tour (admin only - requires JWT)
 app.post('/api/tours', verifyToken, async (req, res) => {
   try {
-    const { 
-      name, description, days, priceEgyptian, priceForeign, image,
-      itinerary, includes, excludes, faq, gallery 
-    } = req.body;
+    const { name, description, days, priceEgyptian, priceForeign, image, itinerary, includes, excludes, faq, gallery } = req.body;
     
     if (!name || !description || !days || !priceEgyptian || !priceForeign) {
       return res.status(400).json({ error: 'جميع الحقول المطلوبة' });
     }
     
-    let imageValue = '';
-    if (image && image.trim() !== '' && image !== 'null' && image !== 'undefined') {
-      imageValue = image;
-    }
+    let imageValue = (image && image.trim() !== '' && image !== 'null' && image !== 'undefined') ? image : '';
     
     const newTour = {
-      name,
-      description,
-      days: parseInt(days),
-      priceEgyptian: parseFloat(priceEgyptian),
-      priceForeign: parseFloat(priceForeign),
-      image: imageValue,
-      itinerary: itinerary || [],
-      includes: includes || [],
-      excludes: excludes || [],
-      faq: faq || [],
-      gallery: gallery || [],
-      createdAt: new Date().toISOString()
+      name, description, days: parseInt(days), priceEgyptian: parseFloat(priceEgyptian),
+      priceForeign: parseFloat(priceForeign), image: imageValue,
+      itinerary: itinerary || [], includes: includes || [], excludes: excludes || [],
+      faq: faq || [], gallery: gallery || [], createdAt: new Date().toISOString()
     };
     
     if (db) {
@@ -559,16 +638,11 @@ app.post('/api/tours', verifyToken, async (req, res) => {
   }
 });
 
-// Update tour (admin only - requires JWT)
 app.put('/api/tours/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    
-    // لو الصورة جاية فاضية، نخليها فاضية
-    if (updates.image === '' || updates.image === null || updates.image === undefined) {
-      updates.image = '';
-    }
+    if (updates.image === '' || updates.image === null || updates.image === undefined) updates.image = '';
     
     if (db) {
       await db.collection('tours').doc(id).update(updates);
@@ -584,7 +658,6 @@ app.put('/api/tours/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Delete tour (admin only - requires JWT)
 app.delete('/api/tours/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -606,18 +679,9 @@ app.post('/api/bookings', async (req, res) => {
     const { tourId, tourName, name, email, phone, persons, date, nationality, totalPrice, currency } = req.body;
     
     const booking = { 
-      tourId,
-      tourName: tourName || 'رحلة سياحية',
-      name, 
-      email, 
-      phone, 
-      persons: parseInt(persons) || 1, 
-      date,
-      nationality,
-      totalAmount: totalPrice,
-      currency,
-      transferNumber: 'TR-' + Date.now(),
-      createdAt: new Date().toISOString() 
+      tourId, tourName: tourName || 'رحلة سياحية', name, email, phone,
+      persons: parseInt(persons) || 1, date, nationality, totalAmount: totalPrice,
+      currency, transferNumber: 'TR-' + Date.now(), createdAt: new Date().toISOString() 
     };
     
     if (db) {
@@ -628,65 +692,16 @@ app.post('/api/bookings', async (req, res) => {
       memoryStorage.bookings.push(booking);
     }
     
-    // Send email notification...
-    try {
-      const emailHtml = `
-        <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
-        <head>
-          <meta charset="UTF-8">
-          <title>تأكيد الحجز</title>
-          <style>
-            body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
-            .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-            .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 30px; text-align: center; }
-            .content { padding: 30px; }
-            .tour-details { background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #D4AF37; }
-            .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header"><h1>🇪🇬 رحلة في مصر مع سيمون</h1></div>
-            <div class="content">
-              <h3>🎉 تم تأكيد حجزك بنجاح!</h3>
-              <div class="tour-details">
-                <p><strong>🏝️ الرحلة:</strong> ${booking.tourName}</p>
-                <p><strong>👤 الاسم:</strong> ${name}</p>
-                <p><strong>📧 البريد:</strong> ${email}</p>
-                <p><strong>📞 الهاتف:</strong> ${phone}</p>
-                <p><strong>👥 عدد الأشخاص:</strong> ${persons}</p>
-                <p><strong>📅 التاريخ:</strong> ${date}</p>
-                <p><strong>💰 السعر الإجمالي:</strong> ${totalPrice} ${currency === 'EGP' ? 'جنيه' : '$'}</p>
-                <p><strong>🔢 رقم الحجز:</strong> ${booking.transferNumber}</p>
-              </div>
-              <p>سنقوم بالتواصل معكم خلال 24 ساعة لتأكيد التفاصيل النهائية.</p>
-              <p>مع تحيات فريق <strong>رحلة في مصر مع سيمون</strong></p>
-            </div>
-            <div class="footer"><p>© 2026 رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p></div>
-          </div>
-        </body>
-        </html>
-      `;
-      
-      await transporter.sendMail({
-        from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-        to: email,
-        subject: '🎉 تأكيد حجز رحلتك - رحلة في مصر مع سيمون',
-        html: emailHtml
-      });
-      console.log(`📧 Booking email sent to ${email}`);
-    } catch (emailError) {
-      console.log('Email error:', emailError.message);
-    }
+    // إرسال بريد تأكيد الحجز باستخدام القالب الموحد
+    await sendBookingConfirmationEmail(booking);
     
     res.json({ success: true, booking });
   } catch (error) {
+    console.error('Booking error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get all bookings (admin only - requires JWT)
 app.get('/api/bookings', verifyToken, async (req, res) => {
   try {
     if (db) {
@@ -701,7 +716,6 @@ app.get('/api/bookings', verifyToken, async (req, res) => {
   }
 });
 
-// Delete booking (admin only - requires JWT)
 app.delete('/api/bookings/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -717,10 +731,16 @@ app.delete('/api/bookings/:id', verifyToken, async (req, res) => {
   }
 });
 
-// ============= CONTACT ENDPOINTS =============
+// ============= CONTACT ENDPOINTS (باستخدام القالب الموحد) =============
 app.post('/api/contact', async (req, res) => {
   try {
-    const contact = { ...req.body, createdAt: new Date().toISOString(), status: 'unread' };
+    const { name, email, phone, message } = req.body;
+    
+    const contact = { 
+      name, email, phone, message, 
+      createdAt: new Date().toISOString(), 
+      status: 'unread' 
+    };
     
     if (db) {
       await db.collection('contacts').add(contact);
@@ -730,22 +750,19 @@ app.post('/api/contact', async (req, res) => {
       memoryStorage.contacts.push(contact);
     }
     
-    try {
-      await transporter.sendMail({
-        from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-        to: contact.email,
-        subject: `📧 شكراً لتواصلك مع رحلة في مصر`,
-        html: `<h3>شكراً لتواصلك ${contact.name}</h3><p>سنقوم بالرد عليك في أقرب وقت ممكن.</p>`
-      });
-    } catch (e) { console.log('Email error:', e.message); }
+    // 1. إرسال بريد شكر للعميل (باستخدام القالب الموحد)
+    await sendContactThankYouEmail(email, name, message);
     
-    res.json({ success: true });
+    // 2. إرسال إشعار للأدمن عن رسالة جديدة
+    await sendAdminNotification(name, email, phone, message);
+    
+    res.json({ success: true, message: 'تم إرسال رسالتك بنجاح' });
   } catch (error) {
+    console.error('Contact error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get all contacts (admin only - requires JWT)
 app.get('/api/contacts', verifyToken, async (req, res) => {
   try {
     if (db) {
@@ -760,7 +777,6 @@ app.get('/api/contacts', verifyToken, async (req, res) => {
   }
 });
 
-// Delete contact (admin only - requires JWT)
 app.delete('/api/contacts/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -792,7 +808,6 @@ app.post('/api/rankings', async (req, res) => {
   }
 });
 
-// Get all rankings (public)
 app.get('/api/rankings', async (req, res) => {
   try {
     if (db) {
@@ -807,7 +822,6 @@ app.get('/api/rankings', async (req, res) => {
   }
 });
 
-// Delete ranking (admin only - requires JWT)
 app.delete('/api/rankings/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -822,7 +836,7 @@ app.delete('/api/rankings/:id', verifyToken, async (req, res) => {
   }
 });
 
-// ============= ADMIN SEND EMAIL ENDPOINT =============
+// ============= ADMIN SEND EMAIL ENDPOINT (باستخدام القالب الموحد) =============
 app.post('/api/send-email', verifyToken, async (req, res) => {
   try {
     const { to, subject, message } = req.body;
@@ -831,14 +845,22 @@ app.post('/api/send-email', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
     }
     
-    await transporter.sendMail({
-      from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-      to: to,
-      subject: subject,
-      html: `<div style="font-family: 'Cairo', sans-serif; direction: rtl;"><h3>${subject}</h3><p>${message.replace(/\n/g, '<br>')}</p><br><p>مع تحيات فريق <strong>رحلة في مصر مع سيمون</strong></p></div>`
-    });
+    // استخدام القالب الموحد لإرسال البريد من الأدمن
+    const success = await sendUnifiedEmail(
+      to,
+      subject,
+      'رسالة من إدارة الموقع',
+      `السلام عليكم،`,
+      `<p>${message.replace(/\n/g, '<br>')}</p>`,
+      'زيارة موقعنا',
+      process.env.SITE_URL || 'http://localhost:3000'
+    );
     
-    res.json({ success: true, message: 'تم إرسال البريد بنجاح' });
+    if (success) {
+      res.json({ success: true, message: 'تم إرسال البريد بنجاح' });
+    } else {
+      res.status(500).json({ error: 'فشل إرسال البريد' });
+    }
   } catch (error) {
     res.status(500).json({ error: 'فشل إرسال البريد: ' + error.message });
   }
@@ -851,61 +873,8 @@ app.post('/api/confirm-payment', async (req, res) => {
     
     console.log('📝 Payment confirmation received:', { bookingId, email, name, tour, totalAmount, currency });
     
-    // Here you can update the booking status in your database if needed
-    // For now, we'll just send a confirmation email
-    
-    const confirmationHtml = `
-      <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
-      <head>
-        <meta charset="UTF-8">
-        <title>تأكيد الدفع - رحلة في مصر</title>
-        <style>
-          body { font-family: 'Cairo', sans-serif; background-color: #f5f5f5; padding: 20px; direction: rtl; }
-          .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #D4AF37, #B8860B); padding: 30px; text-align: center; color: #2c1810; }
-          .content { padding: 30px; }
-          .details { background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #D4AF37; }
-          .success-icon { font-size: 60px; color: #4caf50; text-align: center; margin-bottom: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🇪🇬 رحلة في مصر مع سيمون</h1>
-          </div>
-          <div class="content">
-            <div class="success-icon">✅</div>
-            <h2 style="text-align: center; color: #2c1810;">تم تأكيد دفعك بنجاح!</h2>
-            <div class="details">
-              <p><strong>🏝️ الرحلة:</strong> ${tour}</p>
-              <p><strong>👤 الاسم:</strong> ${name}</p>
-              <p><strong>📧 البريد:</strong> ${email}</p>
-              <p><strong>👥 عدد الأشخاص:</strong> ${persons}</p>
-              <p><strong>📅 التاريخ:</strong> ${date}</p>
-              <p><strong>💰 المبلغ المدفوع:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه' : '$'}</p>
-              <p><strong>🔢 رقم التحويل:</strong> ${transferNumber}</p>
-            </div>
-            <p style="text-align: center;">شكراً لحجزكم معنا! سنقوم بالتواصل معكم قريباً لتأكيد التفاصيل النهائية.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    // Send confirmation email
-    try {
-      await transporter.sendMail({
-        from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-        to: email,
-        subject: '✅ تأكيد الدفع - رحلة في مصر مع سيمون',
-        html: confirmationHtml
-      });
-      console.log(`📧 Payment confirmation email sent to ${email}`);
-    } catch (emailError) {
-      console.log('Email error:', emailError.message);
-      // Don't fail the request if email fails
-    }
+    // إرسال بريد تأكيد الدفع باستخدام القالب الموحد
+    await sendPaymentConfirmationEmail(email, name, tour, persons, date, totalAmount, currency, transferNumber);
     
     res.json({ success: true, message: 'تم تأكيد الدفع بنجاح' });
   } catch (error) {
@@ -914,29 +883,17 @@ app.post('/api/confirm-payment', async (req, res) => {
   }
 });
 
-// ============= ADD THIS AFTER THE CONFIRM PAYMENT ENDPOINT =============
-// Update tour with full details (itinerary, includes, excludes, faq, gallery)
+// ============= FULL TOUR DETAILS ENDPOINTS =============
 app.put('/api/tours/:id/full', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { 
-      name, description, days, priceEgyptian, priceForeign, image,
-      itinerary, includes, excludes, faq, gallery 
-    } = req.body;
+    const { name, description, days, priceEgyptian, priceForeign, image, itinerary, includes, excludes, faq, gallery } = req.body;
     
     const updates = {
-      name,
-      description,
-      days: parseInt(days),
-      priceEgyptian: parseFloat(priceEgyptian),
-      priceForeign: parseFloat(priceForeign),
-      image: image || '',
-      itinerary: itinerary || [],
-      includes: includes || [],
-      excludes: excludes || [],
-      faq: faq || [],
-      gallery: gallery || [],
-      updatedAt: new Date().toISOString()
+      name, description, days: parseInt(days), priceEgyptian: parseFloat(priceEgyptian),
+      priceForeign: parseFloat(priceForeign), image: image || '',
+      itinerary: itinerary || [], includes: includes || [], excludes: excludes || [],
+      faq: faq || [], gallery: gallery || [], updatedAt: new Date().toISOString()
     };
     
     if (db) {
@@ -953,7 +910,6 @@ app.put('/api/tours/:id/full', verifyToken, async (req, res) => {
   }
 });
 
-// Get full tour details
 app.get('/api/tours/:id/full', async (req, res) => {
   try {
     const { id } = req.params;
