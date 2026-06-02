@@ -52,7 +52,6 @@ const transporter = nodemailer.createTransport({
 });
 
 // ============= UNIFIED EMAIL TEMPLATE FUNCTION =============
-// دالة موحدة لإنشاء قالب البريد الإلكتروني (شكل واحد لكل الرسائل)
 function generateUnifiedEmailHTML(title, greeting, content, buttonText = null, buttonLink = null) {
   return `
     <!DOCTYPE html>
@@ -174,7 +173,7 @@ function generateUnifiedEmailHTML(title, greeting, content, buttonText = null, b
           <p>© ${new Date().getFullYear()} رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p>
           <p>📍 مصر - القاهرة | 📞 للاستفسارات: ${process.env.SUPPORT_PHONE || '01026517329'}</p>
           <div class="social-links">
-            🌐 ${process.env.SITE_URL || 'http://simoon-issac.vercel.app'}
+            🌐 ${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}
           </div>
         </div>
       </div>
@@ -183,7 +182,6 @@ function generateUnifiedEmailHTML(title, greeting, content, buttonText = null, b
   `;
 }
 
-// دالة موحدة لإرسال أي بريد باستخدام القالب الموحد
 async function sendUnifiedEmail(to, subject, title, greeting, content, buttonText = null, buttonLink = null) {
   try {
     const emailHtml = generateUnifiedEmailHTML(title, greeting, content, buttonText, buttonLink);
@@ -201,7 +199,6 @@ async function sendUnifiedEmail(to, subject, title, greeting, content, buttonTex
   }
 }
 
-// دالة خاصة لإشعارات الأدمن (عندما يرسل زائر رسالة جديدة)
 async function sendAdminNotification(visitorName, visitorEmail, visitorPhone, message) {
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@egyptwithsimon.com';
   const content = `
@@ -227,9 +224,6 @@ async function sendAdminNotification(visitorName, visitorEmail, visitorPhone, me
   );
 }
 
-// ============= EMAIL FUNCTIONS FOR DIFFERENT TYPES (ALL USING UNIFIED TEMPLATE) =============
-
-// دالة لإرسال بريد إنشاء الحساب
 async function sendAccountCreatedEmail(email, fullname, username, password) {
   const content = `
     <p>أهلاً بك في منصة <strong>رحلة في مصر مع سيمون</strong>.</p>
@@ -255,35 +249,29 @@ async function sendAccountCreatedEmail(email, fullname, username, password) {
   );
 }
 
-// دالة لإرسال بريد استعادة كلمة المرور
-async function sendForgotPasswordEmail(email, fullname, username, newPassword) {
+async function sendForgotPasswordEmail(email, fullname, resetLink) {
   const content = `
     <p>عزيزي/عزيزتي <strong>${fullname}</strong>،</p>
-    <p>تم إنشاء كلمة مرور جديدة لحسابك بناءً على طلبك.</p>
-    <div style="background: #fff3e0; padding: 15px; border-radius: 12px; margin: 15px 0;">
-      <p><strong>📝 بيانات حسابك الجديدة:</strong></p>
-      <p>👤 <strong>الاسم الكامل:</strong> ${fullname}</p>
-      <p>🔑 <strong>اسم المستخدم:</strong> <span style="color: #D4AF37; font-weight: bold;">${username}</span></p>
-      <p>🔐 <strong>كلمة المرور الجديدة:</strong></p>
-      <p style="text-align: center;"><span style="font-size: 24px; font-weight: bold; color: #D4AF37; background: #f0f0f0; padding: 10px 20px; border-radius: 10px; display: inline-block;">${newPassword}</span></p>
+    <p>لقد تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.</p>
+    <p>لإعادة تعيين كلمة المرور، يرجى النقر على الزر أدناه:</p>
+    <div style="text-align: center; margin: 25px 0;">
+      <a href="${resetLink}" style="background: linear-gradient(135deg, #D4AF37, #FF8C00); color: #2c1810; text-decoration: none; padding: 12px 30px; border-radius: 30px; font-weight: bold; display: inline-block;">إعادة تعيين كلمة المرور</a>
     </div>
-    <div style="background: #ffebee; padding: 12px; border-radius: 10px; margin-top: 15px;">
-      <p><strong>⚠️ تنبيه هام:</strong> إذا لم تكن أنت من طلب استعادة كلمة المرور، يرجى تغيير كلمة المرور فوراً من خلال لوحة التحكم.</p>
-    </div>
+    <p>هذا الرابط صالح لمدة ساعة واحدة فقط.</p>
+    <p>إذا لم تكن أنت من طلب إعادة التعيين، يمكنك تجاهل هذا البريد.</p>
   `;
   
   return await sendUnifiedEmail(
     email,
     '🔐 إعادة تعيين كلمة المرور - رحلة في مصر',
-    'تم إعادة تعيين كلمة المرور',
+    'طلب إعادة تعيين كلمة المرور',
     `السلام عليكم ${fullname}،`,
     content,
-    'تسجيل الدخول الآن',
-    `${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/login`
+    'إعادة تعيين كلمة المرور',
+    resetLink
   );
 }
 
-// دالة إرسال تأكيد الحجز (موحدة)
 async function sendBookingConfirmationEmail(booking) {
   const { name, email, tourName, persons, date, totalAmount, currency, transferNumber } = booking;
   
@@ -312,7 +300,6 @@ async function sendBookingConfirmationEmail(booking) {
   );
 }
 
-// دالة إرسال تأكيد الدفع (موحدة)
 async function sendPaymentConfirmationEmail(email, name, tour, persons, date, totalAmount, currency, transferNumber) {
   const content = `
     <div style="text-align: center; margin-bottom: 20px;">
@@ -340,7 +327,6 @@ async function sendPaymentConfirmationEmail(email, name, tour, persons, date, to
   );
 }
 
-// دالة الرد على رسالة التواصل (شكراً لتواصلك)
 async function sendContactThankYouEmail(name, email, message) {
   const content = `
     <p>شكراً لتواصلك معنا عبر موقع <strong>رحلة في مصر مع سيمون</strong>.</p>
@@ -363,7 +349,6 @@ async function sendContactThankYouEmail(name, email, message) {
   );
 }
 
-// Middleware: Verify JWT
 const verifyToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'No token provided' });
@@ -377,7 +362,6 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// Initialize default admin user
 async function initDefaultAdmin() {
   const bcrypt = require('bcryptjs');
   const defaultUsername = process.env.ADMIN_USERNAME || 'admin';
@@ -418,7 +402,6 @@ async function initDefaultAdmin() {
 
 // ============= AUTH ENDPOINTS =============
 
-// Register new user
 app.post('/api/register', async (req, res) => {
   try {
     const { fullname, username, email, password } = req.body;
@@ -505,14 +488,15 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// Forgot password endpoint - sends reset link
 app.post('/api/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
-    const bcrypt = require('bcryptjs');
     
     if (!email) return res.status(400).json({ error: 'البريد الإلكتروني مطلوب' });
     
     let user = null;
+    
     if (db) {
       const userQuery = await db.collection('users').where('email', '==', email).get();
       if (!userQuery.empty) user = { id: userQuery.docs[0].id, ...userQuery.docs[0].data() };
@@ -522,20 +506,67 @@ app.post('/api/forgot-password', async (req, res) => {
     
     if (!user) return res.status(404).json({ error: 'هذا البريد الإلكتروني غير مسجل في النظام' });
     
-    const newPassword = Math.random().toString(36).slice(-8);
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    // Create reset token (valid for 1 hour)
+    const resetToken = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
     
-    if (db) {
-      await db.collection('users').doc(user.id).update({ password: hashedNewPassword, updatedAt: new Date().toISOString() });
-    } else {
-      const userIndex = memoryUsers.findIndex(u => u.id === user.id);
-      if (userIndex !== -1) memoryUsers[userIndex].password = hashedNewPassword;
-    }
+    const resetLink = `${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/reset-password?token=${resetToken}`;
     
-    await sendForgotPasswordEmail(email, user.fullname, user.username, newPassword);
-    res.json({ success: true, message: 'تم إرسال كلمة المرور الجديدة إلى بريدك الإلكتروني' });
+    await sendForgotPasswordEmail(email, user.fullname, resetLink);
+    
+    res.json({ success: true, message: 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني' });
+    
   } catch (error) {
     console.error('Forgot password error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reset password endpoint
+app.post('/api/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    const bcrypt = require('bcryptjs');
+    
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'الرمز وكلمة المرور الجديدة مطلوبة' });
+    }
+    
+    if (newPassword.length < 3) {
+      return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 3 أحرف على الأقل' });
+    }
+    
+    // Verify token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      return res.status(400).json({ error: 'الرمز غير صالح أو منتهي الصلاحية' });
+    }
+    
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    if (db) {
+      await db.collection('users').doc(decoded.id).update({
+        password: hashedPassword,
+        updatedAt: new Date().toISOString()
+      });
+    } else {
+      const userIndex = memoryUsers.findIndex(u => u.id === decoded.id);
+      if (userIndex !== -1) {
+        memoryUsers[userIndex].password = hashedPassword;
+      } else {
+        return res.status(404).json({ error: 'المستخدم غير موجود' });
+      }
+    }
+    
+    res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
+    
+  } catch (error) {
+    console.error('Reset password error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -692,7 +723,6 @@ app.post('/api/bookings', async (req, res) => {
       memoryStorage.bookings.push(booking);
     }
     
-    // إرسال بريد تأكيد الحجز باستخدام القالب الموحد
     await sendBookingConfirmationEmail(booking);
     
     res.json({ success: true, booking });
@@ -731,26 +761,20 @@ app.delete('/api/bookings/:id', verifyToken, async (req, res) => {
   }
 });
 
-// ============= CONTACT ENDPOINTS (باستخدام القالب الموحد) =============
+// ============= CONTACT ENDPOINTS =============
 app.post('/api/contact', async (req, res) => {
   try {
     const { name, email, phone, message } = req.body;
     
-    // التحقق من البيانات
     if (!name || !email || !message) {
       return res.status(400).json({ error: 'الاسم والبريد الإلكتروني والرسالة مطلوبة' });
     }
     
     const contact = { 
-      name, 
-      email, 
-      phone: phone || '', 
-      message, 
-      createdAt: new Date().toISOString(), 
-      status: 'unread' 
+      name, email, phone: phone || '', message, 
+      createdAt: new Date().toISOString(), status: 'unread' 
     };
     
-    // حفظ في قاعدة البيانات
     if (db) {
       await db.collection('contacts').add(contact);
     } else {
@@ -759,10 +783,7 @@ app.post('/api/contact', async (req, res) => {
       memoryStorage.contacts.push(contact);
     }
     
-    // 1. إرسال بريد شكر للعميل (باستخدام القالب الموحد)
     await sendContactThankYouEmail(name, email, message);
-    
-    // 2. إرسال إشعار للأدمن عن رسالة جديدة (باستخدام القالب الموحد)
     await sendAdminNotification(name, email, phone, message);
     
     res.json({ success: true, message: 'تم إرسال رسالتك بنجاح' });
@@ -772,7 +793,6 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-// Get all contacts (admin only - requires JWT)
 app.get('/api/contacts', verifyToken, async (req, res) => {
   try {
     if (db) {
@@ -787,7 +807,6 @@ app.get('/api/contacts', verifyToken, async (req, res) => {
   }
 });
 
-// Delete contact (admin only - requires JWT)
 app.delete('/api/contacts/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -847,7 +866,7 @@ app.delete('/api/rankings/:id', verifyToken, async (req, res) => {
   }
 });
 
-// ============= ADMIN SEND EMAIL ENDPOINT (باستخدام القالب الموحد) =============
+// ============= ADMIN SEND EMAIL ENDPOINT =============
 app.post('/api/send-email', verifyToken, async (req, res) => {
   try {
     const { to, subject, message } = req.body;
@@ -856,7 +875,6 @@ app.post('/api/send-email', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
     }
     
-    // استخدام القالب الموحد لإرسال البريد من الأدمن
     const success = await sendUnifiedEmail(
       to,
       subject,
@@ -884,7 +902,6 @@ app.post('/api/confirm-payment', async (req, res) => {
     
     console.log('📝 Payment confirmation received:', { bookingId, email, name, tour, totalAmount, currency });
     
-    // إرسال بريد تأكيد الدفع باستخدام القالب الموحد
     await sendPaymentConfirmationEmail(email, name, tour, persons, date, totalAmount, currency, transferNumber);
     
     res.json({ success: true, message: 'تم تأكيد الدفع بنجاح' });
