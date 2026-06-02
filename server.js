@@ -172,9 +172,9 @@ function generateUnifiedEmailHTML(title, greeting, content, buttonText = null, b
         </div>
         <div class="footer">
           <p>© ${new Date().getFullYear()} رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p>
-          <p>📍 مصر - القاهرة | 📞 للاستفسارات: ${process.env.SUPPORT_PHONE || '01000000000'}</p>
+          <p>📍 مصر - القاهرة | 📞 للاستفسارات: ${process.env.SUPPORT_PHONE || '01026517329'}</p>
           <div class="social-links">
-            🌐 ${process.env.SITE_URL || 'http://localhost:3000'}
+            🌐 ${process.env.SITE_URL || 'http://simoon-issac.vercel.app'}
           </div>
         </div>
       </div>
@@ -220,7 +220,7 @@ async function sendAdminNotification(visitorName, visitorEmail, visitorPhone, me
     adminEmail,
     '📬 رسالة جديدة من الموقع - رحلة في مصر',
     'رسالة جديدة من العميل',
-    `السلام عليكم مدير الموقع،`,
+    `صباح/مساء الخير مدير الموقع،`,
     content,
     'الرد على العميل',
     `mailto:${visitorEmail}`
@@ -251,7 +251,7 @@ async function sendAccountCreatedEmail(email, fullname, username, password) {
     `أهلاً بك ${fullname}،`,
     content,
     'تسجيل الدخول الآن',
-    `${process.env.SITE_URL || 'http://localhost:3000'}/login`
+    `${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/login`
   );
 }
 
@@ -279,7 +279,7 @@ async function sendForgotPasswordEmail(email, fullname, username, newPassword) {
     `السلام عليكم ${fullname}،`,
     content,
     'تسجيل الدخول الآن',
-    `${process.env.SITE_URL || 'http://localhost:3000'}/login`
+    `${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/login`
   );
 }
 
@@ -298,7 +298,7 @@ async function sendBookingConfirmationEmail(booking) {
       <p><strong>💰 السعر الإجمالي:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه مصري' : 'دولار أمريكي'}</p>
       <p><strong>🔢 رقم الحجز المرجعي:</strong> ${transferNumber}</p>
     </div>
-    <p>في حالة وجود أي استفسار، يمكنك الرد على هذا البريد أو الاتصال بنا.</p>
+    <p>في حالة وجود أي استفسار، يمكنك الاتصال بنا.</p>
   `;
   
   return await sendUnifiedEmail(
@@ -308,7 +308,7 @@ async function sendBookingConfirmationEmail(booking) {
     `عزيزي/عزيزتي ${name}،`,
     content,
     'زيارة موقعنا',
-    process.env.SITE_URL || 'http://localhost:3000'
+    process.env.SITE_URL || 'https://simoon-issac.vercel.app'
   );
 }
 
@@ -336,12 +336,12 @@ async function sendPaymentConfirmationEmail(email, name, tour, persons, date, to
     `عزيزي/عزيزتي ${name}،`,
     content,
     'عرض تفاصيل الرحلة',
-    process.env.SITE_URL || 'http://localhost:3000'
+    process.env.SITE_URL || 'https://simoon-issac.vercel.app'
   );
 }
 
 // دالة الرد على رسالة التواصل (شكراً لتواصلك)
-async function sendContactThankYouEmail(email, name, message) {
+async function sendContactThankYouEmail(name, email, message) {
   const content = `
     <p>شكراً لتواصلك معنا عبر موقع <strong>رحلة في مصر مع سيمون</strong>.</p>
     <p>لقد استلمنا رسالتك التالية:</p>
@@ -359,7 +359,7 @@ async function sendContactThankYouEmail(email, name, message) {
     `السلام عليكم ${name}،`,
     content,
     'تصفح رحلاتنا',
-    `${process.env.SITE_URL || 'http://localhost:3000'}/tours`
+    `${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/tours`
   );
 }
 
@@ -847,10 +847,10 @@ app.post('/api/send-email', verifyToken, async (req, res) => {
       to,
       subject,
       'رسالة من إدارة الموقع',
-      `السلام عليكم،`,
+      `مرحباً،`,
       `<p>${message.replace(/\n/g, '<br>')}</p>`,
       'زيارة موقعنا',
-      process.env.SITE_URL || 'http://localhost:3000'
+      process.env.SITE_URL || 'https://simoon-issac.vercel.app'
     );
     
     if (success) {
