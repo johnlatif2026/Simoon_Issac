@@ -761,84 +761,38 @@
         };
         
         // دالة FAQ محسنة وسريعة جداً
-function initFaq() {
-    const faqItems = document.querySelectorAll('.faq-item');
-    
-    faqItems.forEach(item => {
-        const questionDiv = item.querySelector('.faq-question');
-        const answerDiv = item.querySelector('.faq-answer');
-        
-        if (!questionDiv || questionDiv.hasAttribute('data-listener')) return;
-        
-        // إضافة علامة لمنع إضافة مستمعين متعددين
-        questionDiv.setAttribute('data-listener', 'true');
-        
-        // استخدام touchstart للأجهزة المحمولة للاستجابة الفورية
-        const eventType = 'ontouchstart' in window ? 'touchstart' : 'click';
-        
-        questionDiv.addEventListener(eventType, function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+        // دالة FAQ فائقة السرعة - بدون أي تعقيدات
+        function initFaq() {
+            const faqItems = document.querySelectorAll('.faq-item');
             
-            // إغلاق جميع الأسئلة الأخرى أولاً (اختياري - لتحسين الأداء)
-            const allAnswers = document.querySelectorAll('.faq-answer');
-            const allQuestions = document.querySelectorAll('.faq-question');
-            
-            // إذا كان السؤال الحالي مفتوحاً، أغلقه فقط
-            if (answerDiv.classList.contains('show')) {
-                answerDiv.classList.remove('show');
-                this.classList.remove('active');
-            } else {
-                // أغلق الباقي وافتح هذا
-                allAnswers.forEach(ans => ans.classList.remove('show'));
-                allQuestions.forEach(q => q.classList.remove('active'));
+            faqItems.forEach(item => {
+                const questionDiv = item.querySelector('.faq-question');
+                const answerDiv = item.querySelector('.faq-answer');
                 
-                answerDiv.classList.add('show');
-                this.classList.add('active');
-            }
-        }, { passive: false });
-    });
-}
-
-// تحديث دالة displayInfoGrid لتجنب إعادة إنشاء FAQ بشكل متكرر
-function displayInfoGrid(tour) {
-    const includesList = document.getElementById('includesList');
-    const excludesList = document.getElementById('excludesList');
-    const timelineList = document.getElementById('timelineList');
-    const faqList = document.getElementById('faqList');
-    
-    if (tour.includes && tour.includes.length > 0) {
-        includesList.innerHTML = tour.includes.map(item => `<li><i class="fas fa-check"></i> ${escapeHtml(item)}</li>`).join('');
-    } else {
-        includesList.innerHTML = '<li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
-    }
-    
-    if (tour.excludes && tour.excludes.length > 0) {
-        excludesList.innerHTML = tour.excludes.map(item => `<li><i class="fas fa-times"></i> ${escapeHtml(item)}</li>`).join('');
-    } else {
-        excludesList.innerHTML = '<li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
-    }
-    
-    if (tour.itinerary && tour.itinerary.length > 0) {
-        timelineList.innerHTML = tour.itinerary.map((item, idx) => `<div class="day"><strong>${item.includes('اليوم') ? item.split(':')[0] + ':' : '📌'}</strong> ${escapeHtml(item)}</div>`).join('');
-    } else {
-        timelineList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
-    }
-    
-    if (tour.faq && tour.faq.length > 0) {
-        faqList.innerHTML = tour.faq.map((item, index) => `
-            <div class="faq-item" data-faq-index="${index}">
-                <div class="faq-question">${escapeHtml(item.q || item.question)} <i class="fas fa-chevron-down"></i></div>
-                <div class="faq-answer">${escapeHtml(item.a || item.answer)}</div>
-            </div>
-        `).join('');
-        
-        // استدعاء FAQ مرة واحدة فقط بعد إنشاء العناصر
-        setTimeout(() => initFaq(), 0);
-    } else {
-        faqList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
-    }
-}
+                // منع إضافة أكثر من مستمع
+                if (!questionDiv || questionDiv._faqBound) return;
+                questionDiv._faqBound = true;
+                
+                // حدث واحد فقط للجميع
+                questionDiv.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // تبديل بسيط وسريع
+                    if (answerDiv.classList.contains('show')) {
+                        answerDiv.classList.remove('show');
+                        this.classList.remove('active');
+                    } else {
+                        // إغلاق الآخرين
+                        document.querySelectorAll('.faq-answer.show').forEach(a => a.classList.remove('show'));
+                        document.querySelectorAll('.faq-question.active').forEach(q => q.classList.remove('active'));
+                        
+                        answerDiv.classList.add('show');
+                        this.classList.add('active');
+                    }
+                };
+            });
+        }
         
         function openLightbox(src) {
             const lightbox = document.getElementById('lightbox');
@@ -1001,9 +955,12 @@ function displayInfoGrid(tour) {
                 }
             }
             
-            document.getElementById('fullName').placeholder = translations[currentLang].full_name_label;
-            document.getElementById('email').placeholder = translations[currentLang].email_label;
-            document.getElementById('phone').placeholder = translations[currentLang].phone_label;
+            const fullNameInput = document.getElementById('fullName');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            if (fullNameInput) fullNameInput.placeholder = translations[currentLang].full_name_label;
+            if (emailInput) emailInput.placeholder = translations[currentLang].email_label;
+            if (phoneInput) phoneInput.placeholder = translations[currentLang].phone_label;
             
             document.getElementById('langBtn').innerHTML = currentLang === 'ar' ? 'EN' : 'AR';
             document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
@@ -1047,24 +1004,35 @@ function displayInfoGrid(tour) {
                 displayInfoGrid(tour);
                 displayGallery(tour);
                 
-                document.getElementById('infoGrid').style.display = 'grid';
-                document.getElementById('gallerySection').style.display = 'block';
-                document.getElementById('bookingSection').style.display = 'block';
+                const infoGrid = document.getElementById('infoGrid');
+                const gallerySection = document.getElementById('gallerySection');
+                const bookingSection = document.getElementById('bookingSection');
                 
-                document.getElementById('tourId').value = tour.id || '';
-                document.getElementById('tourName').value = tour.name || '';
-                document.getElementById('tourPriceEgyptian').value = tour.priceEgyptian || '';
-                document.getElementById('tourPriceForeign').value = tour.priceForeign || '';
+                if (infoGrid) infoGrid.style.display = 'grid';
+                if (gallerySection) gallerySection.style.display = 'block';
+                if (bookingSection) bookingSection.style.display = 'block';
                 
-                initFaq();
+                const tourIdInput = document.getElementById('tourId');
+                const tourNameInput = document.getElementById('tourName');
+                const priceEgyptianInput = document.getElementById('tourPriceEgyptian');
+                const priceForeignInput = document.getElementById('tourPriceForeign');
+                
+                if (tourIdInput) tourIdInput.value = tour.id || '';
+                if (tourNameInput) tourNameInput.value = tour.name || '';
+                if (priceEgyptianInput) priceEgyptianInput.value = tour.priceEgyptian || '';
+                if (priceForeignInput) priceForeignInput.value = tour.priceForeign || '';
+                
             } catch (error) {
                 console.error('Error:', error);
-                container.innerHTML = '<div class="no-data" style="text-align:center; padding:2rem;"><i class="fas fa-exclamation-triangle"></i><p data-key="no_data_found" style="margin-top:10px;">لا توجد بيانات</p></div>';
+                if (container) {
+                    container.innerHTML = '<div class="no-data" style="text-align:center; padding:2rem;"><i class="fas fa-exclamation-triangle"></i><p data-key="no_data_found" style="margin-top:10px;">لا توجد بيانات</p></div>';
+                }
             }
         }
         
         function displayTourDetails(tour) {
             const container = document.getElementById('tourDetailContainer');
+            if (!container) return;
             
             const hasImage = tour.image && tour.image.trim() !== '';
             const imageHtml = hasImage ? `<img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" class="tour-header-image" loading="lazy" onerror="this.style.display=\'none\'">` : '';
@@ -1106,45 +1074,56 @@ function displayInfoGrid(tour) {
             `;
         }
         
+        // الدالة الوحيدة لعرض المعلومات - بدون تكرار
         function displayInfoGrid(tour) {
             const includesList = document.getElementById('includesList');
             const excludesList = document.getElementById('excludesList');
             const timelineList = document.getElementById('timelineList');
             const faqList = document.getElementById('faqList');
             
-            if (tour.includes && tour.includes.length > 0) {
-                includesList.innerHTML = tour.includes.map(item => `<li><i class="fas fa-check"></i> ${escapeHtml(item)}</li>`).join('');
-            } else {
-                includesList.innerHTML = '<li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
+            if (includesList) {
+                if (tour.includes && tour.includes.length > 0) {
+                    includesList.innerHTML = tour.includes.map(item => `<li><i class="fas fa-check"></i> ${escapeHtml(item)}</li>`).join('');
+                } else {
+                    includesList.innerHTML = '<li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
+                }
             }
             
-            if (tour.excludes && tour.excludes.length > 0) {
-                excludesList.innerHTML = tour.excludes.map(item => `<li><i class="fas fa-times"></i> ${escapeHtml(item)}</li>`).join('');
-            } else {
-                excludesList.innerHTML = '<li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
+            if (excludesList) {
+                if (tour.excludes && tour.excludes.length > 0) {
+                    excludesList.innerHTML = tour.excludes.map(item => `<li><i class="fas fa-times"></i> ${escapeHtml(item)}</li>`).join('');
+                } else {
+                    excludesList.innerHTML = '<li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
+                }
             }
             
-            if (tour.itinerary && tour.itinerary.length > 0) {
-                timelineList.innerHTML = tour.itinerary.map((item, idx) => `<div class="day"><strong>${item.includes('اليوم') ? item.split(':')[0] + ':' : '📌'}</strong> ${escapeHtml(item)}</div>`).join('');
-            } else {
-                timelineList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
+            if (timelineList) {
+                if (tour.itinerary && tour.itinerary.length > 0) {
+                    timelineList.innerHTML = tour.itinerary.map((item) => `<div class="day"><strong>${item.includes('اليوم') ? item.split(':')[0] + ':' : '📌'}</strong> ${escapeHtml(item)}</div>`).join('');
+                } else {
+                    timelineList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
+                }
             }
             
-            if (tour.faq && tour.faq.length > 0) {
-                faqList.innerHTML = tour.faq.map(item => `
-                    <div class="faq-item">
-                        <div class="faq-question">${escapeHtml(item.q || item.question)} <i class="fas fa-chevron-down"></i></div>
-                        <div class="faq-answer">${escapeHtml(item.a || item.answer)}</div>
-                    </div>
-                `).join('');
-                initFaq();
-            } else {
-                faqList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
+            if (faqList) {
+                if (tour.faq && tour.faq.length > 0) {
+                    faqList.innerHTML = tour.faq.map((item, index) => `
+                        <div class="faq-item" data-faq-index="${index}">
+                            <div class="faq-question">${escapeHtml(item.q || item.question)} <i class="fas fa-chevron-down"></i></div>
+                            <div class="faq-answer">${escapeHtml(item.a || item.answer)}</div>
+                        </div>
+                    `).join('');
+                    // استدعاء FAQ مرة واحدة فقط
+                    initFaq();
+                } else {
+                    faqList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
+                }
             }
         }
         
         function displayGallery(tour) {
             const galleryGrid = document.getElementById('galleryGrid');
+            if (!galleryGrid) return;
             
             if (tour.gallery && tour.gallery.length > 0 && tour.gallery[0] && tour.gallery[0].trim() !== '') {
                 galleryGrid.innerHTML = tour.gallery.map(img => `<img src="${escapeHtml(img)}" onclick="openLightbox('${escapeHtml(img)}')" loading="lazy" onerror="this.style.display=\'none\'">`).join('');
@@ -1251,8 +1230,10 @@ function displayInfoGrid(tour) {
         
         window.addEventListener('scroll', () => {
             const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) navbar.classList.add('scrolled');
-            else navbar.classList.remove('scrolled');
+            if (navbar) {
+                if (window.scrollY > 50) navbar.classList.add('scrolled');
+                else navbar.classList.remove('scrolled');
+            }
         });
         
         initDarkMode();
