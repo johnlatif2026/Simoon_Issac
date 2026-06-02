@@ -731,10 +731,26 @@ app.delete('/api/bookings/:id', verifyToken, async (req, res) => {
   }
 });
 
+// ============= CONTACT ENDPOINTS (باستخدام القالب الموحد) =============
 app.post('/api/contact', async (req, res) => {
   try {
-    const contact = { ...req.body, createdAt: new Date().toISOString(), status: 'unread' };
+    const { name, email, phone, message } = req.body;
     
+    // التحقق من البيانات
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: 'الاسم والبريد الإلكتروني والرسالة مطلوبة' });
+    }
+    
+    const contact = { 
+      name, 
+      email, 
+      phone: phone || '', 
+      message, 
+      createdAt: new Date().toISOString(), 
+      status: 'unread' 
+    };
+    
+    // حفظ في قاعدة البيانات
     if (db) {
       await db.collection('contacts').add(contact);
     } else {
@@ -743,17 +759,15 @@ app.post('/api/contact', async (req, res) => {
       memoryStorage.contacts.push(contact);
     }
     
-    try {
-      await transporter.sendMail({
-        from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
-        to: contact.email,
-        subject: `📧 شكراً لتواصلك مع رحلة في مصر`,
-        html: `<h3>شكراً لتواصلك ${contact.name}</h3><p>سنقوم بالرد عليك في أقرب وقت ممكن.</p>`
-      });
-    } catch (e) { console.log('Email error:', e.message); }
+    // 1. إرسال بريد شكر للعميل (باستخدام القالب الموحد)
+    await sendContactThankYouEmail(name, email, message);
     
-    res.json({ success: true });
+    // 2. إرسال إشعار للأدمن عن رسالة جديدة (باستخدام القالب الموحد)
+    await sendAdminNotification(name, email, phone, message);
+    
+    res.json({ success: true, message: 'تم إرسال رسالتك بنجاح' });
   } catch (error) {
+    console.error('Contact error:', error);
     res.status(500).json({ error: error.message });
   }
 });
