@@ -51,6 +51,145 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// ============= EMAIL FUNCTIONS =============
+
+// دالة لإرسال بريد إنشاء الحساب
+async function sendAccountCreatedEmail(email, fullname, username, password) {
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="UTF-8">
+      <title>تم إنشاء حسابك بنجاح</title>
+      <style>
+        body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
+        .container { max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 25px; text-align: center; }
+        .content { padding: 25px; }
+        .info-box { background-color: #f8f9fa; border-radius: 12px; padding: 15px; margin: 20px 0; border-right: 4px solid #D4AF37; }
+        .footer { background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 11px; color: #999; }
+        .highlight { color: #D4AF37; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>🇪🇬 رحلة في مصر مع سيمون</h2>
+          <p>مرحباً بك في عائلتنا!</p>
+        </div>
+        <div class="content">
+          <h3>🎉 تم إنشاء حسابك بنجاح!</h3>
+          <p>أهلاً بك <strong>${fullname}</strong>،</p>
+          <p>نحن سعداء بانضمامك إلى منصة <strong>رحلة في مصر مع سيمون</strong>. يمكنك الآن الوصول إلى لوحة التحكم وإدارة المحتوى.</p>
+          <div class="info-box">
+            <p><strong>📝 بيانات حسابك:</strong></p>
+            <p>👤 <strong>الاسم الكامل:</strong> ${fullname}</p>
+            <p>🔑 <strong>اسم المستخدم:</strong> <span class="highlight">${username}</span></p>
+            <p>🔐 <strong>كلمة المرور:</strong> <span class="highlight">${password}</span></p>
+            <p>📧 <strong>البريد الإلكتروني:</strong> ${email}</p>
+          </div>
+          <p style="color: #f44336; font-size: 12px;">⚠️ يرجى حفظ هذه البيانات في مكان آمن. نوصي بتغيير كلمة المرور بعد تسجيل الدخول الأول.</p>
+          <p>للدخول إلى لوحة التحكم، اضغط على الرابط أدناه:</p>
+          <p style="text-align: center;">
+            <a href="${process.env.SITE_URL || 'http://localhost:3000'}/login" style="background: linear-gradient(135deg, #D4AF37, #FF8C00); color: #2c1810; padding: 10px 25px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">🚀 تسجيل الدخول الآن</a>
+          </p>
+        </div>
+        <div class="footer">
+          <p>© 2026 رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p>
+          <p>📍 مصر - القاهرة</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  try {
+    await transporter.sendMail({
+      from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: '🎉 ترحيباً بك - تم إنشاء حسابك بنجاح | رحلة في مصر مع سيمون',
+      html: emailHtml
+    });
+    console.log(`📧 Account creation email sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.log('Account email error:', error.message);
+    return false;
+  }
+}
+
+// دالة لإرسال بريد استعادة كلمة المرور
+async function sendForgotPasswordEmail(email, fullname, username, newPassword) {
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="UTF-8">
+      <title>استعادة كلمة المرور</title>
+      <style>
+        body { font-family: 'Cairo', Tahoma, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; direction: rtl; }
+        .container { max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #2c1810; padding: 25px; text-align: center; }
+        .content { padding: 25px; }
+        .info-box { background-color: #e8f5e9; border-radius: 12px; padding: 15px; margin: 20px 0; border-right: 4px solid #4caf50; }
+        .warning-box { background-color: #fff3e0; border-radius: 12px; padding: 15px; margin: 20px 0; border-right: 4px solid #ff9800; }
+        .footer { background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 11px; color: #999; }
+        .highlight { color: #D4AF37; font-weight: bold; }
+        .new-password { font-size: 24px; font-weight: bold; color: #D4AF37; font-family: monospace; background: #f0f0f0; padding: 10px; border-radius: 10px; display: inline-block; letter-spacing: 2px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>🇪🇬 رحلة في مصر مع سيمون</h2>
+          <p>استعادة بيانات حسابك</p>
+        </div>
+        <div class="content">
+          <h3>🔐 تم إعادة تعيين كلمة المرور</h3>
+          <p>عزيزي/عزيزتي <strong>${fullname}</strong>،</p>
+          <p>تم إنشاء كلمة مرور جديدة لحسابك بناءً على طلبك.</p>
+          <div class="info-box">
+            <p><strong>📝 بيانات حسابك الجديدة:</strong></p>
+            <p>👤 <strong>الاسم الكامل:</strong> ${fullname}</p>
+            <p>🔑 <strong>اسم المستخدم:</strong> <span class="highlight">${username}</span></p>
+            <p>🔐 <strong>كلمة المرور الجديدة:</strong></p>
+            <p style="text-align: center;"><span class="new-password">${newPassword}</span></p>
+            <p>📧 <strong>البريد الإلكتروني:</strong> ${email}</p>
+          </div>
+          <div class="warning-box">
+            <p><strong>⚠️ تنبيه هام:</strong></p>
+            <p>إذا لم تكن أنت من طلب استعادة كلمة المرور، يرجى تغيير كلمة المرور فوراً من خلال لوحة التحكم.</p>
+            <p>نوصي بتغيير كلمة المرور بعد أول تسجيل دخول.</p>
+          </div>
+          <p>للدخول إلى لوحة التحكم، اضغط على الرابط أدناه:</p>
+          <p style="text-align: center;">
+            <a href="${process.env.SITE_URL || 'http://localhost:3000'}/login" style="background: linear-gradient(135deg, #D4AF37, #FF8C00); color: #2c1810; padding: 10px 25px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">🚀 تسجيل الدخول الآن</a>
+          </p>
+          <p style="color: #999; font-size: 12px;">إذا واجهتك أي مشكلة، يرجى التواصل مع الدعم الفني.</p>
+        </div>
+        <div class="footer">
+          <p>© 2026 رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  try {
+    await transporter.sendMail({
+      from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: '🔐 إعادة تعيين كلمة المرور - رحلة في مصر مع سيمون',
+      html: emailHtml
+    });
+    console.log(`📧 Password recovery email sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.log('Recovery email error:', error.message);
+    return false;
+  }
+}
+
 // Middleware: Verify JWT
 const verifyToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
@@ -150,6 +289,10 @@ app.post('/api/register', async (req, res) => {
         role: 'admin',
         createdAt: new Date().toISOString()
       });
+      
+      // إرسال بريد تأكيد إنشاء الحساب
+      await sendAccountCreatedEmail(email, fullname, username, password);
+      
       res.json({ success: true, message: 'تم إنشاء الحساب بنجاح' });
     } else {
       // Memory storage
@@ -173,6 +316,10 @@ app.post('/api/register', async (req, res) => {
         role: 'admin',
         createdAt: new Date().toISOString()
       });
+      
+      // إرسال بريد تأكيد إنشاء الحساب
+      await sendAccountCreatedEmail(email, fullname, username, password);
+      
       res.json({ success: true, message: 'تم إنشاء الحساب بنجاح' });
     }
   } catch (error) {
@@ -228,6 +375,64 @@ app.post('/api/login', async (req, res) => {
     res.status(401).json({ success: false, error: 'Invalid credentials' });
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Forgot password endpoint
+app.post('/api/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const bcrypt = require('bcryptjs');
+    
+    if (!email) {
+      return res.status(400).json({ error: 'البريد الإلكتروني مطلوب' });
+    }
+    
+    let user = null;
+    
+    // Search in Firebase
+    if (db) {
+      const userQuery = await db.collection('users')
+        .where('email', '==', email)
+        .get();
+      
+      if (!userQuery.empty) {
+        user = { id: userQuery.docs[0].id, ...userQuery.docs[0].data() };
+      }
+    } else {
+      // Search in memory
+      user = memoryUsers.find(u => u.email === email);
+    }
+    
+    if (!user) {
+      return res.status(404).json({ error: 'هذا البريد الإلكتروني غير مسجل في النظام' });
+    }
+    
+    // إنشاء كلمة مرور عشوائية جديدة
+    const newPassword = Math.random().toString(36).slice(-8);
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    
+    // تحديث كلمة المرور في قاعدة البيانات
+    if (db) {
+      await db.collection('users').doc(user.id).update({
+        password: hashedNewPassword,
+        updatedAt: new Date().toISOString()
+      });
+    } else {
+      const userIndex = memoryUsers.findIndex(u => u.id === user.id);
+      if (userIndex !== -1) {
+        memoryUsers[userIndex].password = hashedNewPassword;
+      }
+    }
+    
+    // إرسال البريد مع كلمة المرور الجديدة
+    await sendForgotPasswordEmail(email, user.fullname, user.username, newPassword);
+    
+    res.json({ success: true, message: 'تم إرسال كلمة المرور الجديدة إلى بريدك الإلكتروني' });
+    
+  } catch (error) {
+    console.error('Forgot password error:', error);
     res.status(500).json({ error: error.message });
   }
 });
