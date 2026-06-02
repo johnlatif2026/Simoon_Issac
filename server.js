@@ -425,7 +425,7 @@ app.delete('/api/rankings/:id', verifyToken, async (req, res) => {
   }
 });
 
-// ============= ADMIN SEND EMAIL ENDPOINT =============
+// ============= ADMIN SEND EMAIL ENDPOINT (محسن ضد السبام) =============
 app.post('/api/send-email', verifyToken, async (req, res) => {
   try {
     const { to, subject, message } = req.body;
@@ -434,15 +434,347 @@ app.post('/api/send-email', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
     }
     
+    // تحسين HTML للرسالة لتجنب علامات السبام
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
+        <title>${subject}</title>
+        <style>
+          /* Reset styles */
+          body, table, td, p, a, div, span {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          }
+          
+          /* Main container */
+          .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+          }
+          
+          /* Header with gradient and logo */
+          .email-header {
+            background: linear-gradient(135deg, #1a472a 0%, #2d6a4f 50%, #1b4332 100%);
+            padding: 40px 20px;
+            text-align: center;
+            position: relative;
+          }
+          
+          .logo-container {
+            margin-bottom: 20px;
+          }
+          
+          /* Logo placeholder - استبدل الرابط برابط الشعار الحقيقي */
+          .logo {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #D4AF37, #FFD700);
+            border-radius: 50%;
+            line-height: 80px;
+            text-align: center;
+            font-size: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          }
+          
+          /* أو استخدم صورة شعار حقيقية */
+          .logo-img {
+            max-width: 100px;
+            height: auto;
+          }
+          
+          .header-title {
+            color: #FFD700;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 10px 0 5px;
+            letter-spacing: 1px;
+          }
+          
+          .header-subtitle {
+            color: #ffffff;
+            font-size: 14px;
+            opacity: 0.9;
+          }
+          
+          /* Content section */
+          .email-content {
+            padding: 40px 30px;
+            background: #ffffff;
+          }
+          
+          .greeting {
+            font-size: 22px;
+            font-weight: bold;
+            color: #1a472a;
+            margin-bottom: 20px;
+            border-right: 4px solid #D4AF37;
+            padding-right: 15px;
+          }
+          
+          .message-box {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 1px solid #e9ecef;
+            line-height: 1.8;
+            color: #2c3e2f;
+            font-size: 16px;
+          }
+          
+          /* Decorative divider */
+          .divider {
+            text-align: center;
+            margin: 30px 0;
+          }
+          
+          .divider span {
+            display: inline-block;
+            width: 40px;
+            height: 2px;
+            background: #D4AF37;
+            margin: 0 5px;
+            border-radius: 2px;
+          }
+          
+          .divider i {
+            color: #D4AF37;
+            font-size: 12px;
+          }
+          
+          /* Contact info section */
+          .contact-info {
+            background: linear-gradient(135deg, #fef3c7, #fffbeb);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+            border: 1px solid #fde68a;
+          }
+          
+          .contact-info h4 {
+            color: #1a472a;
+            margin-bottom: 12px;
+            font-size: 16px;
+          }
+          
+          .contact-details {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: #4b5563;
+          }
+          
+          .contact-details a {
+            color: #2d6a4f;
+            text-decoration: none;
+          }
+          
+          /* Social links */
+          .social-links {
+            text-align: center;
+            margin: 20px 0;
+          }
+          
+          .social-link {
+            display: inline-block;
+            margin: 0 8px;
+            color: #D4AF37;
+            text-decoration: none;
+            font-size: 20px;
+          }
+          
+          /* Footer */
+          .email-footer {
+            background: #1a472a;
+            padding: 25px 20px;
+            text-align: center;
+            color: #a3c4a3;
+            font-size: 12px;
+          }
+          
+          .footer-links {
+            margin-bottom: 15px;
+          }
+          
+          .footer-links a {
+            color: #FFD700;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 11px;
+          }
+          
+          .copyright {
+            opacity: 0.7;
+            font-size: 11px;
+          }
+          
+          /* Buttons */
+          .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #D4AF37, #B8860B);
+            color: #1a472a;
+            padding: 12px 32px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: transform 0.2s;
+          }
+          
+          .btn:hover {
+            transform: scale(1.02);
+          }
+          
+          /* Responsive */
+          @media only screen and (max-width: 480px) {
+            .email-content {
+              padding: 25px 20px;
+            }
+            .greeting {
+              font-size: 20px;
+            }
+            .logo {
+              width: 60px;
+              height: 60px;
+              line-height: 60px;
+              font-size: 36px;
+            }
+          }
+        </style>
+      </head>
+      <body style="margin: 0; padding: 20px; background-color: #e8f0e6; font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;">
+        <div style="max-width: 600px; margin: 0 auto;">
+          
+          <!-- Email Container -->
+          <div class="email-container">
+            
+            <!-- Header with Logo -->
+            <div class="email-header">
+              <div class="logo-container">
+                <div class="logo">
+                  🐫
+                </div>
+                <!-- إذا كان لديك رابط شعار حقيقي، استخدم هذا:
+                <img src="YOUR_LOGO_URL_HERE" alt="رحلة في مصر" class="logo-img">
+                -->
+              </div>
+              <div class="header-title">🇪🇬 رحلة في مصر</div>
+              <div class="header-subtitle">مع سيمون - اكتشف جمال التاريخ</div>
+            </div>
+            
+            <!-- Content -->
+            <div class="email-content">
+              <div class="greeting">
+                مرحباً عزيزي العميل،
+              </div>
+              
+              <div class="message-box">
+                ${message.replace(/\n/g, '<br>').replace(/<script/g, '&lt;script')}
+              </div>
+              
+              <div class="divider">
+                <span></span>
+                <span style="width: 20px;"></span>
+                <span></span>
+              </div>
+              
+              <!-- Quick Contact Info -->
+              <div class="contact-info">
+                <h4>📞 للتواصل والاستفسارات</h4>
+                <div class="contact-details">
+                  <span>📧 ${process.env.SMTP_USER || 'info@egyptwithsimon.com'}</span>
+                  <span>📱 واتساب: +20 XXX XXX XXX</span>
+                </div>
+              </div>
+              
+              <!-- Call to Action -->
+              <div style="text-align: center;">
+                <a href="${process.env.SITE_URL || 'http://localhost:3000'}" class="btn" style="color: #1a472a; text-decoration: none;">
+                  🏜️ استكشف رحلاتنا
+                </a>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="email-footer">
+              <div class="footer-links">
+                <a href="${process.env.SITE_URL || 'http://localhost:3000'}/privacy">سياسة الخصوصية</a>
+                <span>•</span>
+                <a href="${process.env.SITE_URL || 'http://localhost:3000'}/terms">الشروط والأحكام</a>
+                <span>•</span>
+                <a href="${process.env.SITE_URL || 'http://localhost:3000'}/contact">اتصل بنا</a>
+              </div>
+              <div class="copyright">
+                © ${new Date().getFullYear()} رحلة في مصر مع سيمون. جميع الحقوق محفوظة
+              </div>
+              <div style="margin-top: 10px; font-size: 10px; opacity: 0.6;">
+                هذا البريد رسمي من رحلة في مصر مع سيمون
+              </div>
+            </div>
+            
+          </div>
+          
+          <!-- Unsubscribe note (important for anti-spam) -->
+          <div style="text-align: center; font-size: 10px; color: #999; margin-top: 15px; padding: 10px;">
+            إذا لم تطلب هذا البريد، يمكنك تجاهله بأمان. هذا البريد مرسل من خدمة عملاء رحلة في مصر.
+          </div>
+          
+        </div>
+      </body>
+      </html>
+    `;
+    
+    // Plain text version for better deliverability
+    const plainTextMessage = `
+    ${subject}
+    
+    مرحباً عزيزي العميل,
+    
+    ${message}
+    
+    -------------------------------------------------
+    رحلة في مصر مع سيمون
+    للتواصل: ${process.env.SMTP_USER || 'info@egyptwithsimon.com'}
+    -------------------------------------------------
+    `;
+    
+    // إعدادات إضافية لتحسين وصول البريد وتجنب السبام
     await transporter.sendMail({
-      from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
+      from: `"رحلة في مصر مع سيمون" <${process.env.SMTP_USER}>`,
       to: to,
       subject: subject,
-      html: `<div style="font-family: 'Cairo', sans-serif; direction: rtl;"><h3>${subject}</h3><p>${message.replace(/\n/g, '<br>')}</p><br><p>مع تحيات فريق <strong>رحلة في مصر مع سيمون</strong></p></div>`
+      text: plainTextMessage,
+      html: emailHtml,
+      headers: {
+        'X-Priority': '3',
+        'X-Mailer': 'EgyptWithSimon',
+        'X-Entity-Ref-ID': Date.now().toString(),
+        'List-Unsubscribe': `<mailto:${process.env.SMTP_USER}?subject=unsubscribe>`,
+        'Feedback-ID': `${Date.now()}:egyptwithsimon:booking`
+      }
     });
     
+    console.log(`📧 Email sent successfully to ${to}`);
     res.json({ success: true, message: 'تم إرسال البريد بنجاح' });
+    
   } catch (error) {
+    console.error('Send email error:', error);
     res.status(500).json({ error: 'فشل إرسال البريد: ' + error.message });
   }
 });
