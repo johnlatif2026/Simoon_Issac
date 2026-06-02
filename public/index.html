@@ -1590,110 +1590,119 @@
   function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
 
-  // ==================== TOURS API LOADER (Live Update - بدون ريفرش) ====================
-  function escapeHtml(str) { 
-    if (!str) return ''; 
-    return str.replace(/[&<>]/g, function(m){ 
-      if(m==='&') return '&amp;'; 
-      if(m==='<') return '&lt;'; 
-      if(m==='>') return '&gt;'; 
-      return m;
-    }); 
-  }
+// ==================== TOURS API LOADER (Live Update) ====================
+function escapeHtml(str) { 
+  if (!str) return ''; 
+  return str.replace(/[&<>]/g, function(m){ 
+    if(m==='&') return '&amp;'; 
+    if(m==='<') return '&lt;'; 
+    if(m==='>') return '&gt;'; 
+    return m;
+  }); 
+}
+
+async function loadToursFromAPI() {
+  const container = document.getElementById('toursContainer');
+  if (!container) return;
   
-  // التحقق من صحة بيانات الرحلة
-  function isValidTour(tour) {
-    return tour && tour.name && tour.description && tour.priceForeign && tour.priceEgyptian;
-  }
-  
-  async function loadToursFromAPI() {
-    const container = document.getElementById('toursContainer');
-    if (!container) return;
+  try {
+    const response = await fetch('/api/tours');
+    if (!response.ok) throw new Error('API Error');
     
-    try {
-      const response = await fetch('/api/tours');
-      if (!response.ok) throw new Error('API Error');
-      const tours = await response.json();
-      
-      // تصفية الرحلات - إزالة أي رحلة غير مكتملة البيانات أو مخفية
-      const validTours = tours.filter(tour => isValidTour(tour));
-      
-      if (!validTours || validTours.length === 0) {
-        container.innerHTML = `
-          <div class="no-tours-message">
-            <i class="fas fa-map-marked-alt"></i>
-            <h3>${currentLang === 'ar' ? '📭 لا توجد جولات حالياً' : '📭 No tours available'}</h3>
-            <p>${currentLang === 'ar' ? 'سيتم إضافة جولات جديدة قريباً، تابعونا!' : 'New tours will be added soon, stay tuned!'}</p>
-          </div>
-        `;
-        return;
-      }
-      
-      let html = '';
-      validTours.forEach(tour => {
-        const imgHtml = (tour.image && tour.image !== 'null' && tour.image !== 'undefined') 
-          ? `<img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" loading="lazy" onerror="this.parentElement.style.background='var(--gradient-gold)'; this.style.display='none'">` 
-          : `<div style="width:100%; height:100%; background:var(--gradient-gold); display:flex; align-items:center; justify-content:center;"><i class="fas fa-pyramid" style="font-size:3rem; color:#2c1810;"></i></div>`;
-        
-        const bookBtnText = currentLang === 'ar' ? '✨ احجز الآن' : '✨ Book Now';
-        
-        html += `
-          <div class="tour-card">
-            <div class="tour-image">
-              ${imgHtml}
-              <div class="tour-badge">⭐ ${tour.days || 3} ${currentLang === 'ar' ? 'أيام' : 'Days'}</div>
-            </div>
-            <div class="tour-info">
-              <h3>${escapeHtml(tour.name)}</h3>
-              <p>${escapeHtml(tour.description.substring(0, 100))}${tour.description.length > 100 ? '...' : ''}</p>
-              <div class="tour-details">
-                <span><i class="fas fa-dollar-sign"></i> ${currentLang === 'ar' ? 'الأجنبي' : 'Foreign'}: ${tour.priceForeign}$</span>
-                <span><i class="fas fa-pound-sign"></i> ${currentLang === 'ar' ? 'المصري' : 'Egyptian'}: ${tour.priceEgyptian} ${currentLang === 'ar' ? 'ج' : 'EGP'}</span>
-              </div>
-              <a href="/tour-details?id=${tour.id}" class="book-btn" data-book-btn>${bookBtnText}</a>
-            </div>
-          </div>
-        `;
-      });
-      
-      container.innerHTML = html;
-      
-      // إعادة تفعيل تأثير الظهور
-      const newRevealElements = document.querySelectorAll('.reveal');
-      newRevealElements.forEach(el => {
-        if (el.getBoundingClientRect().top < window.innerHeight - 150) {
-          el.classList.add('active');
-        }
-      });
-      
-    } catch (error) {
-      console.error('Error loading tours:', error);
+    const result = await response.json();
+    
+    // ✅ التعديل المهم هنا - نقرأ data من الـ response
+    const tours = result.data || [];
+    
+    if (!tours || tours.length === 0) {
       container.innerHTML = `
         <div class="no-tours-message">
-          <i class="fas fa-exclamation-triangle"></i>
-          <h3>${currentLang === 'ar' ? '⚠️ حدث خطأ' : '⚠️ Error'}</h3>
-          <p>${currentLang === 'ar' ? 'لم نتمكن من تحميل الجولات، يرجى تحديث الصفحة' : 'Could not load tours, please refresh the page'}</p>
+          <i class="fas fa-map-marked-alt"></i>
+          <h3>${currentLang === 'ar' ? '📭 لا توجد جولات حالياً' : '📭 No tours available'}</h3>
+          <p>${currentLang === 'ar' ? 'سيتم إضافة جولات جديدة قريباً، تابعونا!' : 'New tours will be added soon, stay tuned!'}</p>
         </div>
       `;
+      return;
     }
-  }
-  
-  // تحميل أولي للرحلات
-  document.addEventListener('DOMContentLoaded', loadToursFromAPI);
-  
-  // تحديث تلقائي كل 12 ثانية (بدون ريفرش للصفحة)
-  setInterval(() => {
-    loadToursFromAPI();
-  }, 12000);
-  
-  // Smooth Scroll for anchor links
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
-      e.preventDefault();
-      const target = document.querySelector(this.getAttribute('href'));
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    
+    let html = '';
+    tours.forEach(tour => {
+      // ✅ استخدام الحقول الصحيحة من السيرفر
+      const tourName = tour.name || 'جولة سياحية';
+      const tourDesc = tour.description || 'استمتع برحلة مميزة في مصر';
+      // ✅ السيرفر بيبعث price مش priceForeign
+      const tourPrice = tour.price || 100;
+      
+      const bookBtnText = currentLang === 'ar' ? '✨ احجز الآن' : '✨ Book Now';
+      
+      html += `
+        <div class="tour-card">
+          <div class="tour-image">
+            <div style="width:100%; height:100%; background:var(--gradient-gold); display:flex; align-items:center; justify-content:center;">
+              <i class="fas fa-pyramid" style="font-size:3rem; color:#2c1810;"></i>
+            </div>
+            <div class="tour-badge">⭐ ${tour.duration || 'يوم كامل'}</div>
+          </div>
+          <div class="tour-info">
+            <h3>${escapeHtml(tourName)}</h3>
+            <p>${escapeHtml(tourDesc.substring(0, 100))}${tourDesc.length > 100 ? '...' : ''}</p>
+            <div class="tour-details">
+              <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(tour.location || 'مصر')}</span>
+              <span><i class="fas fa-dollar-sign"></i> ${tourPrice}$</span>
+            </div>
+            <button class="book-btn" data-tour-id="${tour.id}" data-tour-name="${escapeHtml(tourName)}" data-tour-price="${tourPrice}">
+              ${bookBtnText}
+            </button>
+          </div>
+        </div>
+      `;
     });
-  });
+    
+    container.innerHTML = html;
+    
+    // إضافة حدث النقر لأزرار الحجز
+    document.querySelectorAll('.book-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tourId = btn.getAttribute('data-tour-id');
+        const tourName = btn.getAttribute('data-tour-name');
+        const tourPrice = btn.getAttribute('data-tour-price');
+        
+        const modal = document.getElementById('bookingModal');
+        if (modal) {
+          document.getElementById('modalTour').value = `${tourName} - ${tourPrice}$`;
+          document.getElementById('modalTourId').value = tourId;
+          modal.style.display = 'block';
+        }
+      });
+    });
+    
+    // إعادة تفعيل تأثير الظهور
+    const newRevealElements = document.querySelectorAll('.reveal');
+    newRevealElements.forEach(el => {
+      if (el.getBoundingClientRect().top < window.innerHeight - 150) {
+        el.classList.add('active');
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error loading tours:', error);
+    container.innerHTML = `
+      <div class="no-tours-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>${currentLang === 'ar' ? '⚠️ حدث خطأ' : '⚠️ Error'}</h3>
+        <p>${currentLang === 'ar' ? 'لم نتمكن من تحميل الجولات، يرجى تحديث الصفحة' : 'Could not load tours, please refresh the page'}</p>
+      </div>
+    `;
+  }
+}
+
+// تحميل أولي للرحلات
+document.addEventListener('DOMContentLoaded', loadToursFromAPI);
+
+// تحديث تلقائي كل 30 ثانية
+setInterval(() => {
+  loadToursFromAPI();
+}, 30000);
 </script>
 </body>
 </html>
