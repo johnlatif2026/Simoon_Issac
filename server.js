@@ -335,7 +335,7 @@ async function sendPaymentConfirmationEmail(email, name, tour, persons, date, to
     'تم تأكيد دفعك بنجاح',
     `عزيزي/عزيزتي ${name}،`,
     content,
-    'عرض تفاصيل الرحلة',
+    'زيارة موقعنا',
     process.env.SITE_URL || 'https://simoon-issac.vercel.app'
   );
 }
