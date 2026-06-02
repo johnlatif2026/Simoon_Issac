@@ -761,35 +761,42 @@
         };
         
         // دالة FAQ محسنة وسريعة جداً
+        // دالة تهيئة الأسئلة الشائعة - تم إعادة كتابتها بشكل صحيح وآمن
         function initFaq() {
+            // نختار كل عناصر الأسئلة الشائعة في الصفحة
             const faqItems = document.querySelectorAll('.faq-item');
             
             faqItems.forEach(item => {
+                // نبحث عن سهم السؤال داخل العنصر الحالي
                 const questionDiv = item.querySelector('.faq-question');
-                const answerDiv = item.querySelector('.faq-answer');
-                
-                // منع إضافة أكثر من مستمع
-                if (!questionDiv || questionDiv._faqBound) return;
-                questionDiv._faqBound = true;
-                
-                // حدث واحد فقط للجميع
-                questionDiv.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
+                // نتأكد من وجوده وأننا لم نربط له حدثاً من قبل (نمنع التكرار)
+                if (questionDiv && !questionDiv.hasAttribute('data-listener-attached')) {
+                    // نضيف علامة مميزة لنعرف أننا ربطنا الحدث لهذا العنصر بالفعل
+                    questionDiv.setAttribute('data-listener-attached', 'true');
                     
-                    // تبديل بسيط وسريع
-                    if (answerDiv.classList.contains('show')) {
-                        answerDiv.classList.remove('show');
-                        this.classList.remove('active');
-                    } else {
-                        // إغلاق الآخرين
-                        document.querySelectorAll('.faq-answer.show').forEach(a => a.classList.remove('show'));
-                        document.querySelectorAll('.faq-question.active').forEach(q => q.classList.remove('active'));
+                    // نضيف حدث الضغط مرة واحدة فقط لكل سؤال
+                    questionDiv.addEventListener('click', function(e) {
+                        // نمنع انتشار الحدث لتجنب أي تعارضات
+                        e.stopPropagation();
                         
-                        answerDiv.classList.add('show');
-                        this.classList.add('active');
-                    }
-                };
+                        // نجد عنصر الإجابة المرتبط بهذا السؤال
+                        const answerDiv = this.nextElementSibling;
+                        
+                        if (answerDiv && answerDiv.classList.contains('faq-answer')) {
+                            // نبدل ظهور الإجابة
+                            answerDiv.classList.toggle('show');
+                            // نبدل شكل السهم (في حال وجود أيقونة)
+                            const icon = this.querySelector('i');
+                            if (icon) {
+                                if (answerDiv.classList.contains('show')) {
+                                    icon.style.transform = 'rotate(180deg)';
+                                } else {
+                                    icon.style.transform = 'rotate(0deg)';
+                                }
+                            }
+                        }
+                    });
+                }
             });
         }
         
@@ -981,7 +988,7 @@
             updateLanguage();
         }
         
-        async function loadTourDetails() {
+       async function loadTourDetails() {
             const container = document.getElementById('tourDetailContainer');
             
             try {
@@ -1003,29 +1010,19 @@
                 displayInfoGrid(tour);
                 displayGallery(tour);
                 
-                const infoGrid = document.getElementById('infoGrid');
-                const gallerySection = document.getElementById('gallerySection');
-                const bookingSection = document.getElementById('bookingSection');
+                document.getElementById('infoGrid').style.display = 'grid';
+                document.getElementById('gallerySection').style.display = 'block';
+                document.getElementById('bookingSection').style.display = 'block';
                 
-                if (infoGrid) infoGrid.style.display = 'grid';
-                if (gallerySection) gallerySection.style.display = 'block';
-                if (bookingSection) bookingSection.style.display = 'block';
+                document.getElementById('tourId').value = tour.id || '';
+                document.getElementById('tourName').value = tour.name || '';
+                document.getElementById('tourPriceEgyptian').value = tour.priceEgyptian || '';
+                document.getElementById('tourPriceForeign').value = tour.priceForeign || '';
                 
-                const tourIdInput = document.getElementById('tourId');
-                const tourNameInput = document.getElementById('tourName');
-                const priceEgyptianInput = document.getElementById('tourPriceEgyptian');
-                const priceForeignInput = document.getElementById('tourPriceForeign');
-                
-                if (tourIdInput) tourIdInput.value = tour.id || '';
-                if (tourNameInput) tourNameInput.value = tour.name || '';
-                if (priceEgyptianInput) priceEgyptianInput.value = tour.priceEgyptian || '';
-                if (priceForeignInput) priceForeignInput.value = tour.priceForeign || '';
-                
+                // لا حاجة لاستدعاء initFaq() هنا لأن displayInfoGrid قامت بذلك بالفعل
             } catch (error) {
                 console.error('Error:', error);
-                if (container) {
-                    container.innerHTML = '<div class="no-data" style="text-align:center; padding:2rem;"><i class="fas fa-exclamation-triangle"></i><p data-key="no_data_found" style="margin-top:10px;">لا توجد بيانات</p></div>';
-                }
+                container.innerHTML = '<div class="no-data" style="text-align:center; padding:3rem;"><i class="fas fa-exclamation-triangle"></i><p>لا توجد بيانات</p></div>';
             }
         }
         
@@ -1080,43 +1077,42 @@
             const timelineList = document.getElementById('timelineList');
             const faqList = document.getElementById('faqList');
             
-            if (includesList) {
-                if (tour.includes && tour.includes.length > 0) {
-                    includesList.innerHTML = tour.includes.map(item => `<li><i class="fas fa-check"></i> ${escapeHtml(item)}</li>`).join('');
-                } else {
-                    includesList.innerHTML = '<li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
-                }
+            if (tour.includes && tour.includes.length > 0) {
+                includesList.innerHTML = tour.includes.map(item => `<li><i class="fas fa-check"></i> ${escapeHtml(item)}</li>`).join('');
+            } else {
+                includesList.innerHTML = '<li class="empty-text"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
             }
             
-            if (excludesList) {
-                if (tour.excludes && tour.excludes.length > 0) {
-                    excludesList.innerHTML = tour.excludes.map(item => `<li><i class="fas fa-times"></i> ${escapeHtml(item)}</li>`).join('');
-                } else {
-                    excludesList.innerHTML = '<li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
-                }
+            if (tour.excludes && tour.excludes.length > 0) {
+                excludesList.innerHTML = tour.excludes.map(item => `<li><i class="fas fa-times"></i> ${escapeHtml(item)}</li>`).join('');
+            } else {
+                excludesList.innerHTML = '<li class="empty-text"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
             }
             
-            if (timelineList) {
-                if (tour.itinerary && tour.itinerary.length > 0) {
-                    timelineList.innerHTML = tour.itinerary.map((item) => `<div class="day"><strong>${item.includes('اليوم') ? item.split(':')[0] + ':' : '📌'}</strong> ${escapeHtml(item)}</div>`).join('');
-                } else {
-                    timelineList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
-                }
+            if (tour.itinerary && tour.itinerary.length > 0) {
+                timelineList.innerHTML = tour.itinerary.map((item, idx) => `<div class="day"><strong>${item.includes('اليوم') ? item.split(':')[0] + ':' : '📌'}</strong> ${escapeHtml(item)}</div>`).join('');
+            } else {
+                timelineList.innerHTML = '<div class="empty-text"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
             }
             
-            if (faqList) {
-                if (tour.faq && tour.faq.length > 0) {
-                    faqList.innerHTML = tour.faq.map((item, index) => `
-                        <div class="faq-item" data-faq-index="${index}">
+            if (tour.faq && tour.faq.length > 0) {
+                // بناء HTML للأسئلة الشائعة بشكل نظيف
+                let faqHtml = '';
+                tour.faq.forEach(item => {
+                    faqHtml += `
+                        <div class="faq-item">
                             <div class="faq-question">${escapeHtml(item.q || item.question)} <i class="fas fa-chevron-down"></i></div>
                             <div class="faq-answer">${escapeHtml(item.a || item.answer)}</div>
                         </div>
-                    `).join('');
-                    // استدعاء FAQ مرة واحدة فقط
-                    initFaq();
-                } else {
-                    faqList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
-                }
+                    `;
+                });
+                faqList.innerHTML = faqHtml;
+                
+                // مهم جداً: هنا فقط نقوم بتهيئة الـ FAQ بعد إضافتها للصفحة مباشرة
+                // وهذا يضمن أن الأحداث تربط مرة واحدة فقط
+                initFaq();
+            } else {
+                faqList.innerHTML = '<div class="empty-text"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
             }
         }
         
