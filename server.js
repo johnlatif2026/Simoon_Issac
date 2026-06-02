@@ -3,12 +3,48 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const admin = require('firebase-admin');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const sanitizeHtml = require('sanitize-html');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+
+// ============= الحماية الأمنية =============
+app.use(helmet({
+  contentSecurityPolicy: false, // للسماح بالـ inline styles في الإيميلات
+}));
+
+// CORS مقيد
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000', 'https://simoon-issac.vercel.app'],
+  credentials: true
+}));
+
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
+
+// Rate limiting لل endpoints الحساسة
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 دقيقة
+  max: 5, // 5 محاولات
+  message: { error: 'محاولات كثيرة، حاول بعد 15 دقيقة' },
+  skipSuccessfulRequests: true // لا تحسب المحاولات الناجحة
+});
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: '太多 الطلبات، حاول لاحقاً' }
+});
+
+app.use('/api/login', strictLimiter);
+app.use('/api/register', strictLimiter);
+app.use('/api/forgot-password', strictLimiter);
+app.use('/api/contact', generalLimiter);
+
+// Blacklist للتوكنات المسحوبة
+const tokenBlacklist = new Set();
 
 // Initialize Firebase Admin
 let db;
@@ -177,7 +213,6 @@ function generateUnifiedEmailHTML(title, greeting, content, buttonText = null, b
           </div>
         </div>
       </div>
-    </body>
     </html>
   `;
 }
@@ -201,14 +236,15 @@ async function sendUnifiedEmail(to, subject, title, greeting, content, buttonTex
 
 async function sendAdminNotification(visitorName, visitorEmail, visitorPhone, message) {
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@egyptwithsimon.com';
+  const safeMessage = sanitizeHtml(message, { allowedTags: ['br', 'p'], allowedAttributes: {} });
   const content = `
     <p><strong>📩 لديك رسالة جديدة من موقع رحلة في مصر</strong></p>
     <hr>
-    <p><strong>👤 الاسم:</strong> ${visitorName}</p>
+    <p><strong>👤 الاسم:</strong> ${sanitizeHtml(visitorName)}</p>
     <p><strong>📧 البريد الإلكتروني:</strong> <a href="mailto:${visitorEmail}">${visitorEmail}</a></p>
     <p><strong>📞 رقم الهاتف:</strong> ${visitorPhone || 'غير مدخل'}</p>
     <p><strong>💬 نص الرسالة:</strong></p>
-    <p style="background: #f0f0f0; padding: 15px; border-radius: 10px;">${message.replace(/\n/g, '<br>')}</p>
+    <p style="background: #f0f0f0; padding: 15px; border-radius: 10px;">${safeMessage.replace(/\n/g, '<br>')}</p>
     <hr>
     <p>يمكنك الرد على هذا البريد للتواصل مع العميل مباشرة.</p>
   `;
@@ -224,18 +260,19 @@ async function sendAdminNotification(visitorName, visitorEmail, visitorPhone, me
   );
 }
 
-async function sendAccountCreatedEmail(email, fullname, username, password) {
+// ⚠️ تم تعديل هذه الدالة - لا ترسل كلمة المرور بعد الآن
+async function sendAccountCreatedEmail(email, fullname, username) {
   const content = `
     <p>أهلاً بك في منصة <strong>رحلة في مصر مع سيمون</strong>.</p>
     <p>تم إنشاء حسابك بنجاح، ويمكنك الآن الوصول إلى لوحة التحكم وإدارة المحتوى بكل سهولة.</p>
     <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; margin: 15px 0;">
       <p><strong>📝 بيانات حسابك:</strong></p>
-      <p>👤 <strong>الاسم الكامل:</strong> ${fullname}</p>
-      <p>🔑 <strong>اسم المستخدم:</strong> <span style="color: #D4AF37; font-weight: bold;">${username}</span></p>
-      <p>🔐 <strong>كلمة المرور:</strong> <span style="color: #D4AF37; font-weight: bold;">${password}</span></p>
+      <p>👤 <strong>الاسم الكامل:</strong> ${sanitizeHtml(fullname)}</p>
+      <p>🔑 <strong>اسم المستخدم:</strong> <span style="color: #D4AF37; font-weight: bold;">${sanitizeHtml(username)}</span></p>
       <p>📧 <strong>البريد الإلكتروني:</strong> ${email}</p>
     </div>
-    <p style="color: #f44336; font-size: 13px;">⚠️ يرجى حفظ هذه البيانات في مكان آمن. نوصي بتغيير كلمة المرور بعد تسجيل الدخول الأول.</p>
+    <p>🔐 تم تعيين كلمة المرور التي أدخلتها أثناء التسجيل. يمكنك استخدامها لتسجيل الدخول.</p>
+    <p style="color: #f44336; font-size: 13px;">⚠️ يرجى الحفاظ على كلمة المرور في مكان آمن.</p>
   `;
   
   return await sendUnifiedEmail(
@@ -251,7 +288,7 @@ async function sendAccountCreatedEmail(email, fullname, username, password) {
 
 async function sendForgotPasswordEmail(email, fullname, resetLink) {
   const content = `
-    <p>عزيزي/عزيزتي <strong>${fullname}</strong>،</p>
+    <p>عزيزي/عزيزتي <strong>${sanitizeHtml(fullname)}</strong>،</p>
     <p>لقد تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.</p>
     <p>لإعادة تعيين كلمة المرور، يرجى النقر على الزر أدناه:</p>
     <div style="text-align: center; margin: 25px 0;">
@@ -280,7 +317,7 @@ async function sendBookingConfirmationEmail(booking) {
     <p>تم استلام طلب حجزكم بنجاح، وسنقوم بالتواصل معكم خلال 24 ساعة لتأكيد التفاصيل النهائية.</p>
     <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin: 15px 0;">
       <p><strong>🏝️ تفاصيل الحجز:</strong></p>
-      <p><strong>اسم الرحلة:</strong> ${tourName}</p>
+      <p><strong>اسم الرحلة:</strong> ${sanitizeHtml(tourName)}</p>
       <p><strong>👥 عدد الأشخاص:</strong> ${persons}</p>
       <p><strong>📅 التاريخ:</strong> ${date}</p>
       <p><strong>💰 السعر الإجمالي:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه مصري' : 'دولار أمريكي'}</p>
@@ -293,7 +330,7 @@ async function sendBookingConfirmationEmail(booking) {
     email,
     '🎉 تأكيد حجز رحلتك - رحلة في مصر مع سيمون',
     'تم تأكيد حجزك بنجاح',
-    `عزيزي/عزيزتي ${name}،`,
+    `عزيزي/عزيزتي ${sanitizeHtml(name)}،`,
     content,
     'زيارة موقعنا',
     process.env.SITE_URL || 'https://simoon-issac.vercel.app'
@@ -307,7 +344,7 @@ async function sendPaymentConfirmationEmail(email, name, tour, persons, date, to
     </div>
     <p>تم تأكيد عملية الدفع الخاصة برحلتك بنجاح!</p>
     <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; margin: 15px 0;">
-      <p><strong>🏝️ الرحلة:</strong> ${tour}</p>
+      <p><strong>🏝️ الرحلة:</strong> ${sanitizeHtml(tour)}</p>
       <p><strong>👥 عدد الأشخاص:</strong> ${persons}</p>
       <p><strong>📅 التاريخ:</strong> ${date}</p>
       <p><strong>💰 المبلغ المدفوع:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه مصري' : 'دولار أمريكي'}</p>
@@ -320,7 +357,7 @@ async function sendPaymentConfirmationEmail(email, name, tour, persons, date, to
     email,
     '✅ تأكيد الدفع - رحلة في مصر مع سيمون',
     'تم تأكيد دفعك بنجاح',
-    `عزيزي/عزيزتي ${name}،`,
+    `عزيزي/عزيزتي ${sanitizeHtml(name)}،`,
     content,
     'زيارة موقعنا',
     process.env.SITE_URL || 'https://simoon-issac.vercel.app'
@@ -332,7 +369,7 @@ async function sendContactThankYouEmail(name, email, message) {
     <p>شكراً لتواصلك معنا عبر موقع <strong>رحلة في مصر مع سيمون</strong>.</p>
     <p>لقد استلمنا رسالتك التالية:</p>
     <div style="background: #f0f0f0; padding: 15px; border-radius: 10px; margin: 15px 0;">
-      <p><em>"${message.substring(0, 200)}${message.length > 200 ? '...' : ''}"</em></p>
+      <p><em>"${sanitizeHtml(message.substring(0, 200))}${message.length > 200 ? '...' : ''}"</em></p>
     </div>
     <p>سنقوم بالرد عليك في أقرب وقت ممكن (خلال 24 ساعة كحد أقصى).</p>
     <p>مع جزيل الشكر،<br>فريق رحلة في مصر مع سيمون</p>
@@ -342,23 +379,29 @@ async function sendContactThankYouEmail(name, email, message) {
     email,
     '📧 شكراً لتواصلك مع رحلة في مصر',
     'تم استلام رسالتك',
-    `مرحباً ${name}،`,
+    `مرحباً ${sanitizeHtml(name)}،`,
     content,
     'تصفح رحلاتنا',
     `${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/#tours`
   );
 }
 
+// Middleware للتحقق من التوكن مع Blacklist
 const verifyToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'No token provided' });
+  
+  // التحقق من وجود التوكن في القائمة السوداء
+  if (tokenBlacklist.has(token)) {
+    return res.status(401).json({ error: 'Token invalidated, please login again' });
+  }
   
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(403).json({ error: 'Invalid token' });
+    return res.status(403).json({ error: 'Invalid or expired token' });
   }
 };
 
@@ -378,7 +421,8 @@ async function initDefaultAdmin() {
         email: defaultEmail,
         password: hashedPassword,
         role: 'admin',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        emailVerified: true
       });
       console.log('✅ Default admin user created in Firebase');
     }
@@ -393,26 +437,49 @@ async function initDefaultAdmin() {
         email: defaultEmail,
         password: hashedPassword,
         role: 'admin',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        emailVerified: true
       });
       console.log('✅ Default admin user created in memory');
     }
   }
 }
 
-// ============= AUTH ENDPOINTS =============
+// ============= AUTH ENDPOINTS (معدلة أمنياً) =============
+
+// تسجيل الخروج - إبطال التوكن
+app.post('/api/logout', verifyToken, (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (token) {
+    tokenBlacklist.add(token);
+    // تنظيف القائمة السوداء كل ساعة
+    setTimeout(() => tokenBlacklist.delete(token), 60 * 60 * 1000);
+  }
+  res.json({ success: true, message: 'Logged out successfully' });
+});
 
 app.post('/api/register', async (req, res) => {
   try {
-    const { fullname, username, email, password } = req.body;
+    let { fullname, username, email, password } = req.body;
     const bcrypt = require('bcryptjs');
+    
+    // تنظيف المدخلات
+    fullname = sanitizeHtml(fullname, { allowedTags: [], allowedAttributes: {} });
+    username = sanitizeHtml(username, { allowedTags: [], allowedAttributes: {} });
+    email = email.toLowerCase().trim();
     
     if (!fullname || !username || !email || !password) {
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
     }
     
-    if (password.length < 3) {
-      return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 3 أحرف على الأقل' });
+    // التحقق من صحة البريد الإلكتروني
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'البريد الإلكتروني غير صحيح' });
+    }
+    
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
     }
     
     if (db) {
@@ -424,10 +491,13 @@ app.post('/api/register', async (req, res) => {
       
       const hashedPassword = await bcrypt.hash(password, 10);
       await db.collection('users').add({
-        fullname, username, email, password: hashedPassword, role: 'admin', createdAt: new Date().toISOString()
+        fullname, username, email, password: hashedPassword, role: 'admin', 
+        createdAt: new Date().toISOString(),
+        emailVerified: false
       });
       
-      await sendAccountCreatedEmail(email, fullname, username, password);
+      // ✅ لا ترسل كلمة المرور
+      await sendAccountCreatedEmail(email, fullname, username);
       res.json({ success: true, message: 'تم إنشاء الحساب بنجاح' });
     } else {
       const existingUser = memoryUsers.find(u => u.username === username);
@@ -438,15 +508,18 @@ app.post('/api/register', async (req, res) => {
       
       const hashedPassword = await bcrypt.hash(password, 10);
       memoryUsers.push({
-        id: Date.now().toString(), fullname, username, email, password: hashedPassword, role: 'admin', createdAt: new Date().toISOString()
+        id: Date.now().toString(), fullname, username, email, password: hashedPassword, 
+        role: 'admin', createdAt: new Date().toISOString(),
+        emailVerified: false
       });
       
-      await sendAccountCreatedEmail(email, fullname, username, password);
+      // ✅ لا ترسل كلمة المرور
+      await sendAccountCreatedEmail(email, fullname, username);
       res.json({ success: true, message: 'تم إنشاء الحساب بنجاح' });
     }
   } catch (error) {
     console.error('Register error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' }); // لا تعرض تفاصيل الخطأ
   }
 });
 
@@ -476,15 +549,17 @@ app.post('/api/login', async (req, res) => {
       }
     }
     
+    // Fallback للمشرف الافتراضي
     if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
       const token = jwt.sign({ username, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '24h' });
       return res.json({ success: true, token });
     }
     
-    res.status(401).json({ success: false, error: 'Invalid credentials' });
+    // رسالة عامة لا تحدد إذا كان المستخدم موجود أو كلمة المرور خطأ
+    res.status(401).json({ success: false, error: 'بيانات الدخول غير صحيحة' });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -504,9 +579,11 @@ app.post('/api/forgot-password', async (req, res) => {
       user = memoryUsers.find(u => u.email === email);
     }
     
-    if (!user) return res.status(404).json({ error: 'هذا البريد الإلكتروني غير مسجل في النظام' });
+    // لا تخبر المستخدم إذا البريد غير موجود (أمان)
+    if (!user) {
+      return res.json({ success: true, message: 'إذا كان البريد مسجلاً، ستتلقى رابط إعادة التعيين' });
+    }
     
-    // Create reset token (valid for 1 hour)
     const resetToken = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
@@ -521,7 +598,7 @@ app.post('/api/forgot-password', async (req, res) => {
     
   } catch (error) {
     console.error('Forgot password error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -535,11 +612,10 @@ app.post('/api/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'الرمز وكلمة المرور الجديدة مطلوبة' });
     }
     
-    if (newPassword.length < 3) {
-      return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 3 أحرف على الأقل' });
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
     }
     
-    // Verify token
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -567,7 +643,7 @@ app.post('/api/reset-password', async (req, res) => {
     
   } catch (error) {
     console.error('Reset password error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -586,7 +662,7 @@ app.get('/api/users', verifyToken, async (req, res) => {
       res.json(users);
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -603,7 +679,7 @@ app.delete('/api/users/:id', verifyToken, async (req, res) => {
       res.json({ success: true });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -618,7 +694,7 @@ app.get('/api/tours', async (req, res) => {
       res.json(memoryStorage.tours);
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -635,7 +711,7 @@ app.get('/api/tours/:id', async (req, res) => {
       res.json(tour);
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -650,10 +726,18 @@ app.post('/api/tours', verifyToken, async (req, res) => {
     let imageValue = (image && image.trim() !== '' && image !== 'null' && image !== 'undefined') ? image : '';
     
     const newTour = {
-      name, description, days: parseInt(days), priceEgyptian: parseFloat(priceEgyptian),
-      priceForeign: parseFloat(priceForeign), image: imageValue,
-      itinerary: itinerary || [], includes: includes || [], excludes: excludes || [],
-      faq: faq || [], gallery: gallery || [], createdAt: new Date().toISOString()
+      name: sanitizeHtml(name), 
+      description: sanitizeHtml(description), 
+      days: parseInt(days), 
+      priceEgyptian: parseFloat(priceEgyptian),
+      priceForeign: parseFloat(priceForeign), 
+      image: imageValue,
+      itinerary: itinerary || [], 
+      includes: includes || [], 
+      excludes: excludes || [],
+      faq: faq || [], 
+      gallery: gallery || [], 
+      createdAt: new Date().toISOString()
     };
     
     if (db) {
@@ -665,7 +749,7 @@ app.post('/api/tours', verifyToken, async (req, res) => {
       res.json(newTour);
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -674,6 +758,8 @@ app.put('/api/tours/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     if (updates.image === '' || updates.image === null || updates.image === undefined) updates.image = '';
+    if (updates.name) updates.name = sanitizeHtml(updates.name);
+    if (updates.description) updates.description = sanitizeHtml(updates.description);
     
     if (db) {
       await db.collection('tours').doc(id).update(updates);
@@ -685,7 +771,7 @@ app.put('/api/tours/:id', verifyToken, async (req, res) => {
       res.json({ success: true, id, ...updates });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -700,17 +786,23 @@ app.delete('/api/tours/:id', verifyToken, async (req, res) => {
       res.json({ success: true });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
 // ============= BOOKINGS ENDPOINTS =============
 app.post('/api/bookings', async (req, res) => {
   try {
-    const { tourId, tourName, name, email, phone, persons, date, nationality, totalPrice, currency } = req.body;
+    let { tourId, tourName, name, email, phone, persons, date, nationality, totalPrice, currency } = req.body;
+    
+    // تنظيف المدخلات
+    name = sanitizeHtml(name);
+    tourName = sanitizeHtml(tourName || 'رحلة سياحية');
+    phone = sanitizeHtml(phone || '');
+    nationality = sanitizeHtml(nationality || '');
     
     const booking = { 
-      tourId, tourName: tourName || 'رحلة سياحية', name, email, phone,
+      tourId, tourName, name, email, phone,
       persons: parseInt(persons) || 1, date, nationality, totalAmount: totalPrice,
       currency, transferNumber: 'TR-' + Date.now(), createdAt: new Date().toISOString() 
     };
@@ -728,7 +820,7 @@ app.post('/api/bookings', async (req, res) => {
     res.json({ success: true, booking });
   } catch (error) {
     console.error('Booking error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -742,7 +834,7 @@ app.get('/api/bookings', verifyToken, async (req, res) => {
       res.json(memoryStorage.bookings);
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -757,21 +849,26 @@ app.delete('/api/bookings/:id', verifyToken, async (req, res) => {
       res.json({ success: true });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
-// ============= CONTACT ENDPOINTS =============
+// ============= CONTACT ENDPOINTS (معدلة) =============
 app.post('/api/contact', async (req, res) => {
   try {
-    const { name, email, phone, message } = req.body;
+    let { name, email, phone, message } = req.body;
     
     if (!name || !email || !message) {
       return res.status(400).json({ error: 'الاسم والبريد الإلكتروني والرسالة مطلوبة' });
     }
     
+    // تنظيف المدخلات من XSS
+    name = sanitizeHtml(name, { allowedTags: [], allowedAttributes: {} });
+    message = sanitizeHtml(message, { allowedTags: ['br', 'p'], allowedAttributes: {} });
+    phone = sanitizeHtml(phone || '', { allowedTags: [], allowedAttributes: {} });
+    
     const contact = { 
-      name, email, phone: phone || '', message, 
+      name, email, phone, message, 
       createdAt: new Date().toISOString(), status: 'unread' 
     };
     
@@ -789,7 +886,7 @@ app.post('/api/contact', async (req, res) => {
     res.json({ success: true, message: 'تم إرسال رسالتك بنجاح' });
   } catch (error) {
     console.error('Contact error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -803,7 +900,7 @@ app.get('/api/contacts', verifyToken, async (req, res) => {
       res.json(memoryStorage.contacts || []);
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -817,7 +914,7 @@ app.delete('/api/contacts/:id', verifyToken, async (req, res) => {
     }
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -834,7 +931,7 @@ app.post('/api/rankings', async (req, res) => {
     }
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -848,7 +945,7 @@ app.get('/api/rankings', async (req, res) => {
       res.json(memoryStorage.rankings || []);
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -862,7 +959,7 @@ app.delete('/api/rankings/:id', verifyToken, async (req, res) => {
     }
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -880,7 +977,7 @@ app.post('/api/send-email', verifyToken, async (req, res) => {
       subject,
       'رسالة من إدارة الموقع',
       `مرحباً،`,
-      `<p>${message.replace(/\n/g, '<br>')}</p>`,
+      `<p>${sanitizeHtml(message).replace(/\n/g, '<br>')}</p>`,
       'زيارة موقعنا',
       process.env.SITE_URL || 'https://simoon-issac.vercel.app'
     );
@@ -907,7 +1004,7 @@ app.post('/api/confirm-payment', async (req, res) => {
     res.json({ success: true, message: 'تم تأكيد الدفع بنجاح' });
   } catch (error) {
     console.error('Confirm payment error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -918,10 +1015,18 @@ app.put('/api/tours/:id/full', verifyToken, async (req, res) => {
     const { name, description, days, priceEgyptian, priceForeign, image, itinerary, includes, excludes, faq, gallery } = req.body;
     
     const updates = {
-      name, description, days: parseInt(days), priceEgyptian: parseFloat(priceEgyptian),
-      priceForeign: parseFloat(priceForeign), image: image || '',
-      itinerary: itinerary || [], includes: includes || [], excludes: excludes || [],
-      faq: faq || [], gallery: gallery || [], updatedAt: new Date().toISOString()
+      name: sanitizeHtml(name), 
+      description: sanitizeHtml(description), 
+      days: parseInt(days), 
+      priceEgyptian: parseFloat(priceEgyptian),
+      priceForeign: parseFloat(priceForeign), 
+      image: image || '',
+      itinerary: itinerary || [], 
+      includes: includes || [], 
+      excludes: excludes || [],
+      faq: faq || [], 
+      gallery: gallery || [], 
+      updatedAt: new Date().toISOString()
     };
     
     if (db) {
@@ -934,7 +1039,7 @@ app.put('/api/tours/:id/full', verifyToken, async (req, res) => {
       res.json({ success: true, id, ...updates });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
@@ -951,7 +1056,7 @@ app.get('/api/tours/:id/full', async (req, res) => {
       res.json(tour);
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 });
 
