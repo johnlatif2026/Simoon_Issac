@@ -356,7 +356,7 @@ async function sendContactThankYouEmail(name, email, message) {
     email,
     '📧 شكراً لتواصلك مع رحلة في مصر',
     'تم استلام رسالتك',
-    `السلام عليكم ${name}،`,
+    `مرحباً ${name}،`,
     content,
     'تصفح رحلاتنا',
     `${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/#tours`
