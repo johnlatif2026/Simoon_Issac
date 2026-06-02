@@ -348,11 +348,28 @@
         </div>
         
         <div class="dashboard-tabs">
+            <button class="tab-btn" data-tab="users"><i class="fas fa-users-cog"></i> المستخدمين</button>
             <button class="tab-btn active" data-tab="tours"><i class="fas fa-umbrella-beach"></i> الجولات</button>
             <button class="tab-btn" data-tab="orders"><i class="fas fa-shopping-cart"></i> الطلبات</button>
             <button class="tab-btn" data-tab="reviews"><i class="fas fa-star"></i> آراء العملاء</button>
             <button class="tab-btn" data-tab="contacts"><i class="fas fa-envelope"></i> التواصل</button>
             <button class="tab-btn" data-tab="messages"><i class="fas fa-paper-plane"></i> إرسال رسالة</button>
+        </div>
+        
+        <!-- تبويب المستخدمين -->
+        <div id="users-tab" class="tab-content">
+            <div class="card-container">
+                <h2><i class="fas fa-users-cog"></i> إدارة المستخدمين</h2>
+                <div class="table-responsive">
+                    <table class="tours-table">
+                        <thead>
+                            <tr><th>الاسم الكامل</th><th>اسم المستخدم</th><th>البريد الإلكتروني</th><th>تاريخ التسجيل</th><th>الإجراءات</th></tr>
+                        </thead>
+                        <tbody id="usersTableBody"><tr><td colspan="5"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                        </tbody>
+                     </table>
+                </div>
+            </div>
         </div>
         
         <!-- تبويب إدارة الجولات -->
@@ -411,7 +428,8 @@
                 <div class="table-responsive">
                     <table class="tours-table">
                         <thead><tr><th>الاسم</th><th>البريد</th><th>الهاتف</th><th>الجولة</th><th>عدد الأفراد</th><th>السعر</th><th>التاريخ</th><th>الإجراءات</th></tr></thead>
-                        <tbody id="bookingsTableBody"><tr><td colspan="8" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr></tbody>
+                        <tbody id="bookingsTableBody"><tr><td colspan="8" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -494,6 +512,49 @@
             if (!token) { window.location.href = 'login'; return false; }
             return true;
         }
+        
+        // ============= USERS MANAGEMENT =============
+        async function loadUsers() {
+            const token = getToken();
+            if (!token) return;
+            try {
+                const res = await fetch('/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    const users = await res.json();
+                    const tbody = document.getElementById('usersTableBody');
+                    if (!tbody) return;
+                    if (users.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">📭 لا يوجد مستخدمين</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = users.map(u => `
+                        <tr>
+                            <td>${escapeHtml(u.fullname)}</td>
+                            <td>${escapeHtml(u.username)}</td>
+                            <td>${escapeHtml(u.email)}</td>
+                            <td>${formatDate(u.createdAt)}</td>
+                            <td><button class="btn-danger" onclick="deleteUser('${u.id}')"><i class="fas fa-trash"></i> حذف</button></td>
+                        </tr>
+                    `).join('');
+                }
+            } catch(e) { console.error(e); }
+        }
+        
+        window.deleteUser = async (id) => {
+            if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+            const token = getToken();
+            if (!token) return;
+            try {
+                const res = await fetch(`/api/users/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    alert('✅ تم حذف المستخدم');
+                    loadUsers();
+                } else {
+                    const err = await res.json();
+                    alert('❌ ' + err.error);
+                }
+            } catch(e) { alert('❌ حدث خطأ'); }
+        };
         
         // ============= TOURS MANAGEMENT =============
         async function loadTours() {
@@ -850,6 +911,7 @@
                     if (tabId === 'reviews') loadRankingsAdmin();
                     if (tabId === 'contacts') loadContactsAdmin();
                     if (tabId === 'orders') loadBookings();
+                    if (tabId === 'users') loadUsers();
                 });
             });
         }
@@ -869,6 +931,7 @@
             loadBookings();
             loadRankingsAdmin();
             loadContactsAdmin();
+            loadUsers();
         }
     </script>
 </body>
