@@ -13,7 +13,7 @@
   "routes": [
     {
       "src": "/sitemap.xml",
-      "dest": "/public/sitemap.xml",
+      "dest": "/public/sitemap.txt",
       "headers": {
         "Content-Type": "application/xml"
       }
@@ -48,10 +48,6 @@
     {
       "src": "/pay",
       "dest": "/public/pay.html"
-    },
-    {
-      "src": "/404",
-      "dest": "/public/404.html"
     },
     {
       "src": "/(.*)",
