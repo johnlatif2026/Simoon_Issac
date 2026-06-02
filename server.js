@@ -428,6 +428,119 @@ async function sendSecurityAlert(logEntry) {
     }
 }
 
+// ============= TOURS ENDPOINTS =============
+
+// 1. GET /api/tours - جلب قائمة الجولات السياحية
+app.get('/api/tours', async (req, res) => {
+    try {
+        // بيانات وهمية للتجربة - استبدلها ببيانات من Firebase عند وجودها
+        const mockTours = [
+            { 
+                id: '1', 
+                name: 'أهرامات الجيزة', 
+                price: 500, 
+                duration: '4 ساعات',
+                location: 'القاهرة',
+                description: 'جولة رائعة لزيارة أهرامات الجيزة وأبو الهول'
+            },
+            { 
+                id: '2', 
+                name: 'مدينة الأقصر', 
+                price: 700, 
+                duration: '6 ساعات',
+                location: 'الأقصر',
+                description: 'استكشاف معابد الأقصر والكرنك'
+            },
+            { 
+                id: '3', 
+                name: 'رحلة نيلية', 
+                price: 300, 
+                duration: '2 ساعات',
+                location: 'القاهرة',
+                description: 'رحلة ممتعة على نهر النيل مع العشاء'
+            }
+        ];
+
+        // مثال لجلب البيانات من Firebase (قم بإلغاء التعليق عند إنشاء Collection باسم "tours")
+        /*
+        const toursSnapshot = await db.collection('tours').get();
+        const tours = toursSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        return res.status(200).json({ success: true, count: tours.length, data: tours });
+        */
+
+        res.status(200).json({ 
+            success: true, 
+            count: mockTours.length, 
+            data: mockTours 
+        });
+    } catch (error) {
+        console.error('Error fetching tours:', error);
+        res.status(500).json({ success: false, error: 'فشل في جلب بيانات الجولات' });
+    }
+});
+
+// 2. GET /api/tours/:id - جلب جولة محددة بالمعرف
+app.get('/api/tours/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // بيانات وهمية - استبدلها بجلب من Firebase
+        const mockTours = {
+            '1': { id: '1', name: 'أهرامات الجيزة', price: 500, duration: '4 ساعات', location: 'القاهرة', description: 'جولة رائعة لزيارة أهرامات الجيزة وأبو الهول' },
+            '2': { id: '2', name: 'مدينة الأقصر', price: 700, duration: '6 ساعات', location: 'الأقصر', description: 'استكشاف معابد الأقصر والكرنك' },
+            '3': { id: '3', name: 'رحلة نيلية', price: 300, duration: '2 ساعات', location: 'القاهرة', description: 'رحلة ممتعة على نهر النيل مع العشاء' }
+        };
+
+        const tour = mockTours[id];
+        if (!tour) {
+            return res.status(404).json({ success: false, error: 'الجولة غير موجودة' });
+        }
+
+        res.status(200).json({ success: true, data: tour });
+    } catch (error) {
+        console.error('Error fetching tour:', error);
+        res.status(500).json({ success: false, error: 'فشل في جلب بيانات الجولة' });
+    }
+});
+
+// 3. POST /api/tours (محمي - للمشرفين فقط) - إضافة جولة جديدة
+app.post('/api/tours', verifyToken, requireAdmin, async (req, res) => {
+    try {
+        const { name, price, duration, location, description } = req.body;
+
+        // التحقق من صحة البيانات
+        if (!name || !price || !duration) {
+            return res.status(400).json({ success: false, error: 'الاسم والسعر والمدة مطلوبة' });
+        }
+
+        // مثال للإضافة إلى Firebase (قم بإلغاء التعليق عند وجود Collection "tours")
+        /*
+        const newTour = {
+            name: sanitizeHtml(name, { allowedTags: [], allowedAttributes: {} }),
+            price: parseInt(price),
+            duration,
+            location: location || '',
+            description: description ? sanitizeHtml(description, { allowedTags: [], allowedAttributes: {} }) : '',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdBy: req.user.id
+        };
+        
+        const docRef = await db.collection('tours').add(newTour);
+        
+        await auditLog('TOUR_CREATED', req.user.id, req.ip, req.get('User-Agent'), { tourId: docRef.id, name });
+        
+        res.status(201).json({ success: true, message: 'تمت إضافة الجولة بنجاح', data: { id: docRef.id, ...newTour } });
+        */
+
+        // رد وهمي للتجربة
+        await auditLog('TOUR_CREATED', req.user.id, req.ip, req.get('User-Agent'), { name });
+        res.status(201).json({ success: true, message: 'تمت إضافة الجولة بنجاح', data: { id: Date.now().toString(), name, price, duration, location, description } });
+    } catch (error) {
+        console.error('Error adding tour:', error);
+        res.status(500).json({ success: false, error: 'فشل في إضافة الجولة' });
+    }
+});
+
 // ============= AUTH ENDPOINTS =============
 
 // 1. GET CSRF Token
