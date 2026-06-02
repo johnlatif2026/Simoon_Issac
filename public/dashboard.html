@@ -356,21 +356,39 @@
         </div>
         
         <!-- تبويب إدارة الجولات -->
-        <div id="tours-tab" class="tab-content active">
-            <div class="card-container">
-                <h2 style="margin-bottom: 1.5rem;">➕ إضافة جولة جديدة</h2>
-                <form id="addTourForm">
-                    <div class="form-grid">
-                        <div class="form-group"><label>اسم الرحلة</label><input type="text" id="tourName" placeholder="مثال: رحلة الأهرامات" required></div>
-                        <div class="form-group"><label>عدد الأيام</label><input type="number" id="tourDays" placeholder="مثال: 5" required></div>
-                        <div class="form-group"><label>السعر للمصري (EGP)</label><input type="number" id="tourPriceEgyptian" placeholder="مثال: 2500" required></div>
-                        <div class="form-group"><label>السعر للأجنبي (USD)</label><input type="number" id="tourPriceForeign" placeholder="مثال: 50" required></div>
-                        <div class="form-group"><label>رابط الصورة الرئيسية</label><input type="text" id="tourImage" placeholder="https://..."></div>
-                    </div>
-                    <div class="form-group"><label>تفاصيل الرحلة</label><textarea id="tourDescription" rows="3" placeholder="وصف تفصيلي للرحلة..." required></textarea></div>
-                    <button type="submit" class="btn-primary"><i class="fas fa-plus"></i> إضافة الجولة</button>
-                </form>
-            </div>
+<div class="card-container">
+    <h2 style="margin-bottom: 1.5rem;">➕ إضافة جولة جديدة</h2>
+    <form id="addTourForm">
+        <div class="form-grid">
+            <div class="form-group"><label>اسم الرحلة</label><input type="text" id="tourName" placeholder="مثال: رحلة الأهرامات" required></div>
+            <div class="form-group"><label>عدد الأيام</label><input type="number" id="tourDays" placeholder="مثال: 5" required></div>
+            <div class="form-group"><label>السعر للمصري (EGP)</label><input type="number" id="tourPriceEgyptian" placeholder="مثال: 2500" required></div>
+            <div class="form-group"><label>السعر للأجنبي (USD)</label><input type="number" id="tourPriceForeign" placeholder="مثال: 50" required></div>
+            <div class="form-group"><label>رابط الصورة الرئيسية</label><input type="text" id="tourImage" placeholder="https://..."></div>
+        </div>
+        <div class="form-group"><label>تفاصيل الرحلة</label><textarea id="tourDescription" rows="3" placeholder="وصف تفصيلي للرحلة..." required></textarea></div>
+        
+        <!-- الحقول الجديدة -->
+        <hr style="margin: 1.5rem 0; border-color: var(--border-color);">
+        
+        <h3><i class="fas fa-map-marked-alt"></i> 📍 البرنامج (أدخل كل يوم في سطر جديد)</h3>
+        <div class="form-group"><textarea id="tourItinerary" rows="4" placeholder="اليوم 1: زيارة الأهرامات&#10;اليوم 2: جولة المتحف&#10;اليوم 3: ركوب الجمل"></textarea></div>
+        
+        <h3><i class="fas fa-check-circle"></i> ✔ ما يشمل (أدخل كل عنصر في سطر جديد)</h3>
+        <div class="form-group"><textarea id="tourIncludes" rows="3" placeholder="مرشد سياحي&#10;انتقالات&#10;مياه شرب"></textarea></div>
+        
+        <h3><i class="fas fa-times-circle"></i> ✖ ما لا يشمل (أدخل كل عنصر في سطر جديد)</h3>
+        <div class="form-group"><textarea id="tourExcludes" rows="3" placeholder="تذاكر الطيران&#10;المشروبات الساخنة&#10;الإكراميات"></textarea></div>
+        
+        <h3><i class="fas fa-question-circle"></i> ❓ الأسئلة الشائعة (كل سؤال وجواب في سطر، افصل بينهما بـ | )</h3>
+        <div class="form-group"><textarea id="tourFaq" rows="4" placeholder="هل يمكن إلغاء الحجز؟ | نعم، يمكن الإلغاء قبل 48 ساعة&#10;هل السعر شامل الضرائب؟ | نعم، الأسعار شاملة"></textarea></div>
+        
+        <h3><i class="fas fa-images"></i> 📸 معرض الصور (روابط الصور - كل رابط في سطر جديد)</h3>
+        <div class="form-group"><textarea id="tourGallery" rows="3" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea></div>
+        
+        <button type="submit" class="btn-primary"><i class="fas fa-plus"></i> إضافة الجولة</button>
+    </form>
+</div>
             
             <div class="card-container">
                 <h2 style="margin-bottom: 1.5rem;">📋 قائمة الجولات السياحية</h2>
@@ -599,51 +617,54 @@
         });
         
         // ============= TOURS MANAGEMENT =============
-        document.getElementById('addTourForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const token = getToken();
-            if (!token) return;
-            
-            const imageValue = document.getElementById('tourImage').value;
-            const tourData = {
-                name: document.getElementById('tourName').value,
-                description: document.getElementById('tourDescription').value,
-                days: parseInt(document.getElementById('tourDays').value),
-                priceEgyptian: parseFloat(document.getElementById('tourPriceEgyptian').value),
-                priceForeign: parseFloat(document.getElementById('tourPriceForeign').value),
-                image: (imageValue && imageValue.trim() !== '') ? imageValue : '',
-                itinerary: [],
-                includes: [],
-                excludes: [],
-                faq: [],
-                gallery: []
-            };
-            
-            try {
-                const res = await fetch('/api/tours', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(tourData)
-                });
-                if (res.ok) {
-                    alert('✅ تم إضافة الجولة بنجاح');
-                    document.getElementById('addTourForm').reset();
-                    loadTours();
-                } else { 
-                    const err = await res.json();
-                    alert('❌ حدث خطأ: ' + (err.error || 'يرجى المحاولة مرة أخرى'));
-                }
-            } catch(e) { alert('❌ حدث خطأ'); }
+document.getElementById('addTourForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = getToken();
+    if (!token) return;
+    
+    // معالجة البيانات الجديدة
+    const itinerary = document.getElementById('tourItinerary').value.split('\n').filter(l => l.trim());
+    const includes = document.getElementById('tourIncludes').value.split('\n').filter(l => l.trim());
+    const excludes = document.getElementById('tourExcludes').value.split('\n').filter(l => l.trim());
+    const gallery = document.getElementById('tourGallery').value.split('\n').filter(l => l.trim());
+    
+    const faqLines = document.getElementById('tourFaq').value.split('\n').filter(l => l.trim());
+    const faq = faqLines.map(line => {
+        const [q, a] = line.split('|');
+        return { q: q?.trim() || '', a: a?.trim() || '' };
+    }).filter(f => f.q && f.a);
+    
+    const imageValue = document.getElementById('tourImage').value;
+    const tourData = {
+        name: document.getElementById('tourName').value,
+        description: document.getElementById('tourDescription').value,
+        days: parseInt(document.getElementById('tourDays').value),
+        priceEgyptian: parseFloat(document.getElementById('tourPriceEgyptian').value),
+        priceForeign: parseFloat(document.getElementById('tourPriceForeign').value),
+        image: (imageValue && imageValue.trim() !== '') ? imageValue : '',
+        itinerary: itinerary,
+        includes: includes,
+        excludes: excludes,
+        faq: faq,
+        gallery: gallery
+    };
+    
+    try {
+        const res = await fetch('/api/tours', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(tourData)
         });
-        
-        async function loadTours() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch('/api/tours', { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) { allTours = await res.json(); displayTours(); document.getElementById('totalTours').textContent = allTours.length; }
-            } catch(e) { console.error(e); }
+        if (res.ok) {
+            alert('✅ تم إضافة الجولة بكل التفاصيل بنجاح');
+            document.getElementById('addTourForm').reset();
+            loadTours();
+        } else { 
+            const err = await res.json();
+            alert('❌ حدث خطأ: ' + (err.error || 'يرجى المحاولة مرة أخرى'));
         }
+    } catch(e) { alert('❌ حدث خطأ'); }
+});
         
         function displayTours() {
             const tbody = document.getElementById('toursTableBody');
