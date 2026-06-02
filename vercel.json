@@ -54,6 +54,10 @@
       "dest":"/public/register.html"
     },
     {
+      "src":"/forgot-password",
+      "dest":"/public/forgot-password.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/public/index.html"
     }
