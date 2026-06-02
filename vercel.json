@@ -58,6 +58,10 @@
       "dest":"/public/forgot-password.html"
     },
     {
+      "src":"/reset-password",
+      "dest":"/public/reset-password.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/public/index.html"
     }
