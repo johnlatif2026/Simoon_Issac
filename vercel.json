@@ -50,6 +50,10 @@
       "dest": "/public/pay.html"
     },
     {
+      "src": "/404",
+      "dest": "/public/404.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/public/index.html"
     }
