@@ -625,8 +625,10 @@ app.get('/sitemap.xml', async (req, res) => {
   }
 });
 
-// ============= 404 HANDLING FOR API ROUTES =============
-// Handle undefined API routes
+// ============= 404 HANDLING - Any non-existent page goes to 404.html =============
+// This must be the LAST middleware before app.listen()
+
+// First, handle API routes that don't exist (return JSON)
 app.use('/api/*', (req, res) => {
   res.status(404).json({ 
     error: 'API endpoint not found',
@@ -634,184 +636,109 @@ app.use('/api/*', (req, res) => {
   });
 });
 
-// ============= 404 HANDLING FOR FRONTEND PAGES =============
-// Custom 404 page for undefined routes
+// For all other routes that don't exist, serve the 404.html page
 app.use((req, res) => {
-  // Check if the request is for an API
+  // Don't interfere with API routes (they're already handled above)
   if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ 
-      error: 'API endpoint not found',
-      message: 'المسار المطلوب غير موجود'
-    });
+    return;
   }
   
-  // Check if the request is for a static file with extension
-  const hasExtension = /\.[a-zA-Z0-9]+$/.test(req.path);
-  if (!hasExtension) {
-    // Send custom 404 HTML page
-    res.status(404).send(`
-      <!DOCTYPE html>
-      <html lang="ar" dir="rtl">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>404 - الصفحة غير موجودة | رحلة في مصر مع سيمون</title>
-        <style>
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          
-          body {
-            font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            direction: rtl;
-          }
-          
-          .error-container {
-            text-align: center;
-            padding: 40px;
-            background: white;
-            border-radius: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 600px;
-            margin: 20px;
-            animation: fadeIn 0.5s ease-in;
-          }
-          
-          @keyframes fadeIn {
-            from {
-              opacity: 0;
-              transform: translateY(-20px);
+  // Check if the request is for a static file that doesn't exist
+  // Send the 404.html page for all unmatched routes
+  res.status(404).sendFile('404.html', { root: './public' }, (err) => {
+    if (err) {
+      // If 404.html doesn't exist, send a simple HTML response
+      res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>404 - الصفحة غير موجودة</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+              font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              min-height: 100vh;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              direction: rtl;
             }
-            to {
-              opacity: 1;
-              transform: translateY(0);
+            .error-container {
+              text-align: center;
+              padding: 40px;
+              background: white;
+              border-radius: 30px;
+              box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+              max-width: 600px;
+              margin: 20px;
+              animation: fadeIn 0.5s ease-in;
             }
-          }
-          
-          .error-code {
-            font-size: 120px;
-            font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-          }
-          
-          .error-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-          }
-          
-          h1 {
-            font-size: 28px;
-            color: #333;
-            margin-bottom: 15px;
-          }
-          
-          p {
-            font-size: 18px;
-            color: #666;
-            margin-bottom: 30px;
-            line-height: 1.6;
-          }
-          
-          .buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-          }
-          
-          .btn {
-            padding: 12px 30px;
-            font-size: 16px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            display: inline-block;
-            font-family: inherit;
-          }
-          
-          .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-          }
-          
-          .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-          }
-          
-          .btn-secondary {
-            background: #f0f0f0;
-            color: #333;
-          }
-          
-          .btn-secondary:hover {
-            background: #e0e0e0;
-            transform: translateY(-2px);
-          }
-          
-          .pyramids {
-            margin-top: 30px;
-            font-size: 40px;
-            opacity: 0.3;
-          }
-          
-          @media (max-width: 768px) {
+            @keyframes fadeIn {
+              from { opacity: 0; transform: translateY(-20px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
             .error-code {
-              font-size: 80px;
+              font-size: 120px;
+              font-weight: bold;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              -webkit-background-clip: text;
+              background-clip: text;
+              color: transparent;
+              margin-bottom: 20px;
             }
-            
-            h1 {
-              font-size: 24px;
-            }
-            
-            p {
-              font-size: 16px;
-            }
-            
+            .error-icon { font-size: 80px; margin-bottom: 20px; }
+            h1 { font-size: 28px; color: #333; margin-bottom: 15px; }
+            p { font-size: 18px; color: #666; margin-bottom: 30px; line-height: 1.6; }
+            .buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
             .btn {
-              padding: 10px 20px;
-              font-size: 14px;
+              padding: 12px 30px;
+              font-size: 16px;
+              border: none;
+              border-radius: 50px;
+              cursor: pointer;
+              text-decoration: none;
+              transition: all 0.3s ease;
+              display: inline-block;
+              font-family: inherit;
             }
-          }
-        </style>
-        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-      </head>
-      <body>
-        <div class="error-container">
-          <div class="error-icon">🔍</div>
-          <div class="error-code">404</div>
-          <h1>عذراً! الصفحة غير موجودة</h1>
-          <p>يبدو أن الصفحة التي تبحث عنها قد تم نقلها أو حذفها أو أنها لم تكن موجودة من الأساس.</p>
-          <div class="buttons">
-            <a href="/" class="btn btn-primary">🏠 العودة للرئيسية</a>
-            <a href="/" onclick="window.history.back(); return false;" class="btn btn-secondary">🔙 الرجوع للخلف</a>
+            .btn-primary {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            }
+            .btn-primary:hover { transform: translateY(-2px); }
+            .btn-secondary { background: #f0f0f0; color: #333; }
+            .btn-secondary:hover { background: #e0e0e0; transform: translateY(-2px); }
+            .pyramids { margin-top: 30px; font-size: 40px; opacity: 0.3; }
+            @media (max-width: 768px) {
+              .error-code { font-size: 80px; }
+              h1 { font-size: 24px; }
+              p { font-size: 16px; }
+              .btn { padding: 10px 20px; font-size: 14px; }
+            }
+          </style>
+          <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+        </head>
+        <body>
+          <div class="error-container">
+            <div class="error-icon">🔍</div>
+            <div class="error-code">404</div>
+            <h1>عذراً! الصفحة غير موجودة</h1>
+            <p>يبدو أن الصفحة التي تبحث عنها قد تم نقلها أو حذفها أو أنها لم تكن موجودة من الأساس.</p>
+            <div class="buttons">
+              <a href="/" class="btn btn-primary">🏠 العودة للرئيسية</a>
+              <a href="javascript:history.back()" class="btn btn-secondary">🔙 الرجوع للخلف</a>
+            </div>
+            <div class="pyramids">🐫 🇪🇬 🏜️</div>
           </div>
-          <div class="pyramids">
-            🐫 🇪🇬 🏜️
-          </div>
-        </div>
-      </body>
-      </html>
-    `);
-  } else {
-    // For static files that don't exist, send 404 status
-    res.status(404).send('File not found');
-  }
+        </body>
+        </html>
+      `);
+    }
+  });
 });
 
 const PORT = process.env.PORT || 3000;
