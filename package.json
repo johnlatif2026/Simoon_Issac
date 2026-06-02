@@ -1,42 +1,83 @@
 {
-  "name": "egypt-tourism-website",
-  "version": "1.0.0",
-  "description": "Professional tourism website with booking system and admin dashboard",
+  "name": "simoon-issac-tourism-api",
+  "version": "2.0.0",
+  "description": "Professional secure tourism API with banking-grade security",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "NODE_ENV=production node server.js",
+    "dev": "NODE_ENV=development nodemon server.js",
+    "dev:secure": "NODE_ENV=development nodemon --inspect server.js",
+    "test": "npm run test:security",
+    "test:security": "npm audit",
+    "security-check": "npx audit-ci --high",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "db:migrate": "node scripts/migrate.js",
+    "db:seed": "node scripts/seed.js",
+    "keys:generate": "node scripts/generate-keys.js",
+    "pm2:start": "pm2 start server.js --name simoon-api",
+    "pm2:stop": "pm2 stop simoon-api",
+    "pm2:restart": "pm2 restart simoon-api",
+    "pm2:logs": "pm2 logs simoon-api",
+    "monitor": "node scripts/monitor.js"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "compression": "^1.7.5",
     "connect-redis": "^7.1.0",
-    "cookie-parser": "^1.4.6",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "csurf": "^1.11.0",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "express-rate-limit": "^7.1.5",
-    "express-session": "^1.18.0",
-    "express-validator": "^7.0.1",
-    "firebase-admin": "^11.11.0",
-    "helmet": "^7.1.0",
-    "ioredis": "^5.3.2",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "express-validator": "^7.2.1",
+    "firebase-admin": "^12.7.0",
+    "helmet": "^7.2.0",
+    "ioredis": "^5.4.2",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.7",
-    "rate-limiter-flexible": "^4.0.0",
-    "sanitize-html": "^2.11.0"
+    "nodemailer": "^6.9.16",
+    "rate-limiter-flexible": "^5.0.4",
+    "sanitize-html": "^2.14.0",
+    "xss": "^1.0.15"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "@types/node": "^22.10.5",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-security": "^3.0.1",
+    "nodemon": "^3.1.9",
+    "pm2": "^5.4.3",
+    "prettier": "^3.4.2",
+    "supertest": "^7.0.0",
+    "jest": "^29.7.0"
   },
   "keywords": [
     "tourism",
     "egypt",
-    "booking",
-    "admin-dashboard",
-    "smtp",
-    "email"
+    "booking-system",
+    "secure-api",
+    "banking-grade-security",
+    "firebase",
+    "redis",
+    "jwt-authentication",
+    "csrf-protection",
+    "rate-limiting",
+    "audit-logging",
+    "encryption",
+    "aes-256-gcm"
   ],
-  "author": "",
-  "license": "MIT"
+  "author": "Simoon Issac Tourism",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/simoon-issac/tourism-api"
+  },
+  "private": true
 }
