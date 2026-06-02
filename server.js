@@ -671,7 +671,7 @@ app.post('/api/send-email', verifyToken, async (req, res) => {
                   🐫
                 </div>
                 <!-- إذا كان لديك رابط شعار حقيقي، استخدم هذا:
-                <img src="YOUR_LOGO_URL_HERE" alt="رحلة في مصر" class="logo-img">
+                <img src="https://i.postimg.cc/Vv4ZY0nw/Logo.webp" alt="رحلة في مصر" class="logo-img">
                 -->
               </div>
               <div class="header-title">🇪🇬 رحلة في مصر</div>
@@ -698,14 +698,14 @@ app.post('/api/send-email', verifyToken, async (req, res) => {
               <div class="contact-info">
                 <h4>📞 للتواصل والاستفسارات</h4>
                 <div class="contact-details">
-                  <span>📧 ${process.env.SMTP_USER || 'info@egyptwithsimon.com'}</span>
-                  <span>📱 واتساب: +20 XXX XXX XXX</span>
+                  <span>📧 ${process.env.SMTP_USER || 'test@gmail.com'}</span>
+                  <span>📱 واتساب: +20 1026517329</span>
                 </div>
               </div>
               
               <!-- Call to Action -->
               <div style="text-align: center;">
-                <a href="${process.env.SITE_URL || 'http://localhost:3000'}" class="btn" style="color: #1a472a; text-decoration: none;">
+                <a href="${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}" class="btn" style="color: #1a472a; text-decoration: none;">
                   🏜️ استكشف رحلاتنا
                 </a>
               </div>
@@ -714,11 +714,10 @@ app.post('/api/send-email', verifyToken, async (req, res) => {
             <!-- Footer -->
             <div class="email-footer">
               <div class="footer-links">
-                <a href="${process.env.SITE_URL || 'http://localhost:3000'}/privacy">سياسة الخصوصية</a>
+                <a href="${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/privacy">سياسة الخصوصية</a>
                 <span>•</span>
-                <a href="${process.env.SITE_URL || 'http://localhost:3000'}/terms">الشروط والأحكام</a>
                 <span>•</span>
-                <a href="${process.env.SITE_URL || 'http://localhost:3000'}/contact">اتصل بنا</a>
+                <a href="${process.env.SITE_URL || 'https://simoon-issac.vercel.app/#contact'}/contact">اتصل بنا</a>
               </div>
               <div class="copyright">
                 © ${new Date().getFullYear()} رحلة في مصر مع سيمون. جميع الحقوق محفوظة
