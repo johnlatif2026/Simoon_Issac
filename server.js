@@ -13,7 +13,7 @@ const csrf = require('csurf');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const RedisStore = require('connect-redis').default;
-const Redis = require('ioredis');
+const { Redis } = require('@upstash/redis');
 const { RateLimiterRedis } = require('rate-limiter-flexible');
 const compression = require('compression');
 const { createClient } = require('@supabase/supabase-js');
@@ -24,38 +24,40 @@ const app = express();
 // ============= إعدادات الأمان المتقدمة =============
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Trust proxy for Vercel/Heroku/Nginx
 if (process.env.TRUST_PROXY) {
     app.set('trust proxy', parseInt(process.env.TRUST_PROXY));
 }
 
-// Compression for responses
 app.use(compression());
 
-// ============= إعدادات Redis المتقدمة =============
-const redisClient = new Redis({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT) || 6379,
-    password: process.env.REDIS_PASSWORD || undefined,
-    retryStrategy: (times) => {
-        const delay = Math.min(times * 50, 2000);
-        console.log(`Redis reconnecting in ${delay}ms...`);
-        return delay;
-    },
-    maxRetriesPerRequest: 3,
-    enableReadyCheck: true,
-    lazyConnect: false,
-    tls: process.env.REDIS_TLS === 'true' ? {} : undefined
-});
+// ============= إعدادات Redis (Upstash) - تعريف مبكر =============
+let redisClient;
+try {
+    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+        redisClient = new Redis({
+            url: process.env.UPSTASH_REDIS_REST_URL,
+            token: process.env.UPSTASH_REDIS_REST_TOKEN,
+        });
+        console.log('✅ Redis (Upstash) connected');
+    } else {
+        // للاستخدام المحلي فقط
+        const RedisLocal = require('ioredis');
+        redisClient = new RedisLocal({
+            host: process.env.REDIS_HOST || 'localhost',
+            port: parseInt(process.env.REDIS_PORT) || 6379,
+            password: process.env.REDIS_PASSWORD || undefined,
+            tls: process.env.REDIS_TLS === 'true' ? {} : undefined
+        });
+        console.log('✅ Redis (ioredis) connected');
+    }
+} catch (error) {
+    console.error('❌ Redis initialization error:', error.message);
+}
 
-redisClient.on('connect', () => console.log('✅ Redis connected'));
-redisClient.on('error', (err) => console.error('❌ Redis error:', err));
-
-// ============= التشفير المتقدم مع دعم IV الثابت للبحث =============
+// ============= التشفير =============
 const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
 const IV_LENGTH = 16;
 
-// تشفير عادي (مع IV عشوائي) - للإيداع
 function encrypt(text) {
     if (!text) return null;
     const iv = crypto.randomBytes(IV_LENGTH);
@@ -66,7 +68,6 @@ function encrypt(text) {
     return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
 }
 
-// فك التشفير
 function decrypt(text) {
     if (!text) return null;
     try {
@@ -85,7 +86,6 @@ function decrypt(text) {
     }
 }
 
-// تشفير للبحث (مع IV ثابت من hash الإيميل) - للاستعلامات
 function encryptForSearch(email) {
     if (!email) return null;
     const hash = crypto.createHash('sha256').update(email.toLowerCase()).digest();
@@ -97,7 +97,7 @@ function encryptForSearch(email) {
     return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
 }
 
-// ============= تسجيل الأحداث الأمنية المتقدم =============
+// ============= Audit Log =============
 const auditLog = async (action, userId, ip, userAgent, details, status = 'success') => {
     const logEntry = {
         timestamp: new Date().toISOString(),
@@ -120,13 +120,12 @@ const auditLog = async (action, userId, ip, userAgent, details, status = 'succes
 
     console.log(`[AUDIT] ${action} | User: ${userId || 'anonymous'} | IP: ${ip} | Status: ${status}`);
 
-    // إشعار فوري للحالات الحرجة
     if (status === 'critical') {
         await sendSecurityAlert(logEntry);
     }
 };
 
-// ============= نظام قفل الحساب المحسن =============
+// ============= Account Lockout =============
 const failedAttempts = new Map();
 
 async function checkAccountLockout(identifier) {
@@ -155,7 +154,7 @@ async function recordFailedAttempt(identifier) {
     }
 }
 
-// ============= Rate Limiting المتقدم لكل إندبوينت =============
+// ============= Rate Limiting =============
 const rateLimiterRedis = new RateLimiterRedis({
     storeClient: redisClient,
     keyPrefix: 'rl',
@@ -178,17 +177,7 @@ const strictLimiter = async (req, res, next) => {
     }
 };
 
-// Rate limiter مخصص للـ API العام
-const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests from this IP',
-    standardHeaders: true,
-    legacyHeaders: false,
-    keyGenerator: (req) => req.ip
-});
-
-// ============= الأمان الأساسي =============
+// ============= Helmet & Security =============
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -214,7 +203,6 @@ app.use(helmet({
 
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
-// Session management مع أعلى أمان
 app.use(session({
     store: new RedisStore({ 
         client: redisClient,
@@ -236,7 +224,6 @@ app.use(session({
     }
 }));
 
-// CSRF Protection مع تكوين محسن
 const csrfProtection = csrf({ 
     cookie: {
         key: '__Secure-csrf',
@@ -247,7 +234,6 @@ const csrfProtection = csrf({
     value: (req) => req.headers['x-csrf-token'] || req.body._csrf
 });
 
-// CORS مقيد بشكل صارم
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',');
 app.use(cors({
     origin: (origin, callback) => {
@@ -268,7 +254,7 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// ============= Device Fingerprinting (لمنع سرقة الجلسات) =============
+// ============= Device Fingerprinting =============
 function generateDeviceFingerprint(req) {
     const components = [
         req.get('User-Agent') || 'unknown',
@@ -278,21 +264,6 @@ function generateDeviceFingerprint(req) {
     ];
     return crypto.createHash('sha256').update(components.join('|')).digest('hex');
 }
-
-const verifyDeviceFingerprint = async (req, res, next) => {
-    const fingerprint = generateDeviceFingerprint(req);
-    const storedFingerprint = req.session.deviceFingerprint;
-    
-    if (req.user && storedFingerprint && storedFingerprint !== fingerprint) {
-        await auditLog('DEVICE_FINGERPRINT_MISMATCH', req.user.id, req.ip, req.get('User-Agent'), 'Possible session hijacking', 'critical');
-        await redisClient.del(`session:${req.user.id}`);
-        req.session.destroy();
-        return res.status(401).json({ error: 'Session expired. Please login again.' });
-    }
-    
-    req.deviceFingerprint = fingerprint;
-    next();
-};
 
 // ============= Initialize Firebase =============
 let db;
@@ -319,7 +290,6 @@ try {
 let supabase;
 try {
     if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-        const { createClient } = require('@supabase/supabase-js');
         supabase = createClient(
             process.env.SUPABASE_URL,
             process.env.SUPABASE_ANON_KEY
@@ -332,7 +302,7 @@ try {
     console.error('❌ Supabase initialization error:', error.message);
 }
 
-// ============= Email Transporter مع TLS قوي و Retry Logic =============
+// ============= Email Transporter =============
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT),
@@ -352,7 +322,6 @@ const transporter = nodemailer.createTransport({
     rateLimit: 5
 });
 
-// Verify email configuration
 transporter.verify((error, success) => {
     if (error) {
         console.error('❌ Email transporter error:', error);
@@ -361,7 +330,6 @@ transporter.verify((error, success) => {
     }
 });
 
-// Email sending with retry
 async function sendEmailWithRetry(mailOptions, retries = 3) {
     for (let i = 0; i < retries; i++) {
         try {
@@ -376,9 +344,9 @@ async function sendEmailWithRetry(mailOptions, retries = 3) {
     }
 }
 
-// ============= Middleware للتحقق من التوكن =============
+// ============= Verify Token Middleware =============
 const tokenBlacklist = new Set();
-setInterval(() => tokenBlacklist.clear(), 60 * 60 * 1000); // Clear every hour
+setInterval(() => tokenBlacklist.clear(), 60 * 60 * 1000);
 
 const verifyToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -399,13 +367,11 @@ const verifyToken = async (req, res, next) => {
             maxAge: `${process.env.TOKEN_EXPIRY_HOURS || 1}h`
         });
 
-        // Check if token is revoked in Redis
         const isRevoked = await redisClient.get(`revoked:${token}`);
         if (isRevoked) {
             return res.status(401).json({ error: 'Token revoked. Please login again.' });
         }
 
-        // Check session exists
         const sessionExists = await redisClient.exists(`session:${decoded.id}`);
         if (!sessionExists) {
             return res.status(401).json({ error: 'Session expired. Please login again.' });
@@ -432,7 +398,7 @@ const requireAdmin = async (req, res, next) => {
     next();
 };
 
-// ============= Security Alert with Webhook Support =============
+// ============= Security Alert =============
 async function sendSecurityAlert(logEntry) {
     const alertHtml = `
         <h2 style="color: #d32f2f;">🚨 SECURITY INCIDENT DETECTED</h2>
@@ -457,29 +423,8 @@ async function sendSecurityAlert(logEntry) {
             html: alertHtml,
             priority: 'high'
         });
-
-        // Discord/Slack webhook (optional)
-        if (process.env.DISCORD_WEBHOOK_URL) {
-            const response = await fetch(process.env.DISCORD_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: `🚨 **SECURITY ALERT**\nAction: ${logEntry.action}\nIP: ${logEntry.ip}\nUser: ${logEntry.userId}\nTime: ${logEntry.timestamp}`
-                })
-            });
-        }
     } catch (error) {
         console.error('Failed to send security alert:', error.message);
-    }
-}
-
-// ============= Helper function for timing-safe comparison =============
-function timingSafeCompare(a, b) {
-    if (!a || !b) return false;
-    try {
-        return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
-    } catch {
-        return false;
     }
 }
 
@@ -494,10 +439,10 @@ app.get('/api/csrf-token', csrfProtection, (req, res) => {
 app.post('/api/register',
     strictLimiter,
     csrfProtection,
-    body('fullname').trim().isLength({ min: 3, max: 50 }).matches(/^[\p{L}\s]+$/u).withMessage('الاسم يجب أن يحتوي على حروف فقط'),
-    body('username').trim().isAlphanumeric().isLength({ min: 3, max: 30 }).withMessage('اسم المستخدم يجب أن يكون حروف وأرقام فقط'),
-    body('email').isEmail().normalizeEmail().withMessage('البريد الإلكتروني غير صحيح'),
-    body('password').isLength({ min: 12 }).matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/).withMessage('كلمة المرور ضعيفة'),
+    body('fullname').trim().isLength({ min: 3, max: 50 }).matches(/^[\p{L}\s]+$/u),
+    body('username').trim().isAlphanumeric().isLength({ min: 3, max: 30 }),
+    body('email').isEmail().normalizeEmail(),
+    body('password').isLength({ min: 12 }).matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/),
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -508,7 +453,6 @@ app.post('/api/register',
         try {
             const { fullname, username, email, password } = matchedData(req);
             
-            // التحقق باستخدام التشفير المخصص للبحث
             const searchEncryptedEmail = encryptForSearch(email);
             const existingUserQuery = await db.collection('users')
                 .where('searchEmail', '==', searchEncryptedEmail)
@@ -516,18 +460,16 @@ app.post('/api/register',
                 .get();
             
             if (!existingUserQuery.empty) {
-                await auditLog('REGISTER_DUPLICATE_EMAIL', null, req.ip, req.get('User-Agent'), email, 'warning');
                 return res.status(400).json({ error: 'البريد الإلكتروني مسجل بالفعل' });
             }
 
             const encryptedEmail = encrypt(email);
             const searchEncryptedEmailForDb = encryptForSearch(email);
             const hashedPassword = await bcrypt.hash(password, 12);
-            
             const emailVerificationToken = crypto.randomBytes(32).toString('hex');
             const hashedVerificationToken = await bcrypt.hash(emailVerificationToken, 10);
             
-            const userData = {
+            await db.collection('users').add({
                 fullname: sanitizeHtml(fullname, { allowedTags: [], allowedAttributes: {} }),
                 username: username.toLowerCase(),
                 email: encryptedEmail,
@@ -543,11 +485,8 @@ app.post('/api/register',
                 accountLocked: false,
                 twoFactorEnabled: false,
                 emailNotifications: true
-            };
+            });
             
-            await db.collection('users').add(userData);
-            
-            // إرسال الإيميل مع تأخير عشوائي للأمان
             const verificationLink = `${process.env.SITE_URL}/verify-email?token=${emailVerificationToken}&email=${encodeURIComponent(email)}`;
             setTimeout(() => {
                 sendVerificationEmail(email, fullname, verificationLink).catch(console.error);
@@ -593,24 +532,22 @@ app.post('/api/login',
 
             if (userQuery.empty) {
                 await recordFailedAttempt(username);
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Constant time response
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
             }
 
             const user = { id: userQuery.docs[0].id, ...userQuery.docs[0].data() };
 
             if (!user.emailVerified) {
-                await auditLog('LOGIN_FAILED_EMAIL_NOT_VERIFIED', user.id, clientIP, userAgent, null, 'warning');
                 return res.status(401).json({ error: 'يرجى تفعيل حسابك عبر البريد الإلكتروني' });
             }
 
             if (user.accountLocked) {
-                await auditLog('LOGIN_FAILED_ACCOUNT_LOCKED', user.id, clientIP, userAgent, null, 'critical');
                 return res.status(401).json({ error: 'الحساب مقفل. يرجى التواصل مع الدعم.' });
             }
 
             const isValid = await bcrypt.compare(password, user.password);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Timing attack prevention
+            await new Promise(resolve => setTimeout(resolve, 500));
 
             if (!isValid) {
                 const newAttempts = (user.failedLoginAttempts || 0) + 1;
@@ -620,7 +557,6 @@ app.post('/api/login',
                 if (newAttempts >= maxAttempts) {
                     await db.collection('users').doc(user.id).update({ accountLocked: true });
                     await auditLog('ACCOUNT_AUTO_LOCKED', user.id, clientIP, userAgent, `${newAttempts} failed attempts`, 'critical');
-                    await sendSecurityAlert({ action: 'ACCOUNT_AUTO_LOCKED', userId: user.id, ip: clientIP, userAgent, details: `${newAttempts} failed login attempts` });
                     return res.status(401).json({ error: `الحساب مقفل لمدة ${process.env.ACCOUNT_LOCKOUT_MINUTES || 30} دقيقة` });
                 }
 
@@ -629,7 +565,6 @@ app.post('/api/login',
                 return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
             }
 
-            // Reset failed attempts on successful login
             await db.collection('users').doc(user.id).update({
                 failedLoginAttempts: 0,
                 lastLoginIP: clientIP,
@@ -637,7 +572,6 @@ app.post('/api/login',
                 lastLoginUserAgent: userAgent
             });
 
-            // Create secure token with device fingerprint
             const sessionId = crypto.randomBytes(32).toString('base64url');
             const token = jwt.sign(
                 {
@@ -653,7 +587,6 @@ app.post('/api/login',
                 { expiresIn: `${process.env.TOKEN_EXPIRY_HOURS || 1}h`, algorithm: 'HS256' }
             );
 
-            // Store session in Redis
             await redisClient.setex(`session:${user.id}`, 3600, JSON.stringify({
                 token,
                 sessionId,
@@ -661,7 +594,6 @@ app.post('/api/login',
                 ip: clientIP
             }));
 
-            // Refresh token
             const refreshToken = jwt.sign(
                 { id: user.id, type: 'refresh', version: Date.now() },
                 process.env.REFRESH_SECRET,
@@ -678,7 +610,6 @@ app.post('/api/login',
                 partitioned: true
             });
 
-            // Store device fingerprint in session
             req.session.deviceFingerprint = deviceFingerprint;
 
             await auditLog('LOGIN_SUCCESS', user.id, clientIP, userAgent, null);
@@ -775,7 +706,6 @@ app.post('/api/verify-email',
             }
 
             if (Date.now() > user.verificationExpires) {
-                // Generate new verification token
                 const newToken = crypto.randomBytes(32).toString('hex');
                 const hashedToken = await bcrypt.hash(newToken, 10);
                 await db.collection('users').doc(user.id).update({
@@ -787,7 +717,6 @@ app.post('/api/verify-email',
                 return res.status(400).json({ error: 'Link expired. New verification email sent.' });
             }
 
-            // Timing-safe comparison
             const isValidToken = await bcrypt.compare(token, user.emailVerificationToken);
             if (!isValidToken) {
                 return res.status(400).json({ error: 'Invalid verification token' });
@@ -869,7 +798,7 @@ app.get('/api/me', verifyToken, async (req, res) => {
 // 8. Admin Users Endpoint
 app.get('/api/admin/users', verifyToken, requireAdmin, async (req, res) => {
     try {
-        const { limit = 50, offset = 0, role, emailVerified } = req.query;
+        const { limit = 50, role, emailVerified } = req.query;
         
         let query = db.collection('users')
             .orderBy('createdAt', 'desc')
@@ -965,7 +894,6 @@ app.post('/api/forgot-password',
                 await auditLog('PASSWORD_RESET_REQUESTED', user.id, req.ip, req.get('User-Agent'), null);
             }
             
-            // Constant time response to prevent user enumeration
             const elapsed = Date.now() - startTime;
             const delay = Math.max(0, 1000 - elapsed);
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -1026,14 +954,7 @@ app.post('/api/reset-password',
                 passwordUpdatedIP: req.ip
             });
             
-            // Invalidate all sessions
             await redisClient.del(`session:${userDoc.id}`);
-            
-            // Add to token blacklist
-            const tokens = await redisClient.keys(`session:${userDoc.id}:*`);
-            for (const tokenKey of tokens) {
-                await redisClient.del(tokenKey);
-            }
             
             await auditLog('PASSWORD_RESET_SUCCESS', userDoc.id, req.ip, req.get('User-Agent'), null);
             res.json({ success: true, message: 'Password reset successfully. You can now login with your new password.' });
@@ -1044,7 +965,7 @@ app.post('/api/reset-password',
     }
 );
 
-// 12. Health Check Endpoint
+// 12. Health Check
 app.get('/api/health', async (req, res) => {
     const checks = {
         redis: false,
@@ -1053,7 +974,6 @@ app.get('/api/health', async (req, res) => {
         timestamp: new Date().toISOString()
     };
     
-    // Check Redis
     try {
         await redisClient.ping();
         checks.redis = true;
@@ -1061,7 +981,6 @@ app.get('/api/health', async (req, res) => {
         console.error('Redis health check failed:', error);
     }
     
-    // Check Firebase
     try {
         await db.collection('_health').doc('check').set({ timestamp: Date.now() });
         checks.firebase = true;
@@ -1069,7 +988,6 @@ app.get('/api/health', async (req, res) => {
         console.error('Firebase health check failed:', error);
     }
     
-    // Check Email
     try {
         await transporter.verify();
         checks.email = true;
@@ -1092,94 +1010,21 @@ async function sendVerificationEmail(email, fullname, verificationLink) {
         from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
         to: email,
         subject: `تفعيل حسابك في ${process.env.COMPANY_NAME}`,
-        html: `
-            <div style="direction: rtl; font-family: 'Cairo', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-                <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #4CAF50;">
-                    <h1 style="color: #4CAF50;">${process.env.COMPANY_NAME}</h1>
-                    <h3 style="color: #666;">مرحباً ${fullname}</h3>
-                </div>
-                
-                <div style="padding: 20px 0;">
-                    <p style="font-size: 16px; line-height: 1.5; color: #333;">
-                        شكراً لتسجيلك معنا! يرجى تفعيل حسابك بالضغط على الرابط أدناه:
-                    </p>
-                    
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="${verificationLink}" style="background-color: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">
-                            تفعيل الحساب
-                        </a>
-                    </div>
-                    
-                    <p style="font-size: 14px; color: #666; text-align: center;">
-                        أو انسخ الرابط التالي والصقه في المتصفح:<br>
-                        <span style="color: #4CAF50; word-break: break-all;">${verificationLink}</span>
-                    </p>
-                    
-                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">
-                    
-                    <p style="font-size: 12px; color: #999; text-align: center;">
-                        هذا الرابط صالح لمدة 24 ساعة.<br>
-                        إذا لم تقم بالتسجيل معنا، يرجى تجاهل هذا البريد الإلكتروني.
-                    </p>
-                    
-                    <p style="font-size: 12px; color: #999; text-align: center;">
-                        © ${new Date().getFullYear()} ${process.env.COMPANY_NAME}. جميع الحقوق محفوظة.
-                    </p>
-                </div>
-            </div>
-        `,
-        text: `مرحباً ${fullname},\n\nشكراً لتسجيلك معنا! يرجى تفعيل حسابك بالضغط على الرابط التالي:\n\n${verificationLink}\n\nهذا الرابط صالح لمدة 24 ساعة.\n\nإذا لم تقم بالتسجيل معنا، يرجى تجاهل هذا البريد الإلكتروني.`
+        html: `<div style="direction:rtl;font-family:Arial;text-align:center;padding:20px"><h1>مرحباً ${fullname}</h1><p>شكراً لتسجيلك! اضغط على الرابط لتفعيل حسابك:</p><a href="${verificationLink}" style="background:#4CAF50;color:white;padding:10px 20px;text-decoration:none;border-radius:5px">تفعيل الحساب</a><p>الرابط صالح لمدة 24 ساعة</p></div>`,
+        text: `مرحباً ${fullname}\n\nشكراً لتسجيلك! فعّل حسابك عبر الرابط: ${verificationLink}\nهذا الرابط صالح لمدة 24 ساعة.`
     };
-    
     await sendEmailWithRetry(mailOptions);
 }
 
 async function sendPasswordResetEmail(email, fullname, resetToken) {
     const resetLink = `${process.env.SITE_URL}/reset-password?token=${resetToken}`;
-    
     const mailOptions = {
         from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
         to: email,
         subject: `إعادة تعيين كلمة المرور - ${process.env.COMPANY_NAME}`,
-        html: `
-            <div style="direction: rtl; font-family: 'Cairo', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-                <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #ff9800;">
-                    <h1 style="color: #ff9800;">${process.env.COMPANY_NAME}</h1>
-                    <h3 style="color: #666;">مرحباً ${fullname}</h3>
-                </div>
-                
-                <div style="padding: 20px 0;">
-                    <p style="font-size: 16px; line-height: 1.5; color: #333;">
-                        تلقينا طلباً لإعادة تعيين كلمة المرور لحسابك. اضغط على الرابط أدناه لإكمال العملية:
-                    </p>
-                    
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="${resetLink}" style="background-color: #ff9800; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">
-                            إعادة تعيين كلمة المرور
-                        </a>
-                    </div>
-                    
-                    <p style="font-size: 14px; color: #666; text-align: center;">
-                        أو انسخ الرابط التالي والصقه في المتصفح:<br>
-                        <span style="color: #ff9800; word-break: break-all;">${resetLink}</span>
-                    </p>
-                    
-                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">
-                    
-                    <p style="font-size: 12px; color: #999; text-align: center;">
-                        هذا الرابط صالح لمدة ساعة واحدة.<br>
-                        إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد الإلكتروني.
-                    </p>
-                    
-                    <p style="font-size: 12px; color: #999; text-align: center;">
-                        © ${new Date().getFullYear()} ${process.env.COMPANY_NAME}. جميع الحقوق محفوظة.
-                    </p>
-                </div>
-            </div>
-        `,
-        text: `مرحباً ${fullname},\n\nتلقينا طلباً لإعادة تعيين كلمة المرور لحسابك. اضغط على الرابط التالي لإكمال العملية:\n\n${resetLink}\n\nهذا الرابط صالح لمدة ساعة واحدة.\n\nإذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد الإلكتروني.`
+        html: `<div style="direction:rtl;font-family:Arial;text-align:center;padding:20px"><h1>مرحباً ${fullname}</h1><p>لقد طلبت إعادة تعيين كلمة المرور. اضغط على الرابط:</p><a href="${resetLink}" style="background:#ff9800;color:white;padding:10px 20px;text-decoration:none;border-radius:5px">إعادة تعيين كلمة المرور</a><p>الرابط صالح لمدة ساعة واحدة</p></div>`,
+        text: `مرحباً ${fullname}\n\nلقد طلبت إعادة تعيين كلمة المرور. استخدم الرابط: ${resetLink}\nهذا الرابط صالح لمدة ساعة واحدة.`
     };
-    
     await sendEmailWithRetry(mailOptions);
 }
 
@@ -1217,20 +1062,19 @@ if (require.main === module) {
         console.log('='.repeat(60));
         console.log(`🔒 Environment: ${process.env.NODE_ENV || 'development'}`);
         console.log(`🛡️ Security Level: BANKING GRADE (Enhanced)`);
-        console.log(`📊 Audit Logging: ${process.env.ENABLE_AUDIT_LOGS === 'false' ? 'DISABLED' : 'ENABLED'}`);
+        console.log(`📊 Audit Logging: ENABLED`);
         console.log(`🔐 CSRF Protection: ENABLED`);
         console.log(`🔑 Encryption: AES-256-GCM`);
         console.log(`📧 Email Service: ${process.env.SMTP_HOST}`);
-        console.log(`🗄️ Redis: ${redisClient.status === 'ready' ? 'CONNECTED' : 'DISCONNECTED'}`);
+        console.log(`🗄️ Redis: ${redisClient ? 'CONNECTED' : 'DISCONNECTED'}`);
         console.log(`🔥 Firebase: ${db ? 'CONNECTED' : 'DISCONNECTED'}`);
         console.log('='.repeat(60) + '\n');
     });
     
-    // Graceful shutdown
     process.on('SIGTERM', () => {
         console.log('SIGTERM received. Closing server...');
         server.close(() => {
-            redisClient.quit();
+            if (redisClient && redisClient.quit) redisClient.quit();
             console.log('Server closed');
             process.exit(0);
         });
