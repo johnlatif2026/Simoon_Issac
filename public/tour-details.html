@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>التقييمات - رحلة في مصر مع سيمون | شاركنا رأيك</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>تفاصيل الرحلة - رحلة في مصر | اكتشف عظمة الفراعنة</title>
     <link rel="apple-touch-icon" href="https://i.postimg.cc/Vv4ZY0nw/Logo.webp">
     <link rel="icon" type="image/jpeg" href="https://i.postimg.cc/Vv4ZY0nw/Logo.webp">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -11,15 +11,16 @@
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #D4AF37, #B8860B);
+            --secondary-gradient: linear-gradient(135deg, #2c1810, #5c2e1a);
             --bg-gradient: linear-gradient(135deg, #faf6e9 0%, #f0e6d2 100%);
             --card-bg: rgba(255, 255, 255, 0.95);
             --text-primary: #2c1810;
             --text-secondary: #5c3a2a;
             --border-color: rgba(212, 175, 55, 0.3);
             --shadow: 0 20px 40px rgba(0,0,0,0.1);
-            --shadow-hover: 0 30px 50px rgba(0,0,0,0.15);
             --navbar-bg: rgba(44, 24, 16, 0.97);
             --footer-bg: #1a0f0a;
+            --empty-color: #999;
         }
         
         body.dark-mode {
@@ -30,13 +31,10 @@
             --border-color: rgba(212, 175, 55, 0.5);
             --navbar-bg: rgba(10, 10, 20, 0.98);
             --footer-bg: #0a0a15;
+            --empty-color: #666;
         }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Cairo', sans-serif;
@@ -46,11 +44,10 @@
             transition: all 0.3s ease;
         }
         
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--text-secondary); border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 10px; }
         
-        /* Navbar - محسن للموبايل */
         .navbar {
             position: fixed;
             top: 0;
@@ -58,15 +55,12 @@
             background: var(--navbar-bg);
             backdrop-filter: blur(15px);
             z-index: 1000;
-            padding: 0.7rem 0;
+            padding: 0.8rem 0;
             transition: all 0.3s ease;
             border-bottom: 1px solid var(--border-color);
         }
         
-        .navbar.scrolled {
-            padding: 0.4rem 0;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        }
+        .navbar.scrolled { padding: 0.5rem 0; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
         
         .nav-container {
             max-width: 1400px;
@@ -74,219 +68,257 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 1rem;
+            padding: 0 2rem;
         }
         
-        .nav-logo {
+        .nav-logo { display: flex; align-items: center; gap: 0.8rem; }
+        .logo-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #D4AF37; }
+        .logo-text { font-size: 1.3rem; font-weight: 800; background: linear-gradient(135deg, #D4AF37, #FFD700); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        
+        .nav-menu { display: flex; list-style: none; gap: 2rem; }
+        .nav-menu a { color: var(--text-primary); text-decoration: none; font-weight: 500; transition: all 0.3s; position: relative; }
+        .nav-menu a::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 0; height: 2px; background: linear-gradient(90deg, #D4AF37, #FFD700); transition: width 0.3s; }
+        .nav-menu a:hover::after, .nav-menu a.active::after { width: 100%; }
+        
+        .nav-controls { display: flex; gap: 1rem; align-items: center; }
+        .icon-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--border-color); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-primary); transition: all 0.3s; }
+        .icon-btn:hover { background: #D4AF37; color: #2c1810; transform: scale(1.05); }
+        .lang-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--border-color); border-radius: 25px; padding: 0.3rem 1rem; font-weight: 600; cursor: pointer; color: var(--text-primary); transition: all 0.3s; }
+        .lang-btn:hover { background: #D4AF37; color: #2c1810; }
+        .nav-toggle { display: none; cursor: pointer; }
+        .nav-toggle span { display: block; width: 25px; height: 3px; background: #D4AF37; margin: 5px 0; transition: 0.3s; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 6rem 2rem 4rem; }
+        
+        .trust-badges {
             display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
         }
-        
-        .logo-img {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #D4AF37;
-        }
-        
-        .logo-text {
-            font-size: 1.1rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #D4AF37, #FFD700);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        
-        .nav-menu {
-            display: flex;
-            list-style: none;
-            gap: 1rem;
-        }
-        
-        .nav-menu a {
-            color: var(--text-primary);
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: all 0.3s;
-            position: relative;
-            white-space: nowrap;
-        }
-        
-        .nav-menu a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #D4AF37, #FFD700);
-            transition: width 0.3s;
-        }
-        
-        .nav-menu a:hover::after,
-        .nav-menu a.active::after {
-            width: 100%;
-        }
-        
-        .nav-controls {
-            display: flex;
-            gap: 0.6rem;
-            align-items: center;
-        }
-        
-        .icon-btn {
-            background: rgba(212, 175, 55, 0.2);
-            border: 1px solid var(--border-color);
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: var(--text-primary);
-            transition: all 0.3s;
-            font-size: 0.9rem;
-        }
-        
-        .icon-btn:hover {
-            background: #D4AF37;
-            color: #2c1810;
-            transform: scale(1.05);
-        }
-        
-        .lang-btn {
-            background: rgba(212, 175, 55, 0.2);
-            border: 1px solid var(--border-color);
-            border-radius: 25px;
-            padding: 0.25rem 0.8rem;
-            font-weight: 600;
-            font-size: 0.8rem;
-            cursor: pointer;
-            color: var(--text-primary);
-            transition: all 0.3s;
-        }
-        
-        .lang-btn:hover {
-            background: #D4AF37;
-            color: #2c1810;
-        }
-        
-        .nav-toggle {
-            display: none;
-            cursor: pointer;
-        }
-        
-        .nav-toggle span {
-            display: block;
-            width: 24px;
-            height: 2px;
-            background: #D4AF37;
-            margin: 5px 0;
-            transition: 0.3s;
-        }
-        
-        /* Container - محسن للموبايل */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 4rem 1rem 2rem;
-        }
-        
-        .section-title {
-            text-align: center;
-            font-size: 1.8rem;
-            margin-bottom: 2rem;
-            position: relative;
-            font-weight: 700;
-            word-break: keep-all;
-            white-space: normal;
-            line-height: 1.3;
-        }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, #D4AF37, #FF8C00);
-            border-radius: 3px;
-        }
-        
-        /* Rank Card - محسن */
-        .rank-card {
+        .trust-badge {
             background: var(--card-bg);
-            border-radius: 24px;
-            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .trust-badge i { color: #D4AF37; margin-left: 5px; }
+        
+        .tour-detail-card {
+            background: var(--card-bg);
+            border-radius: 30px;
+            overflow: hidden;
             box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
-            max-width: 700px;
-            margin: 0 auto;
+            margin-bottom: 2rem;
         }
         
-        .rank-form .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .rank-form label {
-            display: block;
-            margin-bottom: 0.4rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        
-        .rank-form input,
-        .rank-form textarea,
-        .rank-form select {
+        .tour-header-image {
             width: 100%;
-            padding: 0.7rem;
+            height: auto;
+            max-height: 450px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .tour-content { padding: 2rem; }
+        
+        .tour-title { font-size: 2rem; margin-bottom: 1rem; color: #D4AF37; }
+        
+        .tour-meta {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+        
+        .tour-meta-item { display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); }
+        .tour-meta-item i { color: #D4AF37; font-size: 1.2rem; }
+        
+        .tour-description {
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+        
+        .empty-text {
+            color: var(--empty-color);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background: rgba(212, 175, 55, 0.05);
+            border-radius: 15px;
+        }
+        
+        .pricing-section {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(184, 134, 11, 0.05));
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        
+        .price-card {
+            text-align: center;
+            padding: 1rem;
+            flex: 1;
+            min-width: 180px;
+        }
+        
+        .price-card h3 { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .price-card .price { font-size: 2rem; font-weight: 800; color: #D4AF37; }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+        
+        .info-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .info-card h3 {
+            color: #D4AF37;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .info-card ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .info-card li {
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-card li i {
+            color: #D4AF37;
+            width: 25px;
+        }
+        
+        .timeline {
+            border-right: 3px solid #D4AF37;
+            padding-right: 15px;
+        }
+        
+        .day {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(212, 175, 55, 0.05);
+            border-radius: 12px;
+        }
+        
+        .day strong { color: #D4AF37; }
+        
+        .faq-item {
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 0;
+            cursor: pointer;
+        }
+        
+        .faq-question {
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .faq-question i { transition: transform 0.3s; }
+        .faq-question.active i { transform: rotate(180deg); }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            padding-right: 20px;
+            color: var(--text-secondary);
+        }
+        
+        .faq-answer.show { max-height: 200px; margin-top: 10px; }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .gallery-grid img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .gallery-grid img:hover { transform: scale(1.02); }
+        
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .lightbox img { max-width: 90%; max-height: 90%; border-radius: 10px; }
+        .lightbox .close-lightbox {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            font-size: 30px;
+            cursor: pointer;
+        }
+        
+        .booking-form-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
             border: 2px solid var(--border-color);
             border-radius: 12px;
             background: var(--card-bg);
             color: var(--text-primary);
             font-family: 'Cairo', sans-serif;
-            font-size: 0.85rem;
             transition: all 0.3s;
         }
-        
-        .rank-form input:focus,
-        .rank-form textarea:focus {
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
             outline: none;
             border-color: #D4AF37;
-        }
-        
-        .rating-input {
-            display: flex;
-            gap: 0.4rem;
-            direction: ltr;
-            justify-content: center;
-            padding: 0.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .rating-input i {
-            font-size: 1.8rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #D4AF37;
-        }
-        
-        .rating-input i:hover {
-            transform: scale(1.1);
         }
         
         .submit-btn {
             background: linear-gradient(135deg, #D4AF37, #FF8C00);
             color: #2c1810;
             border: none;
-            padding: 0.8rem;
+            padding: 1rem;
             border-radius: 12px;
             cursor: pointer;
             font-weight: 700;
@@ -294,281 +326,88 @@
             font-size: 1rem;
             transition: all 0.3s;
         }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
         
-        .submit-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow);
-        }
-        
-        .success-message {
-            background: #4caf50;
+        .back-btn {
+            display: inline-block;
+            background: var(--text-secondary);
             color: #fff;
-            padding: 0.8rem;
-            border-radius: 12px;
-            text-align: center;
-            margin-top: 1rem;
-            font-size: 0.85rem;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            text-decoration: none;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
         }
+        .back-btn:hover { opacity: 0.8; transform: translateX(-5px); }
         
-        /* Rankings Section */
-        .rankings-section {
-            background: rgba(212, 175, 55, 0.05);
-        }
+        footer { background: var(--footer-bg); color: #fff; text-align: center; padding: 2rem; margin-top: 2rem; }
         
-        .rankings-filter {
+        .whatsapp-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: #25D366;
+            color: #fff;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
             display: flex;
-            gap: 0.8rem;
+            align-items: center;
             justify-content: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .filter-btn {
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            padding: 0.4rem 1rem;
-            border-radius: 30px;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-weight: 600;
-            font-size: 0.8rem;
-            color: var(--text-primary);
+            font-size: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             transition: all 0.3s;
+            z-index: 1000;
+            text-decoration: none;
+            animation: pulse 2s infinite;
         }
         
-        .filter-btn:hover,
-        .filter-btn.active {
-            background: linear-gradient(135deg, #D4AF37, #FF8C00);
-            color: #2c1810;
-            border-color: transparent;
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
         }
         
-        .rankings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.2rem;
-        }
+        .whatsapp-btn:hover { transform: scale(1.1); }
         
-        .ranking-card {
-            background: var(--card-bg);
-            border-radius: 18px;
-            padding: 1.2rem;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s;
-        }
-        
-        .ranking-card:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow);
-        }
-        
-        .ranking-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.8rem;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-        
-        .ranking-user {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-        
-        .ranking-user i {
-            font-size: 1.6rem;
-            color: #D4AF37;
-        }
-        
-        .ranking-user h4 {
-            font-size: 0.95rem;
-        }
-        
-        .country {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-        }
-        
-        .ranking-rating {
-            color: #D4AF37;
-            font-size: 0.8rem;
-        }
-        
-        .ranking-message {
-            margin: 0.8rem 0;
-            padding: 0.8rem;
-            background: rgba(212, 175, 55, 0.05);
-            border-radius: 12px;
-            line-height: 1.5;
-            font-size: 0.85rem;
-        }
-        
-        .ranking-message i {
-            color: #D4AF37;
-            margin-left: 0.4rem;
-            opacity: 0.7;
-        }
-        
-        .ranking-date {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-        }
-        
-        .empty-rankings {
-            text-align: center;
-            padding: 2rem;
-            background: var(--card-bg);
-            border-radius: 20px;
-        }
-        
-        .empty-rankings i {
-            font-size: 2.5rem;
-            color: #D4AF37;
-            margin-bottom: 0.8rem;
-        }
-        
-        .empty-rankings h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.3rem;
-        }
-        
-        .empty-rankings p {
-            font-size: 0.85rem;
-            opacity: 0.8;
-        }
-        
-        .loading-spinner {
-            text-align: center;
-            padding: 2rem;
-        }
-        
-        /* Footer */
-        footer {
-            background: var(--footer-bg);
-            color: #fff;
-            text-align: center;
-            padding: 1.5rem;
-            margin-top: 2rem;
-            font-size: 0.8rem;
-        }
-        
-        /* Responsive - محسن جداً للموبايل */
         @media (max-width: 768px) {
-            .nav-toggle {
-                display: block;
-            }
-            
-            .nav-menu {
-                position: fixed;
-                right: -100%;
-                top: 60px;
-                flex-direction: column;
-                background: var(--navbar-bg);
-                backdrop-filter: blur(20px);
-                width: 80%;
-                text-align: center;
-                transition: 0.3s ease;
-                padding: 1.5rem;
-                gap: 1rem;
-                border-radius: 20px 0 0 20px;
-                box-shadow: -5px 0 30px rgba(0,0,0,0.3);
-            }
-            
-            .nav-menu a {
-                font-size: 0.9rem;
-                white-space: normal;
-            }
-            
-            .nav-menu.active {
-                right: 0;
-            }
-            
-            .section-title {
-                font-size: 1.3rem;
-                margin-bottom: 1.5rem;
-            }
-            
-            .section-title::after {
-                width: 50px;
-                bottom: -8px;
-            }
-            
-            .container {
-                padding: 3.5rem 0.8rem 1.5rem;
-            }
-            
-            .rank-card {
-                padding: 1.2rem;
-                border-radius: 20px;
-            }
-            
-            .rankings-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            .rating-input i {
-                font-size: 1.4rem;
-            }
-            
-            .ranking-card {
-                padding: 1rem;
-            }
-            
-            .filter-btn {
-                padding: 0.3rem 0.8rem;
-                font-size: 0.7rem;
-            }
-            
-            .rank-form label {
-                font-size: 0.85rem;
-            }
-            
-            .rank-form input,
-            .rank-form textarea {
-                padding: 0.6rem;
-                font-size: 0.8rem;
-            }
-            
-            .submit-btn {
-                padding: 0.7rem;
-                font-size: 0.9rem;
-            }
+            .nav-toggle { display: block; }
+            .nav-menu { position: fixed; right: -100%; top: 70px; flex-direction: column; background: var(--navbar-bg); backdrop-filter: blur(15px); width: 100%; text-align: center; transition: 0.3s; padding: 2rem 0; gap: 1.5rem; z-index: 999; }
+            .nav-menu.active { right: 0; }
+            .tour-title { font-size: 1.5rem; }
+            .tour-header-image { max-height: 250px; }
+            .container { padding: 5rem 1rem 2rem; }
+            .pricing-section { flex-direction: column; }
+            .info-grid { grid-template-columns: 1fr; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+            .price-card { min-width: auto; }
         }
         
         @media (max-width: 480px) {
-            .section-title {
-                font-size: 1.1rem;
-            }
-            
-            .rating-input i {
-                font-size: 1.2rem;
-            }
-            
-            .empty-rankings h3 {
-                font-size: 0.95rem;
-            }
-            
-            .empty-rankings p {
-                font-size: 0.75rem;
-            }
+            .gallery-grid { grid-template-columns: 1fr; }
+            .tour-content { padding: 1rem; }
         }
-        .logo-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  color: inherit;
-}
+        
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(212, 175, 55, 0.05);
+            border-radius: 15px;
+            color: var(--empty-color);
+        }
+        
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #D4AF37;
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-logo">
-                <a href="/" class="logo-link"></a>
                 <img src="https://i.postimg.cc/Vv4ZY0nw/Logo.webp" alt="Logo" class="logo-img">
                 <span class="logo-text" data-key="logo">رحلة في مصر</span>
             </div>
@@ -592,90 +431,152 @@
         </div>
     </nav>
 
-    <section class="rank-section">
-        <div class="container">
-            <h2 class="section-title" data-key="add_review_title">✨ أضف تقييمك ✨</h2>
-            <div class="rank-card">
-                <form id="rankForm" class="rank-form">
-                    <div class="form-group">
-                        <label data-key="full_name">الاسم الكامل</label>
-                        <input type="text" id="rankName" placeholder="أدخل اسمك" required>
-                    </div>
-                    <div class="form-group">
-                        <label data-key="country">الدولة</label>
-                        <input type="text" id="rankCountry" placeholder="مثال: مصر، السعودية، إنجلترا" required>
-                    </div>
-                    <div class="form-group">
-                        <label data-key="your_rating">تقييمك</label>
-                        <div class="rating-input">
-                            <i class="far fa-star" data-rating="1"></i>
-                            <i class="far fa-star" data-rating="2"></i>
-                            <i class="far fa-star" data-rating="3"></i>
-                            <i class="far fa-star" data-rating="4"></i>
-                            <i class="far fa-star" data-rating="5"></i>
-                        </div>
-                        <input type="hidden" id="rankRating" required>
-                    </div>
-                    <div class="form-group">
-                        <label data-key="your_message">رسالتك</label>
-                        <textarea id="rankMessage" rows="4" placeholder="شاركنا تجربتك مع رحلة في مصر..."></textarea>
-                    </div>
-                    <button type="submit" class="submit-btn" data-key="submit_review">📝 إرسال التقييم</button>
-                </form>
-                <div id="rankMessageSuccess" class="success-message" style="display: none;"></div>
+    <div class="container">
+        <a href="/#tours" class="back-btn" data-key="back_to_tours"><i class="fas fa-arrow-right"></i> العودة إلى الجولات</a>
+        
+        <div class="trust-badges">
+            <span class="trust-badge"><i class="fas fa-lock"></i> 🔒 دفع آمن</span>
+            <span class="trust-badge"><i class="fas fa-bolt"></i> ⚡ حجز فوري</span>
+            <span class="trust-badge"><i class="fab fa-whatsapp"></i> 💬 واتساب</span>
+            <span class="trust-badge"><i class="fas fa-star"></i> ⭐ تقييم عالي</span>
+        </div>
+        
+        <div id="tourDetailContainer">
+            <div class="no-data" style="text-align: center; padding: 3rem;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p data-key="loading">جاري تحميل تفاصيل الرحلة...</p>
             </div>
         </div>
-    </section>
-
-    <section class="rankings-section">
-        <div class="container">
-            <h2 class="section-title" data-key="client_reviews">💬 آراء عملائنا</h2>
-            <div class="rankings-filter">
-                <button class="filter-btn active" data-filter="all" data-key="all">الكل</button>
-                <button class="filter-btn" data-filter="5">★★★★★ (5)</button>
-                <button class="filter-btn" data-filter="4">★★★★☆ (4)</button>
-                <button class="filter-btn" data-filter="3">★★★☆☆ (3)</button>
+        
+        <div class="info-grid" id="infoGrid" style="display: none;">
+            <div class="info-card">
+                <h3><i class="fas fa-check-circle"></i> ✔ <span data-key="includes_title">يشمل</span></h3>
+                <ul id="includesList"><li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li></ul>
             </div>
-            <div class="rankings-grid" id="rankingsGrid">
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin"></i> <span data-key="loading">جاري تحميل التقييمات...</span>
+            <div class="info-card">
+                <h3><i class="fas fa-times-circle"></i> ✖ <span data-key="excludes_title">لا يشمل</span></h3>
+                <ul id="excludesList"><li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li></ul>
+            </div>
+            <div class="info-card">
+                <h3><i class="fas fa-map-marked-alt"></i> 📍 <span data-key="itinerary_title">البرنامج</span></h3>
+                <div class="timeline" id="timelineList"><div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div></div>
+            </div>
+            <div class="info-card">
+                <h3><i class="fas fa-question-circle"></i> ❓ <span data-key="faq_title">أسئلة شائعة</span></h3>
+                <div id="faqList"><div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div></div>
+            </div>
+        </div>
+        
+        <div class="tour-detail-card" id="gallerySection" style="display: none;">
+            <div class="tour-content">
+                <h3><i class="fas fa-images"></i> 📸 <span data-key="gallery_title">صور الرحلة</span></h3>
+                <div class="gallery-grid" id="galleryGrid"><div class="empty-text" data-key="no_images"><i class="fas fa-image"></i> لا توجد صور</div></div>
+            </div>
+        </div>
+        
+        <div class="booking-form-container" id="bookingSection" style="display: none;">
+            <h2 style="margin-bottom: 1.5rem; color: #D4AF37;" data-key="book_now_title">📝 احجز الآن</h2>
+            <form id="bookingForm">
+                <div class="form-group"><label data-key="full_name_label">الاسم الكامل</label><input type="text" id="fullName" required placeholder="أدخل اسمك الكامل"></div>
+                <div class="form-group"><label data-key="email_label">البريد الإلكتروني</label><input type="email" id="email" required placeholder="أدخل البريد الالكتروني"></div>
+                <div class="form-group"><label data-key="phone_label">رقم الهاتف</label><input type="tel" id="phone" required placeholder="ادخل رقم الهاتف"></div>
+                <div class="form-group"><label data-key="nationality_label">الجنسية</label>
+                    <select id="nationality" required>
+                        <option value="" data-key="select_nationality">اختر الجنسية</option>
+                        <option value="egyptian">🇪🇬 مصري / عربي</option>
+                        <option value="foreign">أجنبي</option>
+                    </select>
                 </div>
-            </div>
+                <div class="form-group"><label data-key="persons_label">عدد الأفراد</label><input type="number" id="persons" min="1" value="1" required></div>
+                <div class="form-group"><label data-key="trip_date_label">تاريخ الرحلة</label><input type="date" id="tripDate" required></div>
+                <input type="hidden" id="tourId">
+                <input type="hidden" id="tourName">
+                <input type="hidden" id="tourPriceEgyptian">
+                <input type="hidden" id="tourPriceForeign">
+                <button type="submit" class="submit-btn" data-key="confirm_booking">✅ تأكيد الحجز</button>
+            </form>
         </div>
-    </section>
+    </div>
 
-    <footer>
-        <div class="container">
-            <p data-key="copyright">&copy; 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة</p>
-        </div>
-    </footer>
+    <a href="https://wa.me/201026517329" class="whatsapp-btn" target="_blank"><i class="fab fa-whatsapp"></i></a>
+    
+    <div class="lightbox" id="lightbox">
+        <span class="close-lightbox" onclick="closeLightbox()">&times;</span>
+        <img id="lightboxImg" src="">
+    </div>
+    
+    <footer><div class="container" style="padding: 1rem;"><p data-key="copyright">&copy; 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة</p></div></footer>
 
     <script>
-        const API_URL = window.location.origin;
+        const urlParams = new URLSearchParams(window.location.search);
+        const tourId = urlParams.get('id');
         
-        // Mobile menu toggle
-        const navToggle = document.querySelector('.nav-toggle');
-        const navMenu = document.querySelector('.nav-menu');
-        if (navToggle) {
-            navToggle.addEventListener('click', () => {
-                navMenu.classList.toggle('active');
+        let currentTour = null;
+        
+        // Empty default tour - no data at all
+        const emptyTour = {
+            name: "",
+            description: "",
+            days: "",
+            priceEgyptian: "",
+            priceForeign: "",
+            image: null,
+            gallery: [],
+            itinerary: [],
+            includes: [],
+            excludes: [],
+            faq: []
+        };
+        
+        function initFaq() {
+            document.querySelectorAll('.faq-item').forEach(item => {
+                const question = item.querySelector('.faq-question');
+                const answer = item.querySelector('.faq-answer');
+                if (question) {
+                    const newQuestion = question.cloneNode(true);
+                    question.parentNode.replaceChild(newQuestion, question);
+                    newQuestion.addEventListener('click', function(e){
+                        const parentItem = this.closest('.faq-item');
+                        const targetAnswer = parentItem.querySelector('.faq-answer')
+                        if (targetAnswer) {
+                            targetAnswer.classList.toggle('show');
+                            this.classList.toggle('active');
+                            }
+                            });
+                            
+                            if (answer.classList.contains('show')) {
+                                answer.classList.remove('show');
+                    }
+                }
             });
         }
         
-        document.querySelectorAll('.nav-menu a').forEach(link => {
-            link.addEventListener('click', () => {
-                navMenu.classList.remove('active');
-            });
+        function openLightbox(src) {
+            document.getElementById('lightboxImg').src = src;
+            document.getElementById('lightbox').style.display = 'flex';
+        }
+        
+        function closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+        }
+        
+        document.getElementById('lightbox')?.addEventListener('click', (e) => {
+            if (e.target === document.getElementById('lightbox')) closeLightbox();
         });
         
-        // Dark Mode
+        const navToggle = document.querySelector('.nav-toggle');
+        const navMenu = document.querySelector('.nav-menu');
+        if (navToggle) {
+            navToggle.addEventListener('click', () => { navMenu.classList.toggle('active'); });
+            document.querySelectorAll('.nav-menu a').forEach(link => {
+                link.addEventListener('click', () => { navMenu.classList.remove('active'); });
+            });
+        }
+        
         function initDarkMode() {
             const darkModeBtn = document.getElementById('darkModeBtn');
             const isDark = localStorage.getItem('darkMode') === 'true';
-            if (isDark) {
-                document.body.classList.add('dark-mode');
-                darkModeBtn.innerHTML = '<i class="fas fa-sun"></i>';
-            }
+            if (isDark) { document.body.classList.add('dark-mode'); darkModeBtn.innerHTML = '<i class="fas fa-sun"></i>'; }
             darkModeBtn.addEventListener('click', () => {
                 document.body.classList.toggle('dark-mode');
                 const isDarkNow = document.body.classList.contains('dark-mode');
@@ -684,7 +585,6 @@
             });
         }
         
-        // Language System - كاملة مع كل المفاتيح
         const translations = {
             ar: {
                 logo: "رحلة في مصر",
@@ -694,21 +594,32 @@
                 nav_gallery: "المعرض",
                 nav_ratings: "التقييمات",
                 nav_contact: "اتصل بنا",
-                add_review_title: "✨ أضف تقييمك ✨",
-                full_name: "الاسم الكامل",
-                country: "الدولة",
-                your_rating: "تقييمك",
-                your_message: "رسالتك",
-                submit_review: "📝 إرسال التقييم",
-                client_reviews: "💬 آراء عملائنا",
-                all: "الكل",
+                back_to_tours: "العودة إلى الجولات",
+                includes_title: "يشمل",
+                excludes_title: "لا يشمل",
+                itinerary_title: "البرنامج",
+                faq_title: "أسئلة شائعة",
+                gallery_title: "صور الرحلة",
+                book_now_title: "📝 احجز الآن",
+                full_name_label: "الاسم الكامل",
+                email_label: "البريد الإلكتروني",
+                phone_label: "رقم الهاتف",
+                nationality_label: "الجنسية",
+                select_nationality: "اختر الجنسية",
+                persons_label: "عدد الأفراد",
+                trip_date_label: "تاريخ الرحلة",
+                confirm_booking: "✅ تأكيد الحجز",
                 copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة",
-                loading: "جاري تحميل التقييمات...",
-                no_reviews_title: "📭 لا توجد تقييمات بعد",
-                no_reviews_message: "كن أول من يضيف تقييماً!",
-                name_placeholder: "أدخل اسمك",
-                country_placeholder: "مثال: مصر، السعودية، إنجلترا",
-                message_placeholder: "شاركنا تجربتك مع رحلة في مصر..."
+                loading: "جاري تحميل تفاصيل الرحلة...",
+                no_data_found: "لا توجد بيانات",
+                no_images: "لا توجد صور",
+                egyptian_price_label: "للمصريين / العرب",
+                foreign_price_label: "للأجانب",
+                per_person: "للشخص الواحد",
+                days_label: "أيام",
+                nights_label: "ليالي",
+                group_tours: "جولات جماعية خاصة",
+                guide_label: "مرشد سياحي متحدث بالعربية والإنجليزية"
             },
             en: {
                 logo: "Journey in Egypt",
@@ -718,287 +629,338 @@
                 nav_gallery: "Gallery",
                 nav_ratings: "Ratings",
                 nav_contact: "Contact",
-                add_review_title: "✨ Add Your Review ✨",
-                full_name: "Full Name",
-                country: "Country",
-                your_rating: "Your Rating",
-                your_message: "Your Message",
-                submit_review: "📝 Submit Review",
-                client_reviews: "💬 Client Reviews",
-                all: "All",
+                back_to_tours: "Back to Tours",
+                includes_title: "Includes",
+                excludes_title: "Excludes",
+                itinerary_title: "Itinerary",
+                faq_title: "FAQ",
+                gallery_title: "Tour Gallery",
+                book_now_title: "📝 Book Now",
+                full_name_label: "Full Name",
+                email_label: "Email",
+                phone_label: "Phone Number",
+                nationality_label: "Nationality",
+                select_nationality: "Select Nationality",
+                persons_label: "Number of Persons",
+                trip_date_label: "Trip Date",
+                confirm_booking: "✅ Confirm Booking",
                 copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved",
-                loading: "Loading reviews...",
-                no_reviews_title: "📭 No Reviews Yet",
-                no_reviews_message: "Be the first to add a review!",
-                name_placeholder: "Enter your name",
-                country_placeholder: "Example: Egypt, Saudi Arabia, England",
-                message_placeholder: "Share your experience with Journey in Egypt..."
+                loading: "Loading tour details...",
+                no_data_found: "No data available",
+                no_images: "No images available",
+                egyptian_price_label: "For Egyptians / Arabs",
+                foreign_price_label: "For Foreigners",
+                per_person: "per person",
+                days_label: "days",
+                nights_label: "nights",
+                group_tours: "Private group tours",
+                guide_label: "Tour guide speaking Arabic & English"
             }
         };
         
         let currentLang = localStorage.getItem('language') || 'ar';
         
-        function updateLanguage() {
-            // تحديث جميع العناصر التي تحمل data-key
-            const elements = document.querySelectorAll('[data-key]');
-            elements.forEach(el => {
-                const key = el.getAttribute('data-key');
-                if (translations[currentLang][key]) {
-                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                        el.placeholder = translations[currentLang][key];
-                    } else {
-                        el.textContent = translations[currentLang][key];
-                    }
-                }
-            });
-            
-            // تحديث placeholder الحقول الخاصة
-            const nameField = document.getElementById('rankName');
-            if (nameField) nameField.placeholder = translations[currentLang].name_placeholder;
-            
-            const countryField = document.getElementById('rankCountry');
-            if (countryField) countryField.placeholder = translations[currentLang].country_placeholder;
-            
-            const messageField = document.getElementById('rankMessage');
-            if (messageField) messageField.placeholder = translations[currentLang].message_placeholder;
-            
-            // تحديث زر اللغة
-            const langBtn = document.getElementById('langBtn');
-            langBtn.innerHTML = currentLang === 'ar' ? 'EN' : 'AR';
-            
-            // تحديث اتجاه الصفحة
-            document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-            document.documentElement.lang = currentLang;
-            
-            // حفظ اللغة
-            localStorage.setItem('language', currentLang);
-            
-            // إعادة عرض التقييمات لتحديث النصوص
-            loadRankings();
+function updateLanguage() {
+    // 1. تحديث النصوص العامة (data-key)
+    document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (translations[currentLang][key]) {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
+                if (el.hasAttribute('placeholder')) el.placeholder = translations[currentLang][key];
+                else if (el.tagName === 'SELECT' && el.options[0]) el.options[0].text = translations[currentLang][key];
+            } else {
+                el.textContent = translations[currentLang][key];
+            }
         }
+    });
+    
+    // 2. تحديث خيارات الجنسية (القيم الثابتة)
+    const nationalitySelect = document.getElementById('nationality');
+    if (nationalitySelect && nationalitySelect.options[1] && nationalitySelect.options[2]) {
+        if (currentLang === 'ar') {
+            nationalitySelect.options[1].text = '🇪🇬 مصري / عربي';
+            nationalitySelect.options[2].text = 'أجنبي';
+        } else {
+            nationalitySelect.options[1].text = '🇪🇬 Egyptian / Arab';
+            nationalitySelect.options[2].text = 'Foreigner';
+        }
+    }
+    
+    // 3. تحديث نصوص الأزرار والعلامات التجارية الثابتة
+    const trustBadges = document.querySelectorAll('.trust-badge');
+    if (trustBadges.length === 4) {
+        if (currentLang === 'ar') {
+            trustBadges[0].innerHTML = '<i class="fas fa-lock"></i> 🔒 دفع آمن';
+            trustBadges[1].innerHTML = '<i class="fas fa-bolt"></i> ⚡ حجز فوري';
+            trustBadges[2].innerHTML = '<i class="fab fa-whatsapp"></i> 💬 واتساب';
+            trustBadges[3].innerHTML = '<i class="fas fa-star"></i> ⭐ تقييم عالي';
+        } else {
+            trustBadges[0].innerHTML = '<i class="fas fa-lock"></i> 🔒 Secure Payment';
+            trustBadges[1].innerHTML = '<i class="fas fa-bolt"></i> ⚡ Instant Booking';
+            trustBadges[2].innerHTML = '<i class="fab fa-whatsapp"></i> 💬 WhatsApp';
+            trustBadges[3].innerHTML = '<i class="fas fa-star"></i> ⭐ High Rating';
+        }
+    }
+    
+    document.getElementById('fullName').placeholder = translations[currentLang].full_name_label;
+    document.getElementById('email').placeholder = translations[currentLang].email_label;
+    document.getElementById('phone').placeholder = translations[currentLang].phone_label;
+
+    document.getElementById('langBtn').innerHTML = currentLang === 'ar' ? 'EN' : 'AR';
+    document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = currentLang;
+    localStorage.setItem('language', currentLang);
+    
+    if (currentTour) {
+        displayTourDetails(currentTour);
+        displayInfoGrid(currentTour);
+        displayGallery(currentTour);
+    }
+}
         
         function initLanguage() {
-            const langBtn = document.getElementById('langBtn');
-            langBtn.addEventListener('click', () => {
+            document.getElementById('langBtn').addEventListener('click', () => {
                 currentLang = currentLang === 'ar' ? 'en' : 'ar';
                 updateLanguage();
             });
             updateLanguage();
         }
         
-        // Rating stars functionality
-        function initRatingStars() {
-            const stars = document.querySelectorAll('.rating-input i');
-            const ratingInput = document.getElementById('rankRating');
-            
-            stars.forEach(star => {
-                star.addEventListener('click', function() {
-                    const rating = this.getAttribute('data-rating');
-                    ratingInput.value = rating;
-                    stars.forEach((s, index) => {
-                        s.className = index < rating ? 'fas fa-star' : 'far fa-star';
-                    });
-                });
-                
-                star.addEventListener('mouseover', function() {
-                    const rating = this.getAttribute('data-rating');
-                    stars.forEach((s, index) => {
-                        s.className = index < rating ? 'fas fa-star' : 'far fa-star';
-                    });
-                });
-                
-                star.addEventListener('mouseout', function() {
-                    const currentRating = ratingInput.value;
-                    stars.forEach((s, index) => {
-                        s.className = index < currentRating ? 'fas fa-star' : 'far fa-star';
-                    });
-                });
-            });
-        }
-        
-        // Load rankings
-        async function loadRankings() {
-            const grid = document.getElementById('rankingsGrid');
-            if (!grid) return;
+        async function loadTourDetails() {
+            const container = document.getElementById('tourDetailContainer');
             
             try {
-                const response = await fetch('/api/rankings');
-                if (response.ok) {
-                    const rankings = await response.json();
-                    displayRankings(rankings);
-                } else {
-                    throw new Error('Failed to load');
+                let tour = null;
+                if (tourId) {
+                    try {
+                        const response = await fetch(`/api/tours/${tourId}`);
+                        if (response.ok) tour = await response.json();
+                    } catch(e) { console.log('API not available, using empty data'); }
                 }
+                
+                if (!tour || Object.keys(tour).length === 0) {
+                    tour = { ...emptyTour, id: tourId || 'unknown' };
+                }
+                
+                currentTour = tour;
+                
+                displayTourDetails(tour);
+                displayInfoGrid(tour);
+                displayGallery(tour);
+                
+                document.getElementById('infoGrid').style.display = 'grid';
+                document.getElementById('gallerySection').style.display = 'block';
+                document.getElementById('bookingSection').style.display = 'block';
+                
+                document.getElementById('tourId').value = tour.id || '';
+                document.getElementById('tourName').value = tour.name || '';
+                document.getElementById('tourPriceEgyptian').value = tour.priceEgyptian || '';
+                document.getElementById('tourPriceForeign').value = tour.priceForeign || '';
+                
+                initFaq();
             } catch (error) {
-                console.error('Error loading rankings:', error);
-                displayRankings([]);
+                console.error('Error:', error);
+                container.innerHTML = '<div class="no-data" style="text-align:center; padding:3rem;"><i class="fas fa-exclamation-triangle"></i><p data-key="no_data_found">لا توجد بيانات</p></div>';
             }
         }
         
-        function displayRankings(rankings) {
-            const grid = document.getElementById('rankingsGrid');
-            if (!grid) return;
+        function displayTourDetails(tour) {
+            const container = document.getElementById('tourDetailContainer');
             
-            if (!rankings || rankings.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-rankings">
-                        <i class="fas fa-comment-dots"></i>
-                        <h3 data-key="no_reviews_title">📭 لا توجد تقييمات بعد</h3>
-                        <p data-key="no_reviews_message">كن أول من يضيف تقييماً!</p>
-                    </div>
-                `;
-                // تحديث النصوص داخل الـ empty-rankings بعد إضافتها
-                const emptyTitle = grid.querySelector('[data-key="no_reviews_title"]');
-                const emptyMsg = grid.querySelector('[data-key="no_reviews_message"]');
-                if (emptyTitle) emptyTitle.textContent = translations[currentLang].no_reviews_title;
-                if (emptyMsg) emptyMsg.textContent = translations[currentLang].no_reviews_message;
-                return;
-            }
+            const hasImage = tour.image && tour.image.trim() !== '';
+            const imageHtml = hasImage ? `<img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" class="tour-header-image" onerror="this.style.display=\'none\'">` : '';
             
-            grid.innerHTML = rankings.map(ranking => `
-                <div class="ranking-card" data-rating="${ranking.rating}">
-                    <div class="ranking-header">
-                        <div class="ranking-user">
-                            <i class="fas fa-user-circle"></i>
-                            <div>
-                                <h4>${escapeHtml(ranking.name)}</h4>
-                                <span class="country">📍 ${escapeHtml(ranking.country)}</span>
+            const daysText = tour.days ? `${tour.days} <span data-key="days_label">أيام</span> / ${parseInt(tour.days)-1 || tour.days} <span data-key="nights_label">ليالي</span>` : '';
+            
+            container.innerHTML = `
+                <div class="tour-detail-card">
+                    ${imageHtml}
+                    <div class="tour-content">
+                        <h1 class="tour-title">${tour.name ? '✨ ' + escapeHtml(tour.name) + ' ✨' : ''}</h1>
+                        <div class="tour-meta">
+                            ${tour.days ? `<div class="tour-meta-item"><i class="fas fa-calendar-week"></i> <span>${daysText}</span></div>` : ''}
+                            <div class="tour-meta-item"><i class="fas fa-users"></i> <span data-key="group_tours">جولات جماعية خاصة</span></div>
+                            <div class="tour-meta-item"><i class="fas fa-language"></i> <span data-key="guide_label">مرشد سياحي متحدث بالعربية والإنجليزية</span></div>
+                        </div>
+                        ${tour.description ? `<div class="tour-description"><p>${escapeHtml(tour.description)}</p></div>` : ''}
+                        <div class="pricing-section">
+                            ${tour.priceEgyptian ? `
+                            <div class="price-card">
+                                <h3><i class="fas fa-user"></i> 🇪🇬 <span data-key="egyptian_price_label">للمصريين / العرب</span></h3>
+                                <div class="price">${escapeHtml(String(tour.priceEgyptian))} جنيه</div>
+                                <small data-key="per_person">للشخص الواحد</small>
                             </div>
+                            ` : ''}
+                            ${tour.priceForeign ? `
+                            <div class="price-card">
+                                <h3><i class="fas fa-globe"></i> 🌍 <span data-key="foreign_price_label">للأجانب</span></h3>
+                                <div class="price">${escapeHtml(String(tour.priceForeign))} $</div>
+                                <small data-key="per_person">للشخص الواحد</small>
+                            </div>
+                            ` : ''}
+                            ${!tour.priceEgyptian && !tour.priceForeign ? '<div class="empty-text" data-key="no_data_found">لا توجد بيانات</div>' : ''}
                         </div>
-                        <div class="ranking-rating">
-                            ${generateStars(ranking.rating)}
-                        </div>
-                    </div>
-                    <div class="ranking-message">
-                        <i class="fas fa-quote-right"></i>
-                        <p>${escapeHtml(ranking.message)}</p>
-                    </div>
-                    <div class="ranking-date">
-                        <i class="far fa-calendar-alt"></i>
-                        <span>${formatDate(ranking.createdAt)}</span>
                     </div>
                 </div>
-            `).join('');
-            
-            setupFilter();
+            `;
         }
         
-        function generateStars(rating) {
-            let stars = '';
-            for (let i = 1; i <= 5; i++) {
-                stars += i <= rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+function displayInfoGrid(tour) {
+    const includesList = document.getElementById('includesList');
+    const excludesList = document.getElementById('excludesList');
+    const timelineList = document.getElementById('timelineList');
+    const faqList = document.getElementById('faqList');
+    
+    if (tour.includes && tour.includes.length > 0) {
+        includesList.innerHTML = tour.includes.map(item => `<li><i class="fas fa-check"></i> ${escapeHtml(item)}</li>`).join('');
+    } else {
+        includesList.innerHTML = '<li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
+    }
+    
+    if (tour.excludes && tour.excludes.length > 0) {
+        excludesList.innerHTML = tour.excludes.map(item => `<li><i class="fas fa-times"></i> ${escapeHtml(item)}</li>`).join('');
+    } else {
+        excludesList.innerHTML = '<li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
+    }
+    
+    if (tour.itinerary && tour.itinerary.length > 0) {
+        timelineList.innerHTML = tour.itinerary.map((item, idx) => `<div class="day"><strong>${item.includes('اليوم') ? item.split(':')[0] + ':' : '📌'}</strong> ${escapeHtml(item)}</div>`).join('');
+    } else {
+        timelineList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
+    }
+    
+    if (tour.faq && tour.faq.length > 0) {
+        faqList.innerHTML = tour.faq.map(item => `
+            <div class="faq-item">
+                <div class="faq-question">${escapeHtml(item.q || item.question)} <i class="fas fa-chevron-down"></i></div>
+                <div class="faq-answer">${escapeHtml(item.a || item.answer)}</div>
+            </div>
+        `).join('');
+        // إعادة ربط الأحداث بعد إنشاء العناصر الجديدة
+        initFaq();
+    } else {
+        faqList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
+    }
+}
+        
+        function displayGallery(tour) {
+            const galleryGrid = document.getElementById('galleryGrid');
+            
+            if (tour.gallery && tour.gallery.length > 0 && tour.gallery[0] && tour.gallery[0].trim() !== '') {
+                galleryGrid.innerHTML = tour.gallery.map(img => `<img src="${escapeHtml(img)}" onclick="openLightbox('${escapeHtml(img)}')" loading="lazy" onerror="this.style.display=\'none\'">`).join('');
+            } else {
+                galleryGrid.innerHTML = '<div class="empty-text" data-key="no_images"><i class="fas fa-image"></i> لا توجد صور</div>';
             }
-            return stars;
         }
         
-        function setupFilter() {
-            const filterBtns = document.querySelectorAll('.filter-btn');
-            const cards = document.querySelectorAll('.ranking-card');
-            
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    
-                    const filter = btn.getAttribute('data-filter');
-                    cards.forEach(card => {
-                        if (filter === 'all') {
-                            card.style.display = 'block';
-                        } else {
-                            const rating = card.getAttribute('data-rating');
-                            card.style.display = rating === filter ? 'block' : 'none';
-                        }
-                    });
-                });
-            });
-        }
-        
-        // Submit ranking
-        const rankForm = document.getElementById('rankForm');
-        if (rankForm) {
-            rankForm.addEventListener('submit', async (e) => {
+        const bookingForm = document.getElementById('bookingForm');
+        if (bookingForm) {
+            bookingForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                const name = document.getElementById('rankName').value;
-                const country = document.getElementById('rankCountry').value;
-                const rating = document.getElementById('rankRating').value;
-                const message = document.getElementById('rankMessage').value;
-                const successDiv = document.getElementById('rankMessageSuccess');
+                const submitBtn = bookingForm.querySelector('.submit-btn');
+                const originalText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...';
                 
-                if (!rating) {
-                    alert(currentLang === 'ar' ? 'الرجاء اختيار تقييم' : 'Please select a rating');
+                const nationality = document.getElementById('nationality').value;
+                const persons = parseInt(document.getElementById('persons').value);
+                const tourIdVal = document.getElementById('tourId').value;
+                const tourNameVal = document.getElementById('tourName').value;
+                const priceEgyptian = parseFloat(document.getElementById('tourPriceEgyptian').value);
+                const priceForeign = parseFloat(document.getElementById('tourPriceForeign').value);
+                
+                if (!nationality) {
+                    alert(currentLang === 'ar' ? '❌ الرجاء اختيار الجنسية' : '❌ Please select nationality');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
                     return;
                 }
                 
-                const rankingData = {
-                    name: name,
-                    country: country,
-                    rating: parseInt(rating),
-                    message: message,
-                    createdAt: new Date().toISOString()
+                const pricePerPerson = nationality === 'egyptian' ? priceEgyptian : priceForeign;
+                const totalPrice = pricePerPerson * persons;
+                const currency = nationality === 'egyptian' ? 'EGP' : 'USD';
+                
+                const bookingData = {
+                    tourId: tourIdVal,
+                    tourName: tourNameVal,
+                    name: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    nationality: nationality,
+                    persons: persons,
+                    date: document.getElementById('tripDate').value,
+                    totalPrice: totalPrice,
+                    currency: currency
                 };
                 
+                if (!bookingData.name || !bookingData.email || !bookingData.phone || !bookingData.date) {
+                    alert(currentLang === 'ar' ? '❌ الرجاء تعبئة جميع الحقول المطلوبة' : '❌ Please fill all required fields');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                    return;
+                }
+                
                 try {
-                    const response = await fetch('/api/rankings', {
+                    const response = await fetch('/api/bookings', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(rankingData)
+                        body: JSON.stringify(bookingData)
                     });
                     
+                    const result = await response.json();
+                    
                     if (response.ok) {
-                        successDiv.textContent = currentLang === 'ar' 
-                            ? '✅ تم إضافة تقييمك بنجاح! شكراً لك.'
-                            : '✅ Your review has been added successfully! Thank you.';
-                        successDiv.style.display = 'block';
-                        rankForm.reset();
-                        const stars = document.querySelectorAll('.rating-input i');
-                        stars.forEach(star => star.className = 'far fa-star');
-                        document.getElementById('rankRating').value = '';
-                        
-                        setTimeout(() => {
-                            successDiv.style.display = 'none';
-                            loadRankings();
-                        }, 2000);
+                        const paymentData = {
+                            bookingId: result.booking?.id || Date.now().toString(),
+                            name: bookingData.name,
+                            email: bookingData.email,
+                            phone: bookingData.phone,
+                            tour: bookingData.tourName,
+                            persons: persons,
+                            date: bookingData.date,
+                            totalPrice: totalPrice,
+                            currency: currency,
+                            nationality: nationality,
+                            transferNumber: result.booking?.transferNumber || 'TR-' + Date.now()
+                        };
+                        localStorage.setItem('bookingData', JSON.stringify(paymentData));
+                        window.location.href = '/pay';
                     } else {
-                        const error = await response.json();
-                        alert(error.message || (currentLang === 'ar' ? 'حدث خطأ في إرسال التقييم' : 'Error sending review'));
+                        alert((currentLang === 'ar' ? '❌ حدث خطأ في تأكيد الحجز: ' : '❌ Error confirming booking: ') + (result.error || (currentLang === 'ar' ? 'يرجى المحاولة مرة أخرى' : 'Please try again')));
                     }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert(currentLang === 'ar' ? 'حدث خطأ في الاتصال بالخادم' : 'Connection error');
+                } catch(error) {
+                    console.error('Booking error:', error);
+                    alert(currentLang === 'ar' ? '❌ حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.' : '❌ Connection error. Please try again.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
                 }
             });
         }
         
         function escapeHtml(str) {
             if (!str) return '';
-            return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
-        }
-        
-        function formatDate(dateString) {
-            if (!dateString) return '-';
-            const date = new Date(dateString);
-            return date.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
+            return String(str).replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
             });
         }
         
-        // Navbar scroll effect
         window.addEventListener('scroll', () => {
             const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
+            if (window.scrollY > 50) navbar.classList.add('scrolled');
+            else navbar.classList.remove('scrolled');
         });
         
         initDarkMode();
         initLanguage();
-        initRatingStars();
-        loadRankings();
+        loadTourDetails();
+        
+        window.openLightbox = openLightbox;
+        window.closeLightbox = closeLightbox;
     </script>
 </body>
 </html>
