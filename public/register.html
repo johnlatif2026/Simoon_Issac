@@ -305,8 +305,8 @@
                 }
 
                 // التحقق من طول كلمة المرور
-                if (password.length < 6) {
-                    messageDiv.textContent = '❌ كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                if (password.length < 3) {
+                    messageDiv.textContent = '❌ كلمة المرور يجب أن تكون 3 أحرف على الأقل';
                     messageDiv.className = 'message error-message';
                     messageDiv.style.display = 'block';
                     setTimeout(() => messageDiv.style.display = 'none', 3000);
