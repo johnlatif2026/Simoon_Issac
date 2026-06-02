@@ -315,6 +315,23 @@ try {
     process.exit(1);
 }
 
+// ============= Initialize Supabase =============
+let supabase;
+try {
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+        const { createClient } = require('@supabase/supabase-js');
+        supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_ANON_KEY
+        );
+        console.log('✅ Supabase connected');
+    } else {
+        console.log('⚠️ Supabase not configured, skipping...');
+    }
+} catch (error) {
+    console.error('❌ Supabase initialization error:', error.message);
+}
+
 // ============= Email Transporter مع TLS قوي و Retry Logic =============
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
