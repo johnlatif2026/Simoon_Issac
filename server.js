@@ -119,8 +119,8 @@ app.post('/api/register', async (req, res) => {
       return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
     }
     
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
+    if (password.length < 3) {
+      return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 3 أحرف على الأقل' });
     }
     
     // Check if user exists in Firebase
