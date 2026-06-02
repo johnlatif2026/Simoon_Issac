@@ -3,1195 +3,964 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const admin = require('firebase-admin');
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
-const sanitizeHtml = require('sanitize-html');
-const crypto = require('crypto');
-const bcrypt = require('bcryptjs');
-const { body, validationResult, matchedData, header } = require('express-validator');
-const csrf = require('csurf');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const RedisStore = require('connect-redis').default;
-const { Redis } = require('@upstash/redis');
-const { RateLimiterRedis } = require('rate-limiter-flexible');
-const compression = require('compression');
-const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
 
-// ============= إعدادات الأمان المتقدمة =============
-const isProduction = process.env.NODE_ENV === 'production';
-
-if (process.env.TRUST_PROXY) {
-    app.set('trust proxy', parseInt(process.env.TRUST_PROXY));
-}
-
-app.use(compression());
-
-// ============= إعدادات Redis (Upstash) - تعريف مبكر =============
-let redisClient;
-try {
-    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-        redisClient = new Redis({
-            url: process.env.UPSTASH_REDIS_REST_URL,
-            token: process.env.UPSTASH_REDIS_REST_TOKEN,
-        });
-        console.log('✅ Redis (Upstash) connected');
-    } else {
-        // للاستخدام المحلي فقط
-        const RedisLocal = require('ioredis');
-        redisClient = new RedisLocal({
-            host: process.env.REDIS_HOST || 'localhost',
-            port: parseInt(process.env.REDIS_PORT) || 6379,
-            password: process.env.REDIS_PASSWORD || undefined,
-            tls: process.env.REDIS_TLS === 'true' ? {} : undefined
-        });
-        console.log('✅ Redis (ioredis) connected');
-    }
-} catch (error) {
-    console.error('❌ Redis initialization error:', error.message);
-}
-
-// ============= التشفير =============
-const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
-const IV_LENGTH = 16;
-
-function encrypt(text) {
-    if (!text) return null;
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv('aes-256-gcm', ENCRYPTION_KEY, iv);
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    const authTag = cipher.getAuthTag();
-    return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
-}
-
-function decrypt(text) {
-    if (!text) return null;
-    try {
-        const [ivHex, authTagHex, encryptedText] = text.split(':');
-        if (!ivHex || !authTagHex || !encryptedText) return null;
-        const iv = Buffer.from(ivHex, 'hex');
-        const authTag = Buffer.from(authTagHex, 'hex');
-        const decipher = crypto.createDecipheriv('aes-256-gcm', ENCRYPTION_KEY, iv);
-        decipher.setAuthTag(authTag);
-        let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
-        return decrypted;
-    } catch (error) {
-        console.error('Decryption error:', error);
-        return null;
-    }
-}
-
-function encryptForSearch(email) {
-    if (!email) return null;
-    const hash = crypto.createHash('sha256').update(email.toLowerCase()).digest();
-    const iv = hash.slice(0, IV_LENGTH);
-    const cipher = crypto.createCipheriv('aes-256-gcm', ENCRYPTION_KEY, iv);
-    let encrypted = cipher.update(email.toLowerCase(), 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    const authTag = cipher.getAuthTag();
-    return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
-}
-
-// ============= Audit Log =============
-const auditLog = async (action, userId, ip, userAgent, details, status = 'success') => {
-    const logEntry = {
-        timestamp: new Date().toISOString(),
-        action,
-        userId: userId || 'anonymous',
-        ip,
-        userAgent: userAgent || 'unknown',
-        details: typeof details === 'object' ? JSON.stringify(details) : details,
-        status,
-        sessionId: crypto.randomBytes(32).toString('base64url')
-    };
-
-    if (db) {
-        try {
-            await db.collection('auditLogs').add(logEntry);
-        } catch (error) {
-            console.error('Failed to write audit log:', error);
-        }
-    }
-
-    console.log(`[AUDIT] ${action} | User: ${userId || 'anonymous'} | IP: ${ip} | Status: ${status}`);
-
-    if (status === 'critical') {
-        await sendSecurityAlert(logEntry);
-    }
-};
-
-// ============= Account Lockout =============
-const failedAttempts = new Map();
-
-async function checkAccountLockout(identifier) {
-    const attempts = failedAttempts.get(identifier) || { count: 0, firstAttempt: Date.now() };
-
-    if (attempts.count >= parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 10) {
-        const lockoutTime = (parseInt(process.env.ACCOUNT_LOCKOUT_MINUTES) || 30) * 60 * 1000;
-        if (Date.now() - attempts.firstAttempt < lockoutTime) {
-            const remaining = Math.ceil((lockoutTime - (Date.now() - attempts.firstAttempt)) / 60000);
-            throw new Error(`الحساب مقفل لمدة ${remaining} دقائق`);
-        } else {
-            failedAttempts.delete(identifier);
-        }
-    }
-    return attempts;
-}
-
-async function recordFailedAttempt(identifier) {
-    const attempts = failedAttempts.get(identifier) || { count: 0, firstAttempt: Date.now() };
-    attempts.count++;
-    failedAttempts.set(identifier, attempts);
-
-    const maxAttempts = parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 10;
-    if (attempts.count === maxAttempts) {
-        await auditLog('ACCOUNT_LOCKED', identifier, null, null, `${attempts.count} failed attempts`, 'critical');
-    }
-}
-
-// ============= Rate Limiting =============
-const rateLimiterRedis = new RateLimiterRedis({
-    storeClient: redisClient,
-    keyPrefix: 'rl',
-    points: 5,
-    duration: 900,
-    blockDuration: 1800
-});
-
-const strictLimiter = async (req, res, next) => {
-    try {
-        const key = `${req.ip}:${req.originalUrl}`;
-        await rateLimiterRedis.consume(key);
-        next();
-    } catch (error) {
-        await auditLog('RATE_LIMIT_EXCEEDED', null, req.ip, req.get('User-Agent'), req.originalUrl, 'warning');
-        res.status(429).json({
-            error: 'محاولات كثيرة جداً. يرجى المحاولة بعد 30 دقيقة.',
-            retryAfter: Math.ceil(error.msBeforeNext / 1000)
-        });
-    }
-};
-
-// ============= Helmet & Security =============
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-            imgSrc: ["'self'", "data:", "https:", "http:"],
-            connectSrc: ["'self'", process.env.API_URL, "https://*.googleapis.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            frameAncestors: ["'none'"],
-            formAction: ["'self'"],
-            upgradeInsecureRequests: []
-        }
-    },
-    hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true
-    },
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
-
-app.use(cookieParser(process.env.COOKIE_SECRET));
-
-app.use(session({
-    store: new RedisStore({ 
-        client: redisClient,
-        prefix: 'session:',
-        ttl: 86400
-    }),
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    name: '__Secure-sessionId',
-    cookie: {
-        secure: isProduction,
-        httpOnly: true,
-        sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000,
-        domain: isProduction ? process.env.COOKIE_DOMAIN : undefined,
-        path: '/',
-        partitioned: true
-    }
-}));
-
-const csrfProtection = csrf({ 
-    cookie: {
-        key: '__Secure-csrf',
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'strict'
-    },
-    value: (req) => req.headers['x-csrf-token'] || req.body._csrf
-});
-
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',');
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin) || (isProduction && origin?.includes('vercel.app'))) {
-            callback(null, true);
-        } else {
-            console.warn(`CORS blocked: ${origin}`);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With', 'X-Device-Fingerprint'],
-    exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining'],
-    maxAge: 86400
-}));
-
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-
-// ============= Device Fingerprinting =============
-function generateDeviceFingerprint(req) {
-    const components = [
-        req.get('User-Agent') || 'unknown',
-        req.get('Accept-Language') || 'unknown',
-        req.get('Accept-Encoding') || 'unknown',
-        req.ip || 'unknown'
-    ];
-    return crypto.createHash('sha256').update(components.join('|')).digest('hex');
-}
-
-// ============= Initialize Firebase =============
+// Initialize Firebase Admin
 let db;
 try {
-    if (process.env.FIREBASE_CONFIG) {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-            projectId: serviceAccount.project_id
-        });
-        db = admin.firestore();
-        db.settings({ ignoreUndefinedProperties: true });
-        console.log('✅ Firebase connected');
-    } else {
-        console.error('❌ FIREBASE_CONFIG not found in environment');
-        process.exit(1);
-    }
+  if (process.env.FIREBASE_CONFIG) {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    db = admin.firestore();
+    console.log('✅ Firebase connected successfully');
+  } else {
+    console.warn('⚠️ No FIREBASE_CONFIG found, using memory storage');
+    db = null;
+  }
 } catch (error) {
-    console.error('❌ Firebase initialization error:', error.message);
-    process.exit(1);
+  console.error('❌ Firebase initialization error:', error.message);
+  db = null;
 }
 
-// ============= Initialize Supabase =============
-let supabase;
-try {
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-        supabase = createClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_ANON_KEY
-        );
-        console.log('✅ Supabase connected');
-    } else {
-        console.log('⚠️ Supabase not configured, skipping...');
-    }
-} catch (error) {
-    console.error('❌ Supabase initialization error:', error.message);
-}
+// In-memory storage fallback
+const memoryStorage = {
+  tours: [],
+  packages: [],
+  bookings: [],
+  contacts: [],
+  rankings: []
+};
 
-// ============= Email Transporter =============
+const memoryUsers = [];
+
+// Email transporter
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT),
-    secure: true,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    },
-    tls: {
-        rejectUnauthorized: true,
-        minVersion: 'TLSv1.2',
-        ciphers: 'HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA'
-    },
-    pool: true,
-    maxConnections: 5,
-    rateDelta: 1000,
-    rateLimit: 5
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT),
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
 });
 
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('❌ Email transporter error:', error);
-    } else {
-        console.log('✅ Email transporter ready');
-    }
-});
-
-async function sendEmailWithRetry(mailOptions, retries = 3) {
-    for (let i = 0; i < retries; i++) {
-        try {
-            const info = await transporter.sendMail(mailOptions);
-            console.log(`📧 Email sent: ${info.messageId}`);
-            return info;
-        } catch (error) {
-            console.error(`Email attempt ${i + 1} failed:`, error.message);
-            if (i === retries - 1) throw error;
-            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+// ============= UNIFIED EMAIL TEMPLATE FUNCTION =============
+function generateUnifiedEmailHTML(title, greeting, content, buttonText = null, buttonLink = null) {
+  return `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${title}</title>
+      <style>
+        body {
+          font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
+          background-color: #f0f2f5;
+          margin: 0;
+          padding: 20px;
+          direction: rtl;
         }
-    }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #ffffff;
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        .header {
+          background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+          padding: 30px 20px;
+          text-align: center;
+          color: #2c1810;
+        }
+        .header h1 {
+          margin: 0;
+          font-size: 26px;
+          letter-spacing: 1px;
+        }
+        .header p {
+          margin: 10px 0 0;
+          font-size: 14px;
+          opacity: 0.9;
+        }
+        .content {
+          padding: 30px;
+          background: #ffffff;
+        }
+        .greeting {
+          font-size: 20px;
+          font-weight: bold;
+          color: #2c1810;
+          margin-bottom: 20px;
+          border-right: 4px solid #D4AF37;
+          padding-right: 15px;
+        }
+        .message-box {
+          background-color: #f8f9fa;
+          border-radius: 16px;
+          padding: 20px;
+          margin: 20px 0;
+          line-height: 1.7;
+          color: #333;
+        }
+        .button {
+          display: inline-block;
+          background: linear-gradient(135deg, #D4AF37, #FF8C00);
+          color: #2c1810;
+          text-decoration: none;
+          padding: 12px 30px;
+          border-radius: 30px;
+          font-weight: bold;
+          margin: 20px 0;
+          text-align: center;
+          transition: transform 0.2s;
+        }
+        .button:hover {
+          transform: scale(1.02);
+        }
+        .footer {
+          background-color: #f8f9fa;
+          padding: 20px;
+          text-align: center;
+          font-size: 12px;
+          color: #888;
+          border-top: 1px solid #eee;
+        }
+        .footer p {
+          margin: 5px 0;
+        }
+        .social-links {
+          margin-top: 10px;
+        }
+        hr {
+          border: none;
+          border-top: 1px solid #eee;
+          margin: 20px 0;
+        }
+        @media (max-width: 480px) {
+          .content {
+            padding: 20px;
+          }
+          .header h1 {
+            font-size: 22px;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🇪🇬 رحلة في مصر مع سيمون</h1>
+          <p>اكتشف جمال مصر الأصيل</p>
+        </div>
+        <div class="content">
+          <div class="greeting">${greeting}</div>
+          <div class="message-box">
+            ${content}
+          </div>
+          ${buttonText && buttonLink ? `<div style="text-align: center;"><a href="${buttonLink}" class="button">${buttonText}</a></div>` : ''}
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} رحلة في مصر مع سيمون - جميع الحقوق محفوظة</p>
+          <p>📍 مصر - القاهرة | 📞 للاستفسارات: ${process.env.SUPPORT_PHONE || '01026517329'}</p>
+          <div class="social-links">
+            🌐 ${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
 }
 
-// ============= Verify Token Middleware =============
-const tokenBlacklist = new Set();
-setInterval(() => tokenBlacklist.clear(), 60 * 60 * 1000);
+async function sendUnifiedEmail(to, subject, title, greeting, content, buttonText = null, buttonLink = null) {
+  try {
+    const emailHtml = generateUnifiedEmailHTML(title, greeting, content, buttonText, buttonLink);
+    await transporter.sendMail({
+      from: `"رحلة في مصر مع سيمون" <${process.env.SMTP_USER}>`,
+      to: to,
+      subject: subject,
+      html: emailHtml
+    });
+    console.log(`📧 Unified email sent to ${to} - Subject: ${subject}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Unified email error:', error.message);
+    return false;
+  }
+}
 
-const verifyToken = async (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-    
-    if (!token) {
-        return res.status(401).json({ error: 'Authentication required' });
-    }
+async function sendAdminNotification(visitorName, visitorEmail, visitorPhone, message) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@egyptwithsimon.com';
+  const content = `
+    <p><strong>📩 لديك رسالة جديدة من موقع رحلة في مصر</strong></p>
+    <hr>
+    <p><strong>👤 الاسم:</strong> ${visitorName}</p>
+    <p><strong>📧 البريد الإلكتروني:</strong> <a href="mailto:${visitorEmail}">${visitorEmail}</a></p>
+    <p><strong>📞 رقم الهاتف:</strong> ${visitorPhone || 'غير مدخل'}</p>
+    <p><strong>💬 نص الرسالة:</strong></p>
+    <p style="background: #f0f0f0; padding: 15px; border-radius: 10px;">${message.replace(/\n/g, '<br>')}</p>
+    <hr>
+    <p>يمكنك الرد على هذا البريد للتواصل مع العميل مباشرة.</p>
+  `;
+  
+  return await sendUnifiedEmail(
+    adminEmail,
+    '📬 رسالة جديدة من الموقع - رحلة في مصر',
+    'رسالة جديدة من العميل',
+    `صباح/مساء الخير مدير الموقع،`,
+    content,
+    'الرد على العميل',
+    `mailto:${visitorEmail}`
+  );
+}
 
-    if (tokenBlacklist.has(token)) {
-        await auditLog('TOKEN_REUSE', null, req.ip, req.get('User-Agent'), token, 'critical');
-        return res.status(401).json({ error: 'Token invalidated. Please login again.' });
-    }
+async function sendAccountCreatedEmail(email, fullname, username, password) {
+  const content = `
+    <p>أهلاً بك في منصة <strong>رحلة في مصر مع سيمون</strong>.</p>
+    <p>تم إنشاء حسابك بنجاح، ويمكنك الآن الوصول إلى لوحة التحكم وإدارة المحتوى بكل سهولة.</p>
+    <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; margin: 15px 0;">
+      <p><strong>📝 بيانات حسابك:</strong></p>
+      <p>👤 <strong>الاسم الكامل:</strong> ${fullname}</p>
+      <p>🔑 <strong>اسم المستخدم:</strong> <span style="color: #D4AF37; font-weight: bold;">${username}</span></p>
+      <p>🔐 <strong>كلمة المرور:</strong> <span style="color: #D4AF37; font-weight: bold;">${password}</span></p>
+      <p>📧 <strong>البريد الإلكتروني:</strong> ${email}</p>
+    </div>
+    <p style="color: #f44336; font-size: 13px;">⚠️ يرجى حفظ هذه البيانات في مكان آمن. نوصي بتغيير كلمة المرور بعد تسجيل الدخول الأول.</p>
+  `;
+  
+  return await sendUnifiedEmail(
+    email,
+    '🎉 ترحيباً بك - تم إنشاء حسابك بنجاح',
+    'مرحباً بك في عائلتنا',
+    `أهلاً بك ${fullname}،`,
+    content,
+    'تسجيل الدخول الآن',
+    `${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/login`
+  );
+}
 
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET, {
-            algorithms: ['HS256'],
-            maxAge: `${process.env.TOKEN_EXPIRY_HOURS || 1}h`
-        });
+async function sendForgotPasswordEmail(email, fullname, resetLink) {
+  const content = `
+    <p>عزيزي/عزيزتي <strong>${fullname}</strong>،</p>
+    <p>لقد تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.</p>
+    <p>لإعادة تعيين كلمة المرور، يرجى النقر على الزر أدناه:</p>
+    <div style="text-align: center; margin: 25px 0;">
+      <a href="${resetLink}" style="background: linear-gradient(135deg, #D4AF37, #FF8C00); color: #2c1810; text-decoration: none; padding: 12px 30px; border-radius: 30px; font-weight: bold; display: inline-block;">إعادة تعيين كلمة المرور</a>
+    </div>
+    <p>هذا الرابط صالح لمدة ساعة واحدة فقط.</p>
+    <p>إذا لم تكن أنت من طلب إعادة التعيين، يمكنك تجاهل هذا البريد.</p>
+  `;
+  
+  return await sendUnifiedEmail(
+    email,
+    '🔐 إعادة تعيين كلمة المرور - رحلة في مصر',
+    'طلب إعادة تعيين كلمة المرور',
+    `السلام عليكم ${fullname}،`,
+    content,
+    'إعادة تعيين كلمة المرور',
+    resetLink
+  );
+}
 
-        const isRevoked = await redisClient.get(`revoked:${token}`);
-        if (isRevoked) {
-            return res.status(401).json({ error: 'Token revoked. Please login again.' });
-        }
+async function sendBookingConfirmationEmail(booking) {
+  const { name, email, tourName, persons, date, totalAmount, currency, transferNumber } = booking;
+  
+  const content = `
+    <p>شكراً لثقتكم بنا وحجز رحلتكم مع <strong>رحلة في مصر مع سيمون</strong>.</p>
+    <p>تم استلام طلب حجزكم بنجاح، وسنقوم بالتواصل معكم خلال 24 ساعة لتأكيد التفاصيل النهائية.</p>
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin: 15px 0;">
+      <p><strong>🏝️ تفاصيل الحجز:</strong></p>
+      <p><strong>اسم الرحلة:</strong> ${tourName}</p>
+      <p><strong>👥 عدد الأشخاص:</strong> ${persons}</p>
+      <p><strong>📅 التاريخ:</strong> ${date}</p>
+      <p><strong>💰 السعر الإجمالي:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه مصري' : 'دولار أمريكي'}</p>
+      <p><strong>🔢 رقم الحجز المرجعي:</strong> ${transferNumber}</p>
+    </div>
+    <p>في حالة وجود أي استفسار، يمكنك الاتصال بنا.</p>
+  `;
+  
+  return await sendUnifiedEmail(
+    email,
+    '🎉 تأكيد حجز رحلتك - رحلة في مصر مع سيمون',
+    'تم تأكيد حجزك بنجاح',
+    `عزيزي/عزيزتي ${name}،`,
+    content,
+    'زيارة موقعنا',
+    process.env.SITE_URL || 'https://simoon-issac.vercel.app'
+  );
+}
 
-        const sessionExists = await redisClient.exists(`session:${decoded.id}`);
-        if (!sessionExists) {
-            return res.status(401).json({ error: 'Session expired. Please login again.' });
-        }
+async function sendPaymentConfirmationEmail(email, name, tour, persons, date, totalAmount, currency, transferNumber) {
+  const content = `
+    <div style="text-align: center; margin-bottom: 20px;">
+      <span style="font-size: 50px;">✅</span>
+    </div>
+    <p>تم تأكيد عملية الدفع الخاصة برحلتك بنجاح!</p>
+    <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; margin: 15px 0;">
+      <p><strong>🏝️ الرحلة:</strong> ${tour}</p>
+      <p><strong>👥 عدد الأشخاص:</strong> ${persons}</p>
+      <p><strong>📅 التاريخ:</strong> ${date}</p>
+      <p><strong>💰 المبلغ المدفوع:</strong> ${totalAmount} ${currency === 'EGP' ? 'جنيه مصري' : 'دولار أمريكي'}</p>
+      <p><strong>🔢 رقم التحويل:</strong> ${transferNumber}</p>
+    </div>
+    <p>نشكركم على ثقتكم، وسنقوم بتجهيز كل ما يلزم لرحلتكم.</p>
+  `;
+  
+  return await sendUnifiedEmail(
+    email,
+    '✅ تأكيد الدفع - رحلة في مصر مع سيمون',
+    'تم تأكيد دفعك بنجاح',
+    `عزيزي/عزيزتي ${name}،`,
+    content,
+    'زيارة موقعنا',
+    process.env.SITE_URL || 'https://simoon-issac.vercel.app'
+  );
+}
 
-        req.user = decoded;
-        req.token = token;
-        next();
-    } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            await auditLog('TOKEN_EXPIRED', null, req.ip, req.get('User-Agent'), null, 'warning');
-            return res.status(401).json({ error: 'Token expired. Please refresh.' });
-        }
-        await auditLog('INVALID_TOKEN', null, req.ip, req.get('User-Agent'), error.message, 'warning');
-        return res.status(403).json({ error: 'Invalid token' });
-    }
-};
+async function sendContactThankYouEmail(name, email, message) {
+  const content = `
+    <p>شكراً لتواصلك معنا عبر موقع <strong>رحلة في مصر مع سيمون</strong>.</p>
+    <p>لقد استلمنا رسالتك التالية:</p>
+    <div style="background: #f0f0f0; padding: 15px; border-radius: 10px; margin: 15px 0;">
+      <p><em>"${message.substring(0, 200)}${message.length > 200 ? '...' : ''}"</em></p>
+    </div>
+    <p>سنقوم بالرد عليك في أقرب وقت ممكن (خلال 24 ساعة كحد أقصى).</p>
+    <p>مع جزيل الشكر،<br>فريق رحلة في مصر مع سيمون</p>
+  `;
+  
+  return await sendUnifiedEmail(
+    email,
+    '📧 شكراً لتواصلك مع رحلة في مصر',
+    'تم استلام رسالتك',
+    `مرحباً ${name}،`,
+    content,
+    'تصفح رحلاتنا',
+    `${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/#tours`
+  );
+}
 
-const requireAdmin = async (req, res, next) => {
-    if (req.user.role !== 'admin') {
-        await auditLog('UNAUTHORIZED_ADMIN_ACCESS', req.user.id, req.ip, req.get('User-Agent'), 'Attempted admin access', 'critical');
-        return res.status(403).json({ error: 'Admin access required' });
-    }
+const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token provided' });
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
     next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid token' });
+  }
 };
 
-// ============= Security Alert =============
-async function sendSecurityAlert(logEntry) {
-    const alertHtml = `
-        <h2 style="color: #d32f2f;">🚨 SECURITY INCIDENT DETECTED</h2>
-        <hr>
-        <p><strong>Action:</strong> ${logEntry.action}</p>
-        <p><strong>User ID:</strong> ${logEntry.userId}</p>
-        <p><strong>IP Address:</strong> ${logEntry.ip}</p>
-        <p><strong>User Agent:</strong> ${logEntry.userAgent}</p>
-        <p><strong>Details:</strong> ${logEntry.details}</p>
-        <p><strong>Status:</strong> <span style="color: #d32f2f;">${logEntry.status}</span></p>
-        <p><strong>Timestamp:</strong> ${new Date(logEntry.timestamp).toLocaleString('ar-EG')}</p>
-        <hr>
-        <p style="color: #666;">Please investigate immediately.</p>
-    `;
-
-    try {
-        await sendEmailWithRetry({
-            from: `"Security Alert" <${process.env.SMTP_USER}>`,
-            to: process.env.ADMIN_EMAIL,
-            cc: process.env.SUPPORT_EMAIL,
-            subject: `🚨 [CRITICAL] Security Alert: ${logEntry.action}`,
-            html: alertHtml,
-            priority: 'high'
-        });
-    } catch (error) {
-        console.error('Failed to send security alert:', error.message);
+async function initDefaultAdmin() {
+  const bcrypt = require('bcryptjs');
+  const defaultUsername = process.env.ADMIN_USERNAME || 'admin';
+  const defaultPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const defaultEmail = process.env.ADMIN_EMAIL || 'admin@egyptwithsimon.com';
+  
+  if (db) {
+    const adminQuery = await db.collection('users').where('username', '==', defaultUsername).get();
+    if (adminQuery.empty) {
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+      await db.collection('users').add({
+        fullname: 'المدير العام',
+        username: defaultUsername,
+        email: defaultEmail,
+        password: hashedPassword,
+        role: 'admin',
+        createdAt: new Date().toISOString()
+      });
+      console.log('✅ Default admin user created in Firebase');
     }
+  } else {
+    const existingAdmin = memoryUsers.find(u => u.username === defaultUsername);
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+      memoryUsers.push({
+        id: 'admin',
+        fullname: 'المدير العام',
+        username: defaultUsername,
+        email: defaultEmail,
+        password: hashedPassword,
+        role: 'admin',
+        createdAt: new Date().toISOString()
+      });
+      console.log('✅ Default admin user created in memory');
+    }
+  }
 }
-
-// ============= TOURS ENDPOINTS =============
-
-// 1. GET /api/tours - جلب قائمة الجولات السياحية
-app.get('/api/tours', async (req, res) => {
-    try {
-        // بيانات وهمية للتجربة - استبدلها ببيانات من Firebase عند وجودها
-        const mockTours = [
-            { 
-                id: '1', 
-                name: 'أهرامات الجيزة', 
-                price: 500, 
-                duration: '4 ساعات',
-                location: 'القاهرة',
-                description: 'جولة رائعة لزيارة أهرامات الجيزة وأبو الهول'
-            },
-            { 
-                id: '2', 
-                name: 'مدينة الأقصر', 
-                price: 700, 
-                duration: '6 ساعات',
-                location: 'الأقصر',
-                description: 'استكشاف معابد الأقصر والكرنك'
-            },
-            { 
-                id: '3', 
-                name: 'رحلة نيلية', 
-                price: 300, 
-                duration: '2 ساعات',
-                location: 'القاهرة',
-                description: 'رحلة ممتعة على نهر النيل مع العشاء'
-            }
-        ];
-
-        // مثال لجلب البيانات من Firebase (قم بإلغاء التعليق عند إنشاء Collection باسم "tours")
-        /*
-        const toursSnapshot = await db.collection('tours').get();
-        const tours = toursSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        return res.status(200).json({ success: true, count: tours.length, data: tours });
-        */
-
-        res.status(200).json({ 
-            success: true, 
-            count: mockTours.length, 
-            data: mockTours 
-        });
-    } catch (error) {
-        console.error('Error fetching tours:', error);
-        res.status(500).json({ success: false, error: 'فشل في جلب بيانات الجولات' });
-    }
-});
-
-// 2. GET /api/tours/:id - جلب جولة محددة بالمعرف
-app.get('/api/tours/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        // بيانات وهمية - استبدلها بجلب من Firebase
-        const mockTours = {
-            '1': { id: '1', name: 'أهرامات الجيزة', price: 500, duration: '4 ساعات', location: 'القاهرة', description: 'جولة رائعة لزيارة أهرامات الجيزة وأبو الهول' },
-            '2': { id: '2', name: 'مدينة الأقصر', price: 700, duration: '6 ساعات', location: 'الأقصر', description: 'استكشاف معابد الأقصر والكرنك' },
-            '3': { id: '3', name: 'رحلة نيلية', price: 300, duration: '2 ساعات', location: 'القاهرة', description: 'رحلة ممتعة على نهر النيل مع العشاء' }
-        };
-
-        const tour = mockTours[id];
-        if (!tour) {
-            return res.status(404).json({ success: false, error: 'الجولة غير موجودة' });
-        }
-
-        res.status(200).json({ success: true, data: tour });
-    } catch (error) {
-        console.error('Error fetching tour:', error);
-        res.status(500).json({ success: false, error: 'فشل في جلب بيانات الجولة' });
-    }
-});
-
-// 3. POST /api/tours (محمي - للمشرفين فقط) - إضافة جولة جديدة
-app.post('/api/tours', verifyToken, requireAdmin, async (req, res) => {
-    try {
-        const { name, price, duration, location, description } = req.body;
-
-        // التحقق من صحة البيانات
-        if (!name || !price || !duration) {
-            return res.status(400).json({ success: false, error: 'الاسم والسعر والمدة مطلوبة' });
-        }
-
-        // مثال للإضافة إلى Firebase (قم بإلغاء التعليق عند وجود Collection "tours")
-        /*
-        const newTour = {
-            name: sanitizeHtml(name, { allowedTags: [], allowedAttributes: {} }),
-            price: parseInt(price),
-            duration,
-            location: location || '',
-            description: description ? sanitizeHtml(description, { allowedTags: [], allowedAttributes: {} }) : '',
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            createdBy: req.user.id
-        };
-        
-        const docRef = await db.collection('tours').add(newTour);
-        
-        await auditLog('TOUR_CREATED', req.user.id, req.ip, req.get('User-Agent'), { tourId: docRef.id, name });
-        
-        res.status(201).json({ success: true, message: 'تمت إضافة الجولة بنجاح', data: { id: docRef.id, ...newTour } });
-        */
-
-        // رد وهمي للتجربة
-        await auditLog('TOUR_CREATED', req.user.id, req.ip, req.get('User-Agent'), { name });
-        res.status(201).json({ success: true, message: 'تمت إضافة الجولة بنجاح', data: { id: Date.now().toString(), name, price, duration, location, description } });
-    } catch (error) {
-        console.error('Error adding tour:', error);
-        res.status(500).json({ success: false, error: 'فشل في إضافة الجولة' });
-    }
-});
 
 // ============= AUTH ENDPOINTS =============
 
-// 1. GET CSRF Token
-app.get('/api/csrf-token', csrfProtection, (req, res) => {
-    res.json({ csrfToken: req.csrfToken() });
+app.post('/api/register', async (req, res) => {
+  try {
+    const { fullname, username, email, password } = req.body;
+    const bcrypt = require('bcryptjs');
+    
+    if (!fullname || !username || !email || !password) {
+      return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
+    }
+    
+    if (password.length < 3) {
+      return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 3 أحرف على الأقل' });
+    }
+    
+    if (db) {
+      const existingUser = await db.collection('users').where('username', '==', username).get();
+      if (!existingUser.empty) return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
+      
+      const existingEmail = await db.collection('users').where('email', '==', email).get();
+      if (!existingEmail.empty) return res.status(400).json({ error: 'البريد الإلكتروني موجود بالفعل' });
+      
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await db.collection('users').add({
+        fullname, username, email, password: hashedPassword, role: 'admin', createdAt: new Date().toISOString()
+      });
+      
+      await sendAccountCreatedEmail(email, fullname, username, password);
+      res.json({ success: true, message: 'تم إنشاء الحساب بنجاح' });
+    } else {
+      const existingUser = memoryUsers.find(u => u.username === username);
+      if (existingUser) return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
+      
+      const existingEmail = memoryUsers.find(u => u.email === email);
+      if (existingEmail) return res.status(400).json({ error: 'البريد الإلكتروني موجود بالفعل' });
+      
+      const hashedPassword = await bcrypt.hash(password, 10);
+      memoryUsers.push({
+        id: Date.now().toString(), fullname, username, email, password: hashedPassword, role: 'admin', createdAt: new Date().toISOString()
+      });
+      
+      await sendAccountCreatedEmail(email, fullname, username, password);
+      res.json({ success: true, message: 'تم إنشاء الحساب بنجاح' });
+    }
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// 2. Register
-app.post('/api/register',
-    strictLimiter,
-    csrfProtection,
-    body('fullname').trim().isLength({ min: 3, max: 50 }).matches(/^[\p{L}\s]+$/u),
-    body('username').trim().isAlphanumeric().isLength({ min: 3, max: 30 }),
-    body('email').isEmail().normalizeEmail(),
-    body('password').isLength({ min: 12 }).matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/),
-    async (req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            await auditLog('REGISTER_VALIDATION_FAILED', null, req.ip, req.get('User-Agent'), errors.array(), 'warning');
-            return res.status(400).json({ errors: errors.array() });
-        }
-
-        try {
-            const { fullname, username, email, password } = matchedData(req);
-            
-            const searchEncryptedEmail = encryptForSearch(email);
-            const existingUserQuery = await db.collection('users')
-                .where('searchEmail', '==', searchEncryptedEmail)
-                .limit(1)
-                .get();
-            
-            if (!existingUserQuery.empty) {
-                return res.status(400).json({ error: 'البريد الإلكتروني مسجل بالفعل' });
-            }
-
-            const encryptedEmail = encrypt(email);
-            const searchEncryptedEmailForDb = encryptForSearch(email);
-            const hashedPassword = await bcrypt.hash(password, 12);
-            const emailVerificationToken = crypto.randomBytes(32).toString('hex');
-            const hashedVerificationToken = await bcrypt.hash(emailVerificationToken, 10);
-            
-            await db.collection('users').add({
-                fullname: sanitizeHtml(fullname, { allowedTags: [], allowedAttributes: {} }),
-                username: username.toLowerCase(),
-                email: encryptedEmail,
-                searchEmail: searchEncryptedEmailForDb,
-                password: hashedPassword,
-                role: 'user',
-                emailVerified: false,
-                emailVerificationToken: hashedVerificationToken,
-                verificationExpires: Date.now() + 24 * 60 * 60 * 1000,
-                createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                failedLoginAttempts: 0,
-                lastLoginIP: null,
-                accountLocked: false,
-                twoFactorEnabled: false,
-                emailNotifications: true
-            });
-            
-            const verificationLink = `${process.env.SITE_URL}/verify-email?token=${emailVerificationToken}&email=${encodeURIComponent(email)}`;
-            setTimeout(() => {
-                sendVerificationEmail(email, fullname, verificationLink).catch(console.error);
-            }, Math.random() * 1000);
-            
-            await auditLog('REGISTER_SUCCESS', null, req.ip, req.get('User-Agent'), username);
-            res.status(201).json({ 
-                success: true, 
-                message: 'تم إنشاء الحساب بنجاح. يرجى تفعيل البريد الإلكتروني خلال 24 ساعة.' 
-            });
-        } catch (error) {
-            console.error('Registration error:', error);
-            await auditLog('REGISTER_ERROR', null, req.ip, req.get('User-Agent'), error.message, 'critical');
-            res.status(500).json({ error: 'حدث خطأ في الخادم. يرجى المحاولة لاحقاً.' });
-        }
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  const bcrypt = require('bcryptjs');
+  
+  try {
+    let user = null;
+    
+    if (db) {
+      const userQuery = await db.collection('users').where('username', '==', username).get();
+      if (!userQuery.empty) user = { id: userQuery.docs[0].id, ...userQuery.docs[0].data() };
+    } else {
+      user = memoryUsers.find(u => u.username === username);
     }
-);
-
-// 3. Login
-app.post('/api/login',
-    strictLimiter,
-    csrfProtection,
-    body('username').trim().escape(),
-    body('password').notEmpty(),
-    async (req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ error: 'بيانات غير صحيحة' });
-        }
-
-        const { username, password } = req.body;
-        const clientIP = req.ip;
-        const userAgent = req.get('User-Agent');
-        const deviceFingerprint = generateDeviceFingerprint(req);
-
-        try {
-            await checkAccountLockout(username);
-
-            const userQuery = await db.collection('users')
-                .where('username', '==', username.toLowerCase())
-                .limit(1)
-                .get();
-
-            if (userQuery.empty) {
-                await recordFailedAttempt(username);
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
-            }
-
-            const user = { id: userQuery.docs[0].id, ...userQuery.docs[0].data() };
-
-            if (!user.emailVerified) {
-                return res.status(401).json({ error: 'يرجى تفعيل حسابك عبر البريد الإلكتروني' });
-            }
-
-            if (user.accountLocked) {
-                return res.status(401).json({ error: 'الحساب مقفل. يرجى التواصل مع الدعم.' });
-            }
-
-            const isValid = await bcrypt.compare(password, user.password);
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            if (!isValid) {
-                const newAttempts = (user.failedLoginAttempts || 0) + 1;
-                await db.collection('users').doc(user.id).update({ failedLoginAttempts: newAttempts });
-
-                const maxAttempts = parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 10;
-                if (newAttempts >= maxAttempts) {
-                    await db.collection('users').doc(user.id).update({ accountLocked: true });
-                    await auditLog('ACCOUNT_AUTO_LOCKED', user.id, clientIP, userAgent, `${newAttempts} failed attempts`, 'critical');
-                    return res.status(401).json({ error: `الحساب مقفل لمدة ${process.env.ACCOUNT_LOCKOUT_MINUTES || 30} دقيقة` });
-                }
-
-                await recordFailedAttempt(username);
-                await auditLog('LOGIN_FAILED_WRONG_PASSWORD', user.id, clientIP, userAgent, null, 'warning');
-                return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
-            }
-
-            await db.collection('users').doc(user.id).update({
-                failedLoginAttempts: 0,
-                lastLoginIP: clientIP,
-                lastLoginAt: admin.firestore.FieldValue.serverTimestamp(),
-                lastLoginUserAgent: userAgent
-            });
-
-            const sessionId = crypto.randomBytes(32).toString('base64url');
-            const token = jwt.sign(
-                {
-                    id: user.id,
-                    username: user.username,
-                    role: user.role,
-                    sessionId: sessionId,
-                    deviceFingerprint: deviceFingerprint,
-                    iat: Math.floor(Date.now() / 1000),
-                    jti: crypto.randomBytes(16).toString('hex')
-                },
-                process.env.JWT_SECRET,
-                { expiresIn: `${process.env.TOKEN_EXPIRY_HOURS || 1}h`, algorithm: 'HS256' }
-            );
-
-            await redisClient.setex(`session:${user.id}`, 3600, JSON.stringify({
-                token,
-                sessionId,
-                deviceFingerprint,
-                ip: clientIP
-            }));
-
-            const refreshToken = jwt.sign(
-                { id: user.id, type: 'refresh', version: Date.now() },
-                process.env.REFRESH_SECRET,
-                { expiresIn: `${process.env.REFRESH_TOKEN_EXPIRY_DAYS || 7}d` }
-            );
-
-            res.cookie('refreshToken', refreshToken, {
-                httpOnly: true,
-                secure: isProduction,
-                sameSite: 'strict',
-                maxAge: (parseInt(process.env.REFRESH_TOKEN_EXPIRY_DAYS) || 7) * 24 * 60 * 60 * 1000,
-                domain: isProduction ? process.env.COOKIE_DOMAIN : undefined,
-                path: '/',
-                partitioned: true
-            });
-
-            req.session.deviceFingerprint = deviceFingerprint;
-
-            await auditLog('LOGIN_SUCCESS', user.id, clientIP, userAgent, null);
-            res.json({ 
-                success: true, 
-                token, 
-                expiresIn: 3600,
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    fullname: user.fullname,
-                    role: user.role,
-                    emailVerified: user.emailVerified
-                }
-            });
-        } catch (error) {
-            if (error.message.includes('مقفل')) {
-                return res.status(401).json({ error: error.message });
-            }
-            console.error('Login error:', error);
-            await auditLog('LOGIN_ERROR', null, clientIP, userAgent, error.message, 'critical');
-            res.status(500).json({ error: 'حدث خطأ في الخادم' });
-        }
-    }
-);
-
-// 4. Refresh Token
-app.post('/api/refresh-token', async (req, res) => {
-    const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
-        return res.status(401).json({ error: 'No refresh token provided' });
-    }
-
-    try {
-        const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
-        
-        const userDoc = await db.collection('users').doc(decoded.id).get();
-        if (!userDoc.exists) {
-            return res.status(401).json({ error: 'User not found' });
-        }
-
-        const user = userDoc.data();
-        const deviceFingerprint = generateDeviceFingerprint(req);
-        
-        const newToken = jwt.sign(
-            {
-                id: decoded.id,
-                username: user.username,
-                role: user.role,
-                sessionId: crypto.randomBytes(32).toString('base64url'),
-                deviceFingerprint: deviceFingerprint,
-                jti: crypto.randomBytes(16).toString('hex')
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: `${process.env.TOKEN_EXPIRY_HOURS || 1}h` }
+    
+    if (user) {
+      const isValid = await bcrypt.compare(password, user.password);
+      if (isValid) {
+        const token = jwt.sign(
+          { id: user.id, username: user.username, role: user.role || 'admin' },
+          process.env.JWT_SECRET,
+          { expiresIn: '24h' }
         );
-
-        await redisClient.setex(`session:${decoded.id}`, 3600, newToken);
-        
-        res.json({ token: newToken });
-    } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            res.clearCookie('refreshToken');
-            return res.status(401).json({ error: 'Refresh token expired. Please login again.' });
-        }
-        res.status(401).json({ error: 'Invalid refresh token' });
+        return res.json({ success: true, token });
+      }
     }
+    
+    if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
+      const token = jwt.sign({ username, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '24h' });
+      return res.json({ success: true, token });
+    }
+    
+    res.status(401).json({ success: false, error: 'Invalid credentials' });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// 5. Verify Email
-app.post('/api/verify-email',
-    strictLimiter,
-    body('email').isEmail().normalizeEmail(),
-    body('token').isLength({ min: 32, max: 64 }),
-    async (req, res) => {
-        const { email, token } = req.body;
-        
-        try {
-            const searchEncryptedEmail = encryptForSearch(email);
-            const userQuery = await db.collection('users')
-                .where('searchEmail', '==', searchEncryptedEmail)
-                .limit(1)
-                .get();
-
-            if (userQuery.empty) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                return res.status(404).json({ error: 'Invalid verification link' });
-            }
-
-            const user = { id: userQuery.docs[0].id, ...userQuery.docs[0].data() };
-
-            if (user.emailVerified) {
-                return res.json({ success: true, message: 'Email already verified' });
-            }
-
-            if (Date.now() > user.verificationExpires) {
-                const newToken = crypto.randomBytes(32).toString('hex');
-                const hashedToken = await bcrypt.hash(newToken, 10);
-                await db.collection('users').doc(user.id).update({
-                    emailVerificationToken: hashedToken,
-                    verificationExpires: Date.now() + 24 * 60 * 60 * 1000
-                });
-                const newLink = `${process.env.SITE_URL}/verify-email?token=${newToken}&email=${encodeURIComponent(email)}`;
-                await sendVerificationEmail(email, user.fullname, newLink);
-                return res.status(400).json({ error: 'Link expired. New verification email sent.' });
-            }
-
-            const isValidToken = await bcrypt.compare(token, user.emailVerificationToken);
-            if (!isValidToken) {
-                return res.status(400).json({ error: 'Invalid verification token' });
-            }
-
-            await db.collection('users').doc(user.id).update({
-                emailVerified: true,
-                emailVerificationToken: admin.firestore.FieldValue.delete(),
-                verificationExpires: admin.firestore.FieldValue.delete(),
-                emailVerifiedAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-
-            await auditLog('EMAIL_VERIFIED', user.id, req.ip, req.get('User-Agent'), null);
-            res.json({ success: true, message: 'Email verified successfully. You can now login.' });
-        } catch (error) {
-            console.error('Email verification error:', error);
-            res.status(500).json({ error: 'Verification failed. Please try again.' });
-        }
-    }
-);
-
-// 6. Logout
-app.post('/api/logout', verifyToken, csrfProtection, async (req, res) => {
-    const token = req.token;
+// Forgot password endpoint - sends reset link
+app.post('/api/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
     
-    if (token) {
-        tokenBlacklist.add(token);
-        const decoded = jwt.decode(token);
-        if (decoded?.exp) {
-            const ttl = decoded.exp - Math.floor(Date.now() / 1000);
-            if (ttl > 0) {
-                await redisClient.setex(`revoked:${token}`, ttl, 'true');
-            }
-        }
-        await redisClient.del(`session:${req.user.id}`);
+    if (!email) return res.status(400).json({ error: 'البريد الإلكتروني مطلوب' });
+    
+    let user = null;
+    
+    if (db) {
+      const userQuery = await db.collection('users').where('email', '==', email).get();
+      if (!userQuery.empty) user = { id: userQuery.docs[0].id, ...userQuery.docs[0].data() };
+    } else {
+      user = memoryUsers.find(u => u.email === email);
     }
     
-    res.clearCookie('refreshToken', {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'strict',
-        path: '/'
-    });
+    if (!user) return res.status(404).json({ error: 'هذا البريد الإلكتروني غير مسجل في النظام' });
     
-    req.session.destroy((err) => {
-        if (err) console.error('Session destruction error:', err);
-    });
+    // Create reset token (valid for 1 hour)
+    const resetToken = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
     
-    await auditLog('LOGOUT', req.user.id, req.ip, req.get('User-Agent'), null);
-    res.json({ success: true, message: 'Logged out successfully' });
+    const resetLink = `${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/reset-password?token=${resetToken}`;
+    
+    await sendForgotPasswordEmail(email, user.fullname, resetLink);
+    
+    res.json({ success: true, message: 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني' });
+    
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// 7. Get Current User
-app.get('/api/me', verifyToken, async (req, res) => {
+// Reset password endpoint
+app.post('/api/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    const bcrypt = require('bcryptjs');
+    
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'الرمز وكلمة المرور الجديدة مطلوبة' });
+    }
+    
+    if (newPassword.length < 3) {
+      return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 3 أحرف على الأقل' });
+    }
+    
+    // Verify token
+    let decoded;
     try {
-        const userDoc = await db.collection('users').doc(req.user.id).get();
-        if (!userDoc.exists) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        
-        const user = userDoc.data();
-        res.json({
-            id: req.user.id,
-            fullname: user.fullname,
-            username: user.username,
-            email: decrypt(user.email),
-            role: user.role,
-            emailVerified: user.emailVerified,
-            twoFactorEnabled: user.twoFactorEnabled || false,
-            createdAt: user.createdAt,
-            lastLoginIP: user.lastLoginIP,
-            lastLoginAt: user.lastLoginAt
-        });
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+      return res.status(400).json({ error: 'الرمز غير صالح أو منتهي الصلاحية' });
     }
+    
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    if (db) {
+      await db.collection('users').doc(decoded.id).update({
+        password: hashedPassword,
+        updatedAt: new Date().toISOString()
+      });
+    } else {
+      const userIndex = memoryUsers.findIndex(u => u.id === decoded.id);
+      if (userIndex !== -1) {
+        memoryUsers[userIndex].password = hashedPassword;
+      } else {
+        return res.status(404).json({ error: 'المستخدم غير موجود' });
+      }
+    }
+    
+    res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
+    
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// 8. Admin Users Endpoint
-app.get('/api/admin/users', verifyToken, requireAdmin, async (req, res) => {
-    try {
-        const { limit = 50, role, emailVerified } = req.query;
-        
-        let query = db.collection('users')
-            .orderBy('createdAt', 'desc')
-            .limit(parseInt(limit));
-        
-        if (role) query = query.where('role', '==', role);
-        if (emailVerified === 'true') query = query.where('emailVerified', '==', true);
-        if (emailVerified === 'false') query = query.where('emailVerified', '==', false);
-        
-        const snapshot = await query.get();
-        const users = [];
-        
-        for (const doc of snapshot.docs) {
-            const user = doc.data();
-            users.push({
-                id: doc.id,
-                fullname: user.fullname,
-                username: user.username,
-                email: user.email ? decrypt(user.email) : null,
-                role: user.role,
-                emailVerified: user.emailVerified,
-                createdAt: user.createdAt,
-                lastLoginIP: user.lastLoginIP,
-                lastLoginAt: user.lastLoginAt,
-                accountLocked: user.accountLocked || false,
-                failedLoginAttempts: user.failedLoginAttempts || 0
-            });
-        }
-        
-        await auditLog('ADMIN_VIEWED_USERS', req.user.id, req.ip, req.get('User-Agent'), { count: users.length });
-        res.json({ users, total: users.length });
-    } catch (error) {
-        console.error('Admin users error:', error);
-        res.status(500).json({ error: 'Server error' });
-    }
+app.post('/api/verify-token', verifyToken, (req, res) => {
+  res.json({ valid: true, user: req.user });
 });
 
-// 9. Audit Logs Endpoint
-app.get('/api/admin/audit-logs', verifyToken, requireAdmin, async (req, res) => {
-    try {
-        const { limit = 100, action, fromDate, toDate, userId } = req.query;
-        
-        let query = db.collection('auditLogs')
-            .orderBy('timestamp', 'desc')
-            .limit(parseInt(limit));
-        
-        if (action) query = query.where('action', '==', action);
-        if (userId) query = query.where('userId', '==', userId);
-        if (fromDate) query = query.where('timestamp', '>=', fromDate);
-        if (toDate) query = query.where('timestamp', '<=', toDate);
-        
-        const snapshot = await query.get();
-        const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        await auditLog('ADMIN_VIEWED_AUDIT_LOGS', req.user.id, req.ip, req.get('User-Agent'), { count: logs.length });
-        res.json({ logs, total: logs.length });
-    } catch (error) {
-        console.error('Audit logs error:', error);
-        res.status(500).json({ error: 'Server error' });
+app.get('/api/users', verifyToken, async (req, res) => {
+  try {
+    if (db) {
+      const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();
+      const users = snapshot.docs.map(doc => { const user = doc.data(); delete user.password; return { id: doc.id, ...user }; });
+      res.json(users);
+    } else {
+      const users = memoryUsers.map(({ password, ...user }) => user);
+      res.json(users);
     }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// 10. Forgot Password
-app.post('/api/forgot-password',
-    strictLimiter,
-    body('email').isEmail().normalizeEmail(),
-    async (req, res) => {
-        const { email } = req.body;
-        const startTime = Date.now();
-        
-        try {
-            const searchEncryptedEmail = encryptForSearch(email);
-            const userQuery = await db.collection('users')
-                .where('searchEmail', '==', searchEncryptedEmail)
-                .limit(1)
-                .get();
-
-            if (!userQuery.empty) {
-                const user = { id: userQuery.docs[0].id, ...userQuery.docs[0].data() };
-                
-                const resetToken = crypto.randomBytes(32).toString('hex');
-                const hashedResetToken = await bcrypt.hash(resetToken, 10);
-                
-                await db.collection('users').doc(user.id).update({
-                    passwordResetToken: hashedResetToken,
-                    passwordResetExpires: Date.now() + 60 * 60 * 1000,
-                    passwordResetRequestedAt: admin.firestore.FieldValue.serverTimestamp(),
-                    passwordResetRequestedIP: req.ip
-                });
-                
-                const decryptedEmail = decrypt(user.email);
-                await sendPasswordResetEmail(decryptedEmail, user.fullname, resetToken);
-                await auditLog('PASSWORD_RESET_REQUESTED', user.id, req.ip, req.get('User-Agent'), null);
-            }
-            
-            const elapsed = Date.now() - startTime;
-            const delay = Math.max(0, 1000 - elapsed);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            
-            res.json({ 
-                success: true, 
-                message: 'إذا كان البريد الإلكتروني مسجلاً لدينا، ستتلقى رابط إعادة تعيين كلمة المرور خلال دقائق.' 
-            });
-        } catch (error) {
-            console.error('Forgot password error:', error);
-            res.status(500).json({ error: 'Server error. Please try again later.' });
-        }
+app.delete('/api/users/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (db) {
+      await db.collection('users').doc(id).delete();
+      res.json({ success: true });
+    } else {
+      const index = memoryUsers.findIndex(u => u.id === id);
+      if (index === -1) return res.status(404).json({ error: 'User not found' });
+      memoryUsers.splice(index, 1);
+      res.json({ success: true });
     }
-);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// 11. Reset Password
-app.post('/api/reset-password',
-    strictLimiter,
-    body('token').isLength({ min: 32, max: 64 }),
-    body('newPassword').isLength({ min: 12 }).matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/),
-    async (req, res) => {
-        const { token, newPassword } = req.body;
-        
-        try {
-            const usersQuery = await db.collection('users')
-                .where('passwordResetExpires', '>', Date.now())
-                .get();
-            
-            let userDoc = null;
-            let validToken = false;
-            
-            for (const doc of usersQuery.docs) {
-                const user = doc.data();
-                if (user.passwordResetToken) {
-                    const isValid = await bcrypt.compare(token, user.passwordResetToken);
-                    if (isValid) {
-                        userDoc = { id: doc.id, ...user };
-                        validToken = true;
-                        break;
-                    }
-                }
-            }
-            
-            if (!validToken || !userDoc) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                return res.status(400).json({ error: 'Invalid or expired reset token' });
-            }
-            
-            const hashedPassword = await bcrypt.hash(newPassword, 12);
-            
-            await db.collection('users').doc(userDoc.id).update({
-                password: hashedPassword,
-                passwordResetToken: admin.firestore.FieldValue.delete(),
-                passwordResetExpires: admin.firestore.FieldValue.delete(),
-                failedLoginAttempts: 0,
-                accountLocked: false,
-                passwordUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                passwordUpdatedIP: req.ip
-            });
-            
-            await redisClient.del(`session:${userDoc.id}`);
-            
-            await auditLog('PASSWORD_RESET_SUCCESS', userDoc.id, req.ip, req.get('User-Agent'), null);
-            res.json({ success: true, message: 'Password reset successfully. You can now login with your new password.' });
-        } catch (error) {
-            console.error('Reset password error:', error);
-            res.status(500).json({ error: 'Server error. Please try again.' });
-        }
+// ============= TOURS MANAGEMENT ENDPOINTS =============
+app.get('/api/tours', async (req, res) => {
+  try {
+    if (db) {
+      const snapshot = await db.collection('tours').get();
+      const tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      res.json(tours);
+    } else {
+      res.json(memoryStorage.tours);
     }
-);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// 12. Health Check
-app.get('/api/health', async (req, res) => {
-    const checks = {
-        redis: false,
-        firebase: false,
-        email: false,
-        timestamp: new Date().toISOString()
+app.get('/api/tours/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (db) {
+      const doc = await db.collection('tours').doc(id).get();
+      if (!doc.exists) return res.status(404).json({ error: 'Tour not found' });
+      res.json({ id: doc.id, ...doc.data() });
+    } else {
+      const tour = memoryStorage.tours.find(t => t.id === id);
+      if (!tour) return res.status(404).json({ error: 'Tour not found' });
+      res.json(tour);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/tours', verifyToken, async (req, res) => {
+  try {
+    const { name, description, days, priceEgyptian, priceForeign, image, itinerary, includes, excludes, faq, gallery } = req.body;
+    
+    if (!name || !description || !days || !priceEgyptian || !priceForeign) {
+      return res.status(400).json({ error: 'جميع الحقول المطلوبة' });
+    }
+    
+    let imageValue = (image && image.trim() !== '' && image !== 'null' && image !== 'undefined') ? image : '';
+    
+    const newTour = {
+      name, description, days: parseInt(days), priceEgyptian: parseFloat(priceEgyptian),
+      priceForeign: parseFloat(priceForeign), image: imageValue,
+      itinerary: itinerary || [], includes: includes || [], excludes: excludes || [],
+      faq: faq || [], gallery: gallery || [], createdAt: new Date().toISOString()
     };
     
-    try {
-        await redisClient.ping();
-        checks.redis = true;
-    } catch (error) {
-        console.error('Redis health check failed:', error);
+    if (db) {
+      const docRef = await db.collection('tours').add(newTour);
+      res.json({ id: docRef.id, ...newTour });
+    } else {
+      newTour.id = Date.now().toString();
+      memoryStorage.tours.push(newTour);
+      res.json(newTour);
     }
-    
-    try {
-        await db.collection('_health').doc('check').set({ timestamp: Date.now() });
-        checks.firebase = true;
-    } catch (error) {
-        console.error('Firebase health check failed:', error);
-    }
-    
-    try {
-        await transporter.verify();
-        checks.email = true;
-    } catch (error) {
-        console.error('Email health check failed:', error);
-    }
-    
-    const isHealthy = checks.redis && checks.firebase && checks.email;
-    
-    res.status(isHealthy ? 200 : 503).json({
-        status: isHealthy ? 'healthy' : 'unhealthy',
-        checks,
-        environment: process.env.NODE_ENV
-    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// ============= Email Functions =============
-async function sendVerificationEmail(email, fullname, verificationLink) {
-    const mailOptions = {
-        from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
-        to: email,
-        subject: `تفعيل حسابك في ${process.env.COMPANY_NAME}`,
-        html: `<div style="direction:rtl;font-family:Arial;text-align:center;padding:20px"><h1>مرحباً ${fullname}</h1><p>شكراً لتسجيلك! اضغط على الرابط لتفعيل حسابك:</p><a href="${verificationLink}" style="background:#4CAF50;color:white;padding:10px 20px;text-decoration:none;border-radius:5px">تفعيل الحساب</a><p>الرابط صالح لمدة 24 ساعة</p></div>`,
-        text: `مرحباً ${fullname}\n\nشكراً لتسجيلك! فعّل حسابك عبر الرابط: ${verificationLink}\nهذا الرابط صالح لمدة 24 ساعة.`
+app.put('/api/tours/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    if (updates.image === '' || updates.image === null || updates.image === undefined) updates.image = '';
+    
+    if (db) {
+      await db.collection('tours').doc(id).update(updates);
+      res.json({ success: true, id, ...updates });
+    } else {
+      const index = memoryStorage.tours.findIndex(t => t.id === id);
+      if (index === -1) return res.status(404).json({ error: 'Tour not found' });
+      memoryStorage.tours[index] = { ...memoryStorage.tours[index], ...updates };
+      res.json({ success: true, id, ...updates });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/tours/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (db) {
+      await db.collection('tours').doc(id).delete();
+      res.json({ success: true });
+    } else {
+      memoryStorage.tours = memoryStorage.tours.filter(t => t.id !== id);
+      res.json({ success: true });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============= BOOKINGS ENDPOINTS =============
+app.post('/api/bookings', async (req, res) => {
+  try {
+    const { tourId, tourName, name, email, phone, persons, date, nationality, totalPrice, currency } = req.body;
+    
+    const booking = { 
+      tourId, tourName: tourName || 'رحلة سياحية', name, email, phone,
+      persons: parseInt(persons) || 1, date, nationality, totalAmount: totalPrice,
+      currency, transferNumber: 'TR-' + Date.now(), createdAt: new Date().toISOString() 
     };
-    await sendEmailWithRetry(mailOptions);
-}
+    
+    if (db) {
+      const docRef = await db.collection('bookings').add(booking);
+      booking.id = docRef.id;
+    } else {
+      booking.id = Date.now().toString();
+      memoryStorage.bookings.push(booking);
+    }
+    
+    await sendBookingConfirmationEmail(booking);
+    
+    res.json({ success: true, booking });
+  } catch (error) {
+    console.error('Booking error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-async function sendPasswordResetEmail(email, fullname, resetToken) {
-    const resetLink = `${process.env.SITE_URL}/reset-password?token=${resetToken}`;
-    const mailOptions = {
-        from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
-        to: email,
-        subject: `إعادة تعيين كلمة المرور - ${process.env.COMPANY_NAME}`,
-        html: `<div style="direction:rtl;font-family:Arial;text-align:center;padding:20px"><h1>مرحباً ${fullname}</h1><p>لقد طلبت إعادة تعيين كلمة المرور. اضغط على الرابط:</p><a href="${resetLink}" style="background:#ff9800;color:white;padding:10px 20px;text-decoration:none;border-radius:5px">إعادة تعيين كلمة المرور</a><p>الرابط صالح لمدة ساعة واحدة</p></div>`,
-        text: `مرحباً ${fullname}\n\nلقد طلبت إعادة تعيين كلمة المرور. استخدم الرابط: ${resetLink}\nهذا الرابط صالح لمدة ساعة واحدة.`
+app.get('/api/bookings', verifyToken, async (req, res) => {
+  try {
+    if (db) {
+      const snapshot = await db.collection('bookings').orderBy('createdAt', 'desc').get();
+      const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      res.json(bookings);
+    } else {
+      res.json(memoryStorage.bookings);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/bookings/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (db) {
+      await db.collection('bookings').doc(id).delete();
+      res.json({ success: true });
+    } else {
+      memoryStorage.bookings = memoryStorage.bookings.filter(b => b.id !== id);
+      res.json({ success: true });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============= CONTACT ENDPOINTS =============
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, phone, message } = req.body;
+    
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: 'الاسم والبريد الإلكتروني والرسالة مطلوبة' });
+    }
+    
+    const contact = { 
+      name, email, phone: phone || '', message, 
+      createdAt: new Date().toISOString(), status: 'unread' 
     };
-    await sendEmailWithRetry(mailOptions);
-}
-
-// ============= 404 Handler =============
-app.use('*', (req, res) => {
-    res.status(404).json({ error: 'Route not found' });
-});
-
-// ============= Global Error Handler =============
-app.use((err, req, res, next) => {
-    console.error('Global error:', err);
     
-    if (err.code === 'EBADCSRFTOKEN') {
-        return res.status(403).json({ error: 'Invalid CSRF token' });
+    if (db) {
+      await db.collection('contacts').add(contact);
+    } else {
+      contact.id = Date.now().toString();
+      if (!memoryStorage.contacts) memoryStorage.contacts = [];
+      memoryStorage.contacts.push(contact);
     }
     
-    if (err.name === 'UnauthorizedError') {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
+    await sendContactThankYouEmail(name, email, message);
+    await sendAdminNotification(name, email, phone, message);
     
-    res.status(500).json({ 
-        error: process.env.NODE_ENV === 'production' 
-            ? 'Internal server error' 
-            : err.message 
-    });
+    res.json({ success: true, message: 'تم إرسال رسالتك بنجاح' });
+  } catch (error) {
+    console.error('Contact error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// ============= Start Server =============
+app.get('/api/contacts', verifyToken, async (req, res) => {
+  try {
+    if (db) {
+      const snapshot = await db.collection('contacts').orderBy('createdAt', 'desc').get();
+      const contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      res.json(contacts);
+    } else {
+      res.json(memoryStorage.contacts || []);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/contacts/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (db) {
+      await db.collection('contacts').doc(id).delete();
+    } else {
+      memoryStorage.contacts = memoryStorage.contacts.filter(c => c.id !== id);
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============= RANKINGS ENDPOINTS =============
+app.post('/api/rankings', async (req, res) => {
+  try {
+    const ranking = { ...req.body, createdAt: new Date().toISOString() };
+    if (db) {
+      await db.collection('rankings').add(ranking);
+    } else {
+      ranking.id = Date.now().toString();
+      if (!memoryStorage.rankings) memoryStorage.rankings = [];
+      memoryStorage.rankings.push(ranking);
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/rankings', async (req, res) => {
+  try {
+    if (db) {
+      const snapshot = await db.collection('rankings').orderBy('createdAt', 'desc').get();
+      const rankings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      res.json(rankings);
+    } else {
+      res.json(memoryStorage.rankings || []);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/rankings/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (db) {
+      await db.collection('rankings').doc(id).delete();
+    } else {
+      memoryStorage.rankings = memoryStorage.rankings.filter(r => r.id !== id);
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============= ADMIN SEND EMAIL ENDPOINT =============
+app.post('/api/send-email', verifyToken, async (req, res) => {
+  try {
+    const { to, subject, message } = req.body;
+    
+    if (!to || !subject || !message) {
+      return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
+    }
+    
+    const success = await sendUnifiedEmail(
+      to,
+      subject,
+      'رسالة من إدارة الموقع',
+      `مرحباً،`,
+      `<p>${message.replace(/\n/g, '<br>')}</p>`,
+      'زيارة موقعنا',
+      process.env.SITE_URL || 'https://simoon-issac.vercel.app'
+    );
+    
+    if (success) {
+      res.json({ success: true, message: 'تم إرسال البريد بنجاح' });
+    } else {
+      res.status(500).json({ error: 'فشل إرسال البريد' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'فشل إرسال البريد: ' + error.message });
+  }
+});
+
+// ============= CONFIRM PAYMENT ENDPOINT =============
+app.post('/api/confirm-payment', async (req, res) => {
+  try {
+    const { bookingId, email, name, tour, persons, date, totalAmount, currency, transferNumber } = req.body;
+    
+    console.log('📝 Payment confirmation received:', { bookingId, email, name, tour, totalAmount, currency });
+    
+    await sendPaymentConfirmationEmail(email, name, tour, persons, date, totalAmount, currency, transferNumber);
+    
+    res.json({ success: true, message: 'تم تأكيد الدفع بنجاح' });
+  } catch (error) {
+    console.error('Confirm payment error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============= FULL TOUR DETAILS ENDPOINTS =============
+app.put('/api/tours/:id/full', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, days, priceEgyptian, priceForeign, image, itinerary, includes, excludes, faq, gallery } = req.body;
+    
+    const updates = {
+      name, description, days: parseInt(days), priceEgyptian: parseFloat(priceEgyptian),
+      priceForeign: parseFloat(priceForeign), image: image || '',
+      itinerary: itinerary || [], includes: includes || [], excludes: excludes || [],
+      faq: faq || [], gallery: gallery || [], updatedAt: new Date().toISOString()
+    };
+    
+    if (db) {
+      await db.collection('tours').doc(id).update(updates);
+      res.json({ success: true, id, ...updates });
+    } else {
+      const index = memoryStorage.tours.findIndex(t => t.id === id);
+      if (index === -1) return res.status(404).json({ error: 'Tour not found' });
+      memoryStorage.tours[index] = { ...memoryStorage.tours[index], ...updates };
+      res.json({ success: true, id, ...updates });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/tours/:id/full', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (db) {
+      const doc = await db.collection('tours').doc(id).get();
+      if (!doc.exists) return res.status(404).json({ error: 'Tour not found' });
+      res.json({ id: doc.id, ...doc.data() });
+    } else {
+      const tour = memoryStorage.tours.find(t => t.id === id);
+      if (!tour) return res.status(404).json({ error: 'Tour not found' });
+      res.json(tour);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+initDefaultAdmin().catch(console.error);
+
 const PORT = process.env.PORT || 3000;
-
-if (require.main === module) {
-    const server = app.listen(PORT, () => {
-        console.log('\n' + '='.repeat(60));
-        console.log(`🚀 Secure Server Running on Port ${PORT}`);
-        console.log('='.repeat(60));
-        console.log(`🔒 Environment: ${process.env.NODE_ENV || 'development'}`);
-        console.log(`🛡️ Security Level: BANKING GRADE (Enhanced)`);
-        console.log(`📊 Audit Logging: ENABLED`);
-        console.log(`🔐 CSRF Protection: ENABLED`);
-        console.log(`🔑 Encryption: AES-256-GCM`);
-        console.log(`📧 Email Service: ${process.env.SMTP_HOST}`);
-        console.log(`🗄️ Redis: ${redisClient ? 'CONNECTED' : 'DISCONNECTED'}`);
-        console.log(`🔥 Firebase: ${db ? 'CONNECTED' : 'DISCONNECTED'}`);
-        console.log('='.repeat(60) + '\n');
-    });
-    
-    process.on('SIGTERM', () => {
-        console.log('SIGTERM received. Closing server...');
-        server.close(() => {
-            if (redisClient && redisClient.quit) redisClient.quit();
-            console.log('Server closed');
-            process.exit(0);
-        });
-    });
-}
-
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📱 Main site: http://localhost:${PORT}/`);
+  console.log(`🔐 Login: http://localhost:${PORT}/login`);
+  console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
+});
