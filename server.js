@@ -731,16 +731,9 @@ app.delete('/api/bookings/:id', verifyToken, async (req, res) => {
   }
 });
 
-// ============= CONTACT ENDPOINTS (باستخدام القالب الموحد) =============
 app.post('/api/contact', async (req, res) => {
   try {
-    const { name, email, phone, message } = req.body;
-    
-    const contact = { 
-      name, email, phone, message, 
-      createdAt: new Date().toISOString(), 
-      status: 'unread' 
-    };
+    const contact = { ...req.body, createdAt: new Date().toISOString(), status: 'unread' };
     
     if (db) {
       await db.collection('contacts').add(contact);
@@ -750,19 +743,22 @@ app.post('/api/contact', async (req, res) => {
       memoryStorage.contacts.push(contact);
     }
     
-    // 1. إرسال بريد شكر للعميل (باستخدام القالب الموحد)
-    await sendContactThankYouEmail(email, name, message);
+    try {
+      await transporter.sendMail({
+        from: `"رحلة في مصر" <${process.env.SMTP_USER}>`,
+        to: contact.email,
+        subject: `📧 شكراً لتواصلك مع رحلة في مصر`,
+        html: `<h3>شكراً لتواصلك ${contact.name}</h3><p>سنقوم بالرد عليك في أقرب وقت ممكن.</p>`
+      });
+    } catch (e) { console.log('Email error:', e.message); }
     
-    // 2. إرسال إشعار للأدمن عن رسالة جديدة
-    await sendAdminNotification(name, email, phone, message);
-    
-    res.json({ success: true, message: 'تم إرسال رسالتك بنجاح' });
+    res.json({ success: true });
   } catch (error) {
-    console.error('Contact error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
+// Get all contacts (admin only - requires JWT)
 app.get('/api/contacts', verifyToken, async (req, res) => {
   try {
     if (db) {
@@ -777,6 +773,7 @@ app.get('/api/contacts', verifyToken, async (req, res) => {
   }
 });
 
+// Delete contact (admin only - requires JWT)
 app.delete('/api/contacts/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
