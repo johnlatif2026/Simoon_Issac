@@ -1,3 +1,4 @@
+public/index.html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1151,7 +1152,7 @@
           <textarea id="contactMessage" placeholder=" " rows="4" required></textarea>
           <label for="contactMessage" class="floating-label" data-key="message_placeholder">رسالتك</label>
         </div>
-        <button type="submit" class="submit-btn"><i class="fas fa-envelope"></i> <span data-key="send_btn">إرسال الرسالة</span></button>
+        <button type="submit" class="submit-btn" data-key="send_btn"><i class="fas fa-envelope"></i> <span>إرسال الرسالة</span></button>
       </form>
     </div>
   </div>
@@ -1340,7 +1341,8 @@
       e.preventDefault();
       const btn = contactForm.querySelector('.submit-btn');
       btn.disabled = true;
-      btn.textContent = 'جاري الإرسال...';
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
       const data = {
         name: document.getElementById('contactName').value,
         email: document.getElementById('contactInfo').value,
@@ -1354,13 +1356,13 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
-        alert('✅ تم إرسال رسالتك بنجاح!');
+        alert(currentLang === 'ar' ? '✅ تم إرسال رسالتك بنجاح!' : '✅ Your message has been sent successfully!');
         contactForm.reset();
       } catch (error) {
-        alert('❌ حدث خطأ في الإرسال');
+        alert(currentLang === 'ar' ? '❌ حدث خطأ في الإرسال' : '❌ An error occurred');
       } finally {
         btn.disabled = false;
-        btn.textContent = 'إرسال الرسالة';
+        btn.innerHTML = originalText;
       }
     });
   }
@@ -1388,69 +1390,163 @@
     });
   }
 
-  // Language System
+  // ==================== الترجمة الموسعة ====================
   const translations = {
     ar: {
-      logo: "رحلة في مصر", nav_home: "الرئيسية", nav_about: "نبذة عنا", nav_tours: "الجولات",
-      nav_portfolio:"مَلَفّ", nav_gallery: "المعرض", nav_testimonials: "آراء العملاء", nav_contact: "اتصل بنا",
-      hero_title: "اكتشف جمال مصر", hero_subtitle: "مع مرشدة سياحية وممثلة محترفة، رحلة لا تُنسى في قلب التاريخ والثقافة المصرية",
-      hero_btn: "احجز رحلتك الآن", about_title: "نبذة عنا", about_welcome: "مرحبا بكم في رحلة في مصر",
+      logo: "رحلة في مصر",
+      nav_home: "الرئيسية",
+      nav_about: "نبذة عنا",
+      nav_tours: "الجولات",
+      nav_portfolio: "مَلَفّ",
+      nav_gallery: "المعرض",
+      nav_testimonials: "آراء العملاء",
+      nav_contact: "اتصل بنا",
+      hero_title: "اكتشف جمال مصر",
+      hero_subtitle: "مع مرشدة سياحية وممثلة محترفة، رحلة لا تُنسى في قلب التاريخ والثقافة المصرية",
+      hero_btn: "احجز رحلتك الآن",
+      about_title: "نبذة عنا",
+      about_welcome: "مرحبا بكم في رحلة في مصر",
       about_p1: "أنا سيمون، مرشدة سياحية وممثلة مصرية محترفة. شغفي هو إظهار جمال مصر الحقيقي من خلال عيون فنانة.",
       about_p2: "مع أكثر من 10 سنوات من الخبرة في مجال السياحة والفن، أضمن لك رحلة مميزة.",
-      achievement_1: "1000+ عميل سعيد", achievement_2: "15+ عمل فني", achievement_3: "50+ جولة سياحية",
-      tours_title: "الجولات السياحية", portfolio_title: "ملف أعمال المرشدة السياحية",
-      portfolio_name: "سيمون اسحاق - مرشدة سياحية وممثلة", portfolio_awards: "جوائز وتكريمات:",
-      portfolio_award1: "تكريم من وزارة السياحة المصرية", gallery_title: "معرض الصور",
-      testimonials_title: "آراء العملاء", no_reviews: "لتقيم الرحلة👇 برجاء الدخول ",
-      add_review: "أضف تقييمك الآن", contact_title: "اتصل بنا", contact_info: "معلومات الاتصال",
-      whatsapp: "واتساب", facebook: "فيسبوك", send_message: "أرسل رسالتك", send_btn: "إرسال الرسالة",
-      confirm_booking: "تأكيد الحجز", confirm_btn: "تأكيد الحجز", copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة",
+      achievement_1: "1000+ عميل سعيد",
+      achievement_2: "15+ عمل فني",
+      achievement_3: "50+ جولة سياحية",
+      tours_title: "الجولات السياحية",
+      portfolio_title: "ملف أعمال المرشدة السياحية",
+      portfolio_name: "سيمون اسحاق - مرشدة سياحية وممثلة",
+      portfolio_awards: "جوائز وتكريمات:",
+      portfolio_award1: "تكريم من وزارة السياحة المصرية",
+      gallery_title: "معرض الصور",
+      testimonials_title: "آراء العملاء",
+      no_reviews: "لتقيم الرحلة برجاء الدخول 👇",
+      add_review: "أضف تقييمك الآن",
+      contact_title: "اتصل بنا",
+      contact_info: "معلومات الاتصال",
+      whatsapp: "واتساب",
+      facebook: "فيسبوك",
+      send_message: "أرسل رسالتك",
+      send_btn: "إرسال الرسالة",
+      confirm_booking: "تأكيد الحجز",
+      confirm_btn: "تأكيد الحجز",
+      copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة",
       name_placeholder: "الاسم الكامل",
-contact_placeholder: "البريد الإلكتروني أو رقم الهاتف",
-message_placeholder: "رسالتك",
+      contact_placeholder: "البريد الإلكتروني أو رقم الهاتف",
+      message_placeholder: "رسالتك",
+      book_now: "✨ احجز الآن"  // مفتاح جديد لزر الحجز
     },
     en: {
-      logo: "Journey in Egypt", nav_home: "Home", nav_about: "About", nav_tours: "Tours",
-      nav_portfolio:"Portfolio", nav_gallery: "Gallery", nav_testimonials: "Testimonials", nav_contact: "Contact",
-      hero_title: "Discover Egypt's Beauty", hero_subtitle: "With a professional tour guide and actress, an unforgettable journey into Egyptian history",
-      hero_btn: "Book Your Trip Now", about_title: "About Us", about_welcome: "Welcome to Journey in Egypt",
-      about_p1: "I'm Simon, a professional Egyptian tour guide and actress. My passion is to show Egypt's true beauty.",
-      about_p2: "With over 10 years of experience, I guarantee a unique journey.",
-      achievement_1: "1000+ Happy Clients", achievement_2: "15+ Artworks", achievement_3: "50+ Tours",
-      tours_title: "Tours", portfolio_title: "Tour Guide Portfolio", portfolio_name: "Simon Issac - Tour Guide & Actress",
-      portfolio_awards: "Awards & Honors:", portfolio_award1: "Honored by Egyptian Ministry of Tourism",
-      gallery_title: "Photo Gallery", testimonials_title: "Client Reviews", no_reviews: "Trip rating 👇 Please enter",
+      logo: "Journey in Egypt",
+      nav_home: "Home",
+      nav_about: "About",
+      nav_tours: "Tours",
+      nav_portfolio: "Portfolio",
+      nav_gallery: "Gallery",
+      nav_testimonials: "Testimonials",
+      nav_contact: "Contact",
+      hero_title: "Discover Egypt's Beauty",
+      hero_subtitle: "With a professional tour guide and actress, an unforgettable journey into Egyptian history and culture",
+      hero_btn: "Book Your Trip Now",
+      about_title: "About Us",
+      about_welcome: "Welcome to Journey in Egypt",
+      about_p1: "I'm Simon, a professional Egyptian tour guide and actress. My passion is to show Egypt's true beauty through an artist's eyes.",
+      about_p2: "With over 10 years of experience in tourism and art, I guarantee you a unique journey.",
+      achievement_1: "1000+ Happy Clients",
+      achievement_2: "15+ Artworks",
+      achievement_3: "50+ Tours",
+      tours_title: "Tours",
+      portfolio_title: "Tour Guide Portfolio",
+      portfolio_name: "Simon Issac - Tour Guide & Actress",
+      portfolio_awards: "Awards & Honors:",
+      portfolio_award1: "Honored by Egyptian Ministry of Tourism",
+      gallery_title: "Photo Gallery",
+      testimonials_title: "Client Reviews",
+      no_reviews: "Rate your trip 👇 Please enter",
       add_review: "Add Your Review",
-      contact_title: "Contact Us", contact_info: "Contact Information", whatsapp: "WhatsApp",
-      facebook: "Facebook", send_message: "Send Message", send_btn: "Send Message",
-      confirm_booking: "Confirm Booking", confirm_btn: "Confirm Booking", copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved",
+      contact_title: "Contact Us",
+      contact_info: "Contact Information",
+      whatsapp: "WhatsApp",
+      facebook: "Facebook",
+      send_message: "Send Message",
+      send_btn: "Send Message",
+      confirm_booking: "Confirm Booking",
+      confirm_btn: "Confirm Booking",
+      copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved",
       name_placeholder: "Full Name",
-contact_placeholder: "Email or Phone Number",
-message_placeholder: "Your Message",
+      contact_placeholder: "Email or Phone Number",
+      message_placeholder: "Your Message",
+      book_now: "✨ Book Now"  // مفتاح جديد لزر الحجز
     }
   };
   
   let currentLang = localStorage.getItem('language') || 'ar';
-function updateLanguage() {
-  document.querySelectorAll('[data-key]').forEach(el => {
-    const key = el.getAttribute('data-key');
-    const value = translations[currentLang][key];
-
-    if (!value) return;
-
-    if (el.placeholder !== undefined) {
-      el.placeholder = value;
-    } else {
-      el.textContent = value;
+  
+  function updateLanguage() {
+    // تحديث النصوص الثابتة في الصفحة
+    document.querySelectorAll('[data-key]').forEach(el => {
+      const key = el.getAttribute('data-key');
+      const value = translations[currentLang][key];
+      if (!value) return;
+      
+      // معالجة خاصة للأزرار التي تحتوي على أيقونات
+      if (el.tagName === 'BUTTON' && key === 'send_btn') {
+        const icon = el.querySelector('i');
+        if (icon) {
+          el.innerHTML = '';
+          el.appendChild(icon);
+          el.appendChild(document.createTextNode(' ' + value));
+        } else {
+          el.textContent = value;
+        }
+      }
+      // معالجة خاصة للروابط التي تحتوي على أيقونات
+      else if (el.tagName === 'A' && (key === 'whatsapp' || key === 'facebook')) {
+        const icon = el.querySelector('i');
+        const span = el.querySelector('span');
+        if (span) span.textContent = value;
+      }
+      else if (el.placeholder !== undefined) {
+        el.placeholder = value;
+      } else {
+        el.textContent = value;
+      }
+    });
+    
+    // تحديث أزرار "احجز الآن" في بطاقات الجولات
+    document.querySelectorAll('.book-btn').forEach(btn => {
+      const icon = btn.querySelector('i');
+      if (icon) {
+        btn.innerHTML = '';
+        btn.appendChild(icon);
+        btn.appendChild(document.createTextNode(' ' + (currentLang === 'ar' ? 'احجز الآن' : 'Book Now')));
+      } else {
+        btn.textContent = currentLang === 'ar' ? '✨ احجز الآن' : '✨ Book Now';
+      }
+    });
+    
+    // تحديث زر إرسال الرسالة بشكل إضافي للتأكيد
+    const submitBtn = document.querySelector('.submit-btn');
+    if (submitBtn) {
+      const icon = submitBtn.querySelector('i');
+      if (icon) {
+        submitBtn.innerHTML = '';
+        submitBtn.appendChild(icon);
+        submitBtn.appendChild(document.createTextNode(' ' + (currentLang === 'ar' ? 'إرسال الرسالة' : 'Send Message')));
+      } else {
+        submitBtn.textContent = currentLang === 'ar' ? 'إرسال الرسالة' : 'Send Message';
+      }
     }
-  });
-
-  document.getElementById('langBtn').innerHTML =
-    currentLang === 'ar' ? 'EN' : 'AR';
-
-  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-  localStorage.setItem('language', currentLang);
-}
+    
+    // تحديث عنوان زر الترجمة
+    document.getElementById('langBtn').innerHTML = currentLang === 'ar' ? 'EN' : 'AR';
+    
+    // تحديث اتجاه الصفحة
+    document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = currentLang;
+    
+    // حفظ اللغة في localStorage
+    localStorage.setItem('language', currentLang);
+  }
+  
   function initLanguage() {
     document.getElementById('langBtn').addEventListener('click', () => {
       currentLang = currentLang === 'ar' ? 'en' : 'ar';
@@ -1458,6 +1554,7 @@ function updateLanguage() {
     });
     updateLanguage();
   }
+  
   initDarkMode();
   initLanguage();
 
@@ -1526,8 +1623,8 @@ function updateLanguage() {
         container.innerHTML = `
           <div class="no-tours-message">
             <i class="fas fa-map-marked-alt"></i>
-            <h3>📭 لا توجد جولات حالياً</h3>
-            <p>سيتم إضافة جولات جديدة قريباً، تابعونا!</p>
+            <h3>${currentLang === 'ar' ? '📭 لا توجد جولات حالياً' : '📭 No tours available'}</h3>
+            <p>${currentLang === 'ar' ? 'سيتم إضافة جولات جديدة قريباً، تابعونا!' : 'New tours will be added soon, stay tuned!'}</p>
           </div>
         `;
         return;
@@ -1539,20 +1636,22 @@ function updateLanguage() {
           ? `<img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" loading="lazy" onerror="this.parentElement.style.background='var(--gradient-gold)'; this.style.display='none'">` 
           : `<div style="width:100%; height:100%; background:var(--gradient-gold); display:flex; align-items:center; justify-content:center;"><i class="fas fa-pyramid" style="font-size:3rem; color:#2c1810;"></i></div>`;
         
+        const bookBtnText = currentLang === 'ar' ? '✨ احجز الآن' : '✨ Book Now';
+        
         html += `
           <div class="tour-card">
             <div class="tour-image">
               ${imgHtml}
-              <div class="tour-badge">⭐ ${tour.days || 3} أيام</div>
+              <div class="tour-badge">⭐ ${tour.days || 3} ${currentLang === 'ar' ? 'أيام' : 'Days'}</div>
             </div>
             <div class="tour-info">
               <h3>${escapeHtml(tour.name)}</h3>
               <p>${escapeHtml(tour.description.substring(0, 100))}${tour.description.length > 100 ? '...' : ''}</p>
               <div class="tour-details">
-                <span><i class="fas fa-dollar-sign"></i> الأجنبي: ${tour.priceForeign}$</span>
-                <span><i class="fas fa-pound-sign"></i> المصري: ${tour.priceEgyptian} ج</span>
+                <span><i class="fas fa-dollar-sign"></i> ${currentLang === 'ar' ? 'الأجنبي' : 'Foreign'}: ${tour.priceForeign}$</span>
+                <span><i class="fas fa-pound-sign"></i> ${currentLang === 'ar' ? 'المصري' : 'Egyptian'}: ${tour.priceEgyptian} ${currentLang === 'ar' ? 'ج' : 'EGP'}</span>
               </div>
-              <a href="/tour-details?id=${tour.id}" class="book-btn">✨ احجز الآن</a>
+              <a href="/tour-details?id=${tour.id}" class="book-btn" data-book-btn>${bookBtnText}</a>
             </div>
           </div>
         `;
@@ -1573,8 +1672,8 @@ function updateLanguage() {
       container.innerHTML = `
         <div class="no-tours-message">
           <i class="fas fa-exclamation-triangle"></i>
-          <h3>⚠️ حدث خطأ</h3>
-          <p>لم نتمكن من تحميل الجولات، يرجى تحديث الصفحة</p>
+          <h3>${currentLang === 'ar' ? '⚠️ حدث خطأ' : '⚠️ Error'}</h3>
+          <p>${currentLang === 'ar' ? 'لم نتمكن من تحميل الجولات، يرجى تحديث الصفحة' : 'Could not load tours, please refresh the page'}</p>
         </div>
       `;
     }
@@ -1583,7 +1682,7 @@ function updateLanguage() {
   // تحميل أولي للرحلات
   document.addEventListener('DOMContentLoaded', loadToursFromAPI);
   
-  // تحديث تلقائي كل دقيقتين (بدون ريفرش للصفحة)
+  // تحديث تلقائي كل 12 ثانية (بدون ريفرش للصفحة)
   setInterval(() => {
     loadToursFromAPI();
   }, 12000);
