@@ -359,7 +359,7 @@ async function sendContactThankYouEmail(name, email, message) {
     `السلام عليكم ${name}،`,
     content,
     'تصفح رحلاتنا',
-    `${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/tours`
+    `${process.env.SITE_URL || 'https://simoon-issac.vercel.app'}/#tours`
   );
 }
 
