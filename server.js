@@ -120,13 +120,15 @@ app.get('/api/tours/:id', async (req, res) => {
 // Create tour (admin only - requires JWT)
 app.post('/api/tours', verifyToken, async (req, res) => {
   try {
-    const { name, description, days, priceEgyptian, priceForeign, image } = req.body;
+    const { 
+      name, description, days, priceEgyptian, priceForeign, image,
+      itinerary, includes, excludes, faq, gallery 
+    } = req.body;
     
     if (!name || !description || !days || !priceEgyptian || !priceForeign) {
-      return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
+      return res.status(400).json({ error: 'جميع الحقول المطلوبة' });
     }
     
-    // فقط لو المستخدم حط رابط صورة، نخزنه. لو فاضي نخزنه كـ string فاضي
     let imageValue = '';
     if (image && image.trim() !== '' && image !== 'null' && image !== 'undefined') {
       imageValue = image;
@@ -138,7 +140,12 @@ app.post('/api/tours', verifyToken, async (req, res) => {
       days: parseInt(days),
       priceEgyptian: parseFloat(priceEgyptian),
       priceForeign: parseFloat(priceForeign),
-      image: imageValue,  // ← من غير صورة افتراضية خالص
+      image: imageValue,
+      itinerary: itinerary || [],
+      includes: includes || [],
+      excludes: excludes || [],
+      faq: faq || [],
+      gallery: gallery || [],
       createdAt: new Date().toISOString()
     };
     
