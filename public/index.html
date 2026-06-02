@@ -653,53 +653,6 @@
       box-shadow: var(--shadow-gold);
     }
     
-    /* تنسيق البرنامج (itinerary) */
-    .itinerary-container {
-      margin: 15px 0;
-      background: rgba(212, 175, 55, 0.05);
-      border-radius: 16px;
-      overflow: hidden;
-    }
-    
-    .itinerary-day {
-      border-bottom: 1px dashed var(--border-gold);
-      padding: 12px 15px;
-    }
-    
-    .itinerary-day:last-child {
-      border-bottom: none;
-    }
-    
-    .itinerary-day-title {
-      font-weight: 800;
-      color: var(--gold-primary);
-      margin-bottom: 8px;
-      font-size: 0.95rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .itinerary-day-title i {
-      font-size: 0.9rem;
-    }
-    
-    .itinerary-day-content {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      line-height: 1.5;
-      padding-right: 20px;
-    }
-    
-    /* الوضع الليلي للبرنامج */
-    body.dark-mode .itinerary-day {
-      border-bottom-color: rgba(212, 175, 55, 0.3);
-    }
-    
-    body.dark-mode .itinerary-day-content {
-      color: #c9b89a;
-    }
-    
     /* رسالة عدم وجود جولات */
     .no-tours-message {
       text-align: center;
@@ -1001,27 +954,27 @@
       to { transform: translateY(0); opacity: 1; }
     }
     img{
-      max-width:100%;
-      height:auto;
-    }
-    .nav-menu a {
-      color: #faf6e9;
-    }
-    .image-caption {
-      text-align: center;
-      font-size: 14px;
-      color: #555;
-      margin-top: 8px;
-      font-weight: 500;
-      font-family: 'Tajawal', sans-serif;
-    }
-    
-    /* لو عايز شكل مختلف للهواتف */
-    @media (max-width: 768px) {
-      .image-caption {
-        font-size: 12px;
-      }
-    }
+  max-width:100%;
+  height:auto;
+}
+.nav-menu a {
+  color: #faf6e9;
+}
+.image-caption {
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+  margin-top: 8px;
+  font-weight: 500;
+  font-family: 'Tajawal', sans-serif;
+}
+
+/* لو عايز شكل مختلف للهواتف */
+@media (max-width: 768px) {
+  .image-caption {
+    font-size: 12px;
+  }
+}
   </style>
 </head>
 <body>
@@ -1090,7 +1043,11 @@
         </div>
       </div>
       <div class="about-image reveal">
-        <img src="https://i.postimg.cc/bw5MDnMg/Simoon.webp" width="800" height="1000" loading="lazy" alt="سيمون اسحاق">
+<img src="https://i.postimg.cc/bw5MDnMg/Simoon.webp"
+     width="800"
+     height="1000"
+     loading="lazy"
+     alt="سيمون اسحاق">
       </div>
     </div>
   </div>
@@ -1117,10 +1074,10 @@
         <ul><li data-key="portfolio_award1">تكريم من وزارة السياحة المصرية</li></ul>
       </div>
       <div class="portfolio-gallery reveal">
-        <img src="https://i.postimg.cc/7YPCWJLm/5.webp" loading="lazy" alt="عمل فني" width="400" height="200" onclick="openLightbox(this.src)">
-        <img src="https://i.postimg.cc/BQh89ZLq/6.webp" loading="lazy" alt="عمل فني" width="400" height="200" onclick="openLightbox(this.src)">
-        <img src="https://i.postimg.cc/D0Lyj7qR/7.webp" loading="lazy" alt="عمل فني" width="600" height="299" onclick="openLightbox(this.src)">
-        <img src="https://i.postimg.cc/MKJGcjSg/8.webp" loading="lazy" alt="عمل فني" width="1200" height="600" onclick="openLightbox(this.src)">
+        <img src="https://i.postimg.cc/7YPCWJLm/5.webp" loading="lazy" alt="عمل فني"width="400"height="200"onclick="openLightbox(this.src)">
+        <img src="https://i.postimg.cc/BQh89ZLq/6.webp" loading="lazy" alt="عمل فني"width="400"height="200"onclick="openLightbox(this.src)">
+        <img src="https://i.postimg.cc/D0Lyj7qR/7.webp" loading="lazy" alt="عمل فني"width="600"height="299"onclick="openLightbox(this.src)">
+        <img src="https://i.postimg.cc/MKJGcjSg/8.webp" loading="lazy" alt="عمل فني"width="1200"height="600"onclick="openLightbox(this.src)">
       </div>
     </div>
   </div>
@@ -1131,22 +1088,27 @@
   <div class="container">
     <h2 class="section-title reveal" data-key="gallery_title">معرض الصور</h2>
     <div class="gallery-grid">
+      
       <div class="gallery-item reveal">
         <img src="https://i.postimg.cc/YqP1NSC1/1.webp" loading="lazy" alt="منظر سياحي" onclick="openLightbox(this.src)">
         <p class="image-caption">هدوء الطبيعة وسحر الصخور وسط المياه الصافية، مشهد يبعث على الراحة والتأمل.</p>
       </div>
+      
       <div class="gallery-item reveal">
         <img src="https://i.postimg.cc/d1ddJMMb/2.webp" loading="lazy" alt="معبد مصري" onclick="openLightbox(this.src)">
         <p class="image-caption">نقوش فرعونية تحكي تاريخًا قديمًا وحضارة عظيمة لا تزال آثارها شاهدة حتى اليوم.</p>
       </div>
+      
       <div class="gallery-item reveal">
         <img src="https://i.postimg.cc/7Yq7rQKt/3.webp" loading="lazy" alt="سفاري" onclick="openLightbox(this.src)">
         <p class="image-caption">صليب محفور بتفاصيل دقيقة يعكس طابعًا دينيًا وروحانيًا في تصميمه.</p>
       </div>
+      
       <div class="gallery-item reveal">
         <img src="https://i.postimg.cc/c4T3xMjZ/4.webp" loading="lazy" alt="بحر أحمر" onclick="openLightbox(this.src)">
         <p class="image-caption">معبد أثري ضخم على ضفاف النهر، يجمع بين عظمة العمارة القديمة وجمال الموقع الطبيعي.</p>
       </div>
+      
     </div>
   </div>
 </section>
@@ -1444,8 +1406,8 @@
       whatsapp: "واتساب", facebook: "فيسبوك", send_message: "أرسل رسالتك", send_btn: "إرسال الرسالة",
       confirm_booking: "تأكيد الحجز", confirm_btn: "تأكيد الحجز", copyright: "© 2026 رحلة في مصر مع سيمون. جميع الحقوق محفوظة",
       name_placeholder: "الاسم الكامل",
-      contact_placeholder: "البريد الإلكتروني أو رقم الهاتف",
-      message_placeholder: "رسالتك",
+contact_placeholder: "البريد الإلكتروني أو رقم الهاتف",
+message_placeholder: "رسالتك",
     },
     en: {
       logo: "Journey in Egypt", nav_home: "Home", nav_about: "About", nav_tours: "Tours",
@@ -1463,27 +1425,32 @@
       facebook: "Facebook", send_message: "Send Message", send_btn: "Send Message",
       confirm_booking: "Confirm Booking", confirm_btn: "Confirm Booking", copyright: "© 2026 Journey in Egypt with Simon. All Rights Reserved",
       name_placeholder: "Full Name",
-      contact_placeholder: "Email or Phone Number",
-      message_placeholder: "Your Message",
+contact_placeholder: "Email or Phone Number",
+message_placeholder: "Your Message",
     }
   };
   
   let currentLang = localStorage.getItem('language') || 'ar';
-  function updateLanguage() {
-    document.querySelectorAll('[data-key]').forEach(el => {
-      const key = el.getAttribute('data-key');
-      const value = translations[currentLang][key];
-      if (!value) return;
-      if (el.placeholder !== undefined) {
-        el.placeholder = value;
-      } else {
-        el.textContent = value;
-      }
-    });
-    document.getElementById('langBtn').innerHTML = currentLang === 'ar' ? 'EN' : 'AR';
-    document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-    localStorage.setItem('language', currentLang);
-  }
+function updateLanguage() {
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const key = el.getAttribute('data-key');
+    const value = translations[currentLang][key];
+
+    if (!value) return;
+
+    if (el.placeholder !== undefined) {
+      el.placeholder = value;
+    } else {
+      el.textContent = value;
+    }
+  });
+
+  document.getElementById('langBtn').innerHTML =
+    currentLang === 'ar' ? 'EN' : 'AR';
+
+  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+  localStorage.setItem('language', currentLang);
+}
   function initLanguage() {
     document.getElementById('langBtn').addEventListener('click', () => {
       currentLang = currentLang === 'ar' ? 'en' : 'ar';
@@ -1527,7 +1494,7 @@
   function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
 
-  // ==================== Helper Functions ====================
+  // ==================== TOURS API LOADER (Live Update - بدون ريفرش) ====================
   function escapeHtml(str) { 
     if (!str) return ''; 
     return str.replace(/[&<>]/g, function(m){ 
@@ -1536,107 +1503,6 @@
       if(m==='>') return '&gt;'; 
       return m;
     }); 
-  }
-  
-  // دالة لتنظيم وعرض البرنامج (itinerary) بشكل جميل
-  function formatItinerary(itineraryArray) {
-    if (!itineraryArray || itineraryArray.length === 0) {
-      return '<div class="itinerary-container"><div class="itinerary-day"><div class="itinerary-day-content">📋 لا يوجد برنامج محدد</div></div></div>';
-    }
-    
-    let html = '<div class="itinerary-container">';
-    const dayNames = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر'];
-    
-    itineraryArray.forEach((item, index) => {
-      let dayText = '';
-      let content = item ? item.trim() : '';
-      if (content === '') return;
-      
-      // قائمة بالكلمات الدالة على اليوم
-      const dayPatterns = [
-        /^اليوم\s*(\d+|[الأولىالثانيالثالثالرابعالخامسالسادسالسابعالثامنالتاسعالعاشر])/i,
-        /^day\s*\d+/i,
-        /^اليوم\s*الأول/i,
-        /^اليوم\s*الاول/i,
-        /^اليوم\s*الثاني/i,
-        /^اليوم\s*الثالث/i,
-        /^اليوم\s*الرابع/i,
-        /^اليوم\s*الخامس/i
-      ];
-      
-      let matched = false;
-      let dayNumber = '';
-      
-      // التحقق إذا كان النص يبدأ بصيغة اليوم
-      for (let pattern of dayPatterns) {
-        if (pattern.test(content)) {
-          matched = true;
-          // استخراج رقم اليوم أو اسمه
-          let dayMatch = content.match(/اليوم\s*(\d+|[^\s:]+)/i);
-          if (dayMatch) {
-            let rawDay = dayMatch[1];
-            if (rawDay === 'الأول' || rawDay === 'الاول') dayNumber = 'الأول';
-            else if (rawDay === 'الثاني') dayNumber = 'الثاني';
-            else if (rawDay === 'الثالث') dayNumber = 'الثالث';
-            else if (rawDay === 'الرابع') dayNumber = 'الرابع';
-            else if (rawDay === 'الخامس') dayNumber = 'الخامس';
-            else if (rawDay === 'السادس') dayNumber = 'السادس';
-            else if (rawDay === 'السابع') dayNumber = 'السابع';
-            else if (rawDay === 'الثامن') dayNumber = 'الثامن';
-            else if (rawDay === 'التاسع') dayNumber = 'التاسع';
-            else if (rawDay === 'العاشر') dayNumber = 'العاشر';
-            else if (!isNaN(parseInt(rawDay))) {
-              const num = parseInt(rawDay);
-              dayNumber = (num <= 10 && num >= 1) ? dayNames[num - 1] : num.toString();
-            }
-          }
-          break;
-        }
-      }
-      
-      if (matched) {
-        // إزالة "اليوم X :" من بداية النص
-        let cleanContent = content.replace(/^اليوم\s*\d+\s*[:\-]?\s*/i, '');
-        cleanContent = cleanContent.replace(/^اليوم\s*الأول\s*[:\-]?\s*/i, '');
-        cleanContent = cleanContent.replace(/^اليوم\s*الاول\s*[:\-]?\s*/i, '');
-        cleanContent = cleanContent.replace(/^اليوم\s*الثاني\s*[:\-]?\s*/i, '');
-        cleanContent = cleanContent.replace(/^اليوم\s*الثالث\s*[:\-]?\s*/i, '');
-        cleanContent = cleanContent.replace(/^اليوم\s*الرابع\s*[:\-]?\s*/i, '');
-        cleanContent = cleanContent.replace(/^اليوم\s*الخامس\s*[:\-]?\s*/i, '');
-        cleanContent = cleanContent.replace(/^day\s*\d+\s*[:\-]?\s*/i, '');
-        
-        if (cleanContent === '' || cleanContent === content) {
-          cleanContent = content;
-        }
-        
-        dayText = `
-          <div class="itinerary-day">
-            <div class="itinerary-day-title">
-              <i class="fas fa-sun"></i> 
-              اليوم ${dayNumber || (dayNames[index] || (index + 1))}
-            </div>
-            <div class="itinerary-day-content">${escapeHtml(cleanContent)}</div>
-          </div>
-        `;
-      } else {
-        // لو مكتوب بدون ذكر اليوم، نضيف "اليوم الأول"، "اليوم الثاني"، إلخ
-        const dayName = dayNames[index] || (index + 1);
-        dayText = `
-          <div class="itinerary-day">
-            <div class="itinerary-day-title">
-              <i class="fas fa-sun"></i> 
-              اليوم ${dayName}
-            </div>
-            <div class="itinerary-day-content">${escapeHtml(content)}</div>
-          </div>
-        `;
-      }
-      
-      html += dayText;
-    });
-    
-    html += '</div>';
-    return html;
   }
   
   // التحقق من صحة بيانات الرحلة
@@ -1653,7 +1519,7 @@
       if (!response.ok) throw new Error('API Error');
       const tours = await response.json();
       
-      // تصفية الرحلات - إزالة أي رحلة غير مكتملة البيانات
+      // تصفية الرحلات - إزالة أي رحلة غير مكتملة البيانات أو مخفية
       const validTours = tours.filter(tour => isValidTour(tour));
       
       if (!validTours || validTours.length === 0) {
@@ -1669,12 +1535,9 @@
       
       let html = '';
       validTours.forEach(tour => {
-        const imgHtml = (tour.image && tour.image !== 'null' && tour.image !== 'undefined' && tour.image.trim() !== '') 
+        const imgHtml = (tour.image && tour.image !== 'null' && tour.image !== 'undefined') 
           ? `<img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" loading="lazy" onerror="this.parentElement.style.background='var(--gradient-gold)'; this.style.display='none'">` 
           : `<div style="width:100%; height:100%; background:var(--gradient-gold); display:flex; align-items:center; justify-content:center;"><i class="fas fa-pyramid" style="font-size:3rem; color:#2c1810;"></i></div>`;
-        
-        // عرض البرنامج المنسق إذا وجد
-        const itineraryHtml = (tour.itinerary && tour.itinerary.length > 0) ? formatItinerary(tour.itinerary) : '';
         
         html += `
           <div class="tour-card">
@@ -1684,8 +1547,7 @@
             </div>
             <div class="tour-info">
               <h3>${escapeHtml(tour.name)}</h3>
-              <p>${escapeHtml(tour.description ? tour.description.substring(0, 100) : '')}${tour.description && tour.description.length > 100 ? '...' : ''}</p>
-              ${itineraryHtml}
+              <p>${escapeHtml(tour.description.substring(0, 100))}${tour.description.length > 100 ? '...' : ''}</p>
               <div class="tour-details">
                 <span><i class="fas fa-dollar-sign"></i> الأجنبي: ${tour.priceForeign}$</span>
                 <span><i class="fas fa-pound-sign"></i> المصري: ${tour.priceEgyptian} ج</span>
