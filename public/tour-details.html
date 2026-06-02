@@ -622,6 +622,19 @@
             color: #D4AF37;
             opacity: 0.5;
         }
+
+        .faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: max-height;
+}
+
+.faq-question {
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    touch-action: manipulation;
+}
     </style>
 </head>
 <body>
@@ -748,45 +761,84 @@
         };
         
         // دالة FAQ محسنة وسريعة جداً
-        function initFaq() {
-            const faqItems = document.querySelectorAll('.faq-item');
+function initFaq() {
+    const faqItems = document.querySelectorAll('.faq-item');
+    
+    faqItems.forEach(item => {
+        const questionDiv = item.querySelector('.faq-question');
+        const answerDiv = item.querySelector('.faq-answer');
+        
+        if (!questionDiv || questionDiv.hasAttribute('data-listener')) return;
+        
+        // إضافة علامة لمنع إضافة مستمعين متعددين
+        questionDiv.setAttribute('data-listener', 'true');
+        
+        // استخدام touchstart للأجهزة المحمولة للاستجابة الفورية
+        const eventType = 'ontouchstart' in window ? 'touchstart' : 'click';
+        
+        questionDiv.addEventListener(eventType, function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             
-            faqItems.forEach(item => {
-                const questionDiv = item.querySelector('.faq-question');
-                const answerDiv = item.querySelector('.faq-answer');
+            // إغلاق جميع الأسئلة الأخرى أولاً (اختياري - لتحسين الأداء)
+            const allAnswers = document.querySelectorAll('.faq-answer');
+            const allQuestions = document.querySelectorAll('.faq-question');
+            
+            // إذا كان السؤال الحالي مفتوحاً، أغلقه فقط
+            if (answerDiv.classList.contains('show')) {
+                answerDiv.classList.remove('show');
+                this.classList.remove('active');
+            } else {
+                // أغلق الباقي وافتح هذا
+                allAnswers.forEach(ans => ans.classList.remove('show'));
+                allQuestions.forEach(q => q.classList.remove('active'));
                 
-                if (!questionDiv) return;
-                
-                // إزالة أي مستمعين قديمين
-                const newQuestion = questionDiv.cloneNode(true);
-                questionDiv.parentNode.replaceChild(newQuestion, questionDiv);
-                
-                newQuestion.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    const parentItem = this.closest('.faq-item');
-                    const targetAnswer = parentItem.querySelector('.faq-answer');
-                    const icon = this.querySelector('i');
-                    
-                    if (targetAnswer.classList.contains('show')) {
-                        targetAnswer.classList.remove('show');
-                        this.classList.remove('active');
-                    } else {
-                        targetAnswer.classList.add('show');
-                        this.classList.add('active');
-                    }
-                });
-                
-                // التأكد من أن الإجابة مغلقة في البداية
-                if (answerDiv && answerDiv.classList.contains('show')) {
-                    answerDiv.classList.remove('show');
-                }
-                if (newQuestion.classList.contains('active')) {
-                    newQuestion.classList.remove('active');
-                }
-            });
-        }
+                answerDiv.classList.add('show');
+                this.classList.add('active');
+            }
+        }, { passive: false });
+    });
+}
+
+// تحديث دالة displayInfoGrid لتجنب إعادة إنشاء FAQ بشكل متكرر
+function displayInfoGrid(tour) {
+    const includesList = document.getElementById('includesList');
+    const excludesList = document.getElementById('excludesList');
+    const timelineList = document.getElementById('timelineList');
+    const faqList = document.getElementById('faqList');
+    
+    if (tour.includes && tour.includes.length > 0) {
+        includesList.innerHTML = tour.includes.map(item => `<li><i class="fas fa-check"></i> ${escapeHtml(item)}</li>`).join('');
+    } else {
+        includesList.innerHTML = '<li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
+    }
+    
+    if (tour.excludes && tour.excludes.length > 0) {
+        excludesList.innerHTML = tour.excludes.map(item => `<li><i class="fas fa-times"></i> ${escapeHtml(item)}</li>`).join('');
+    } else {
+        excludesList.innerHTML = '<li class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</li>';
+    }
+    
+    if (tour.itinerary && tour.itinerary.length > 0) {
+        timelineList.innerHTML = tour.itinerary.map((item, idx) => `<div class="day"><strong>${item.includes('اليوم') ? item.split(':')[0] + ':' : '📌'}</strong> ${escapeHtml(item)}</div>`).join('');
+    } else {
+        timelineList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
+    }
+    
+    if (tour.faq && tour.faq.length > 0) {
+        faqList.innerHTML = tour.faq.map((item, index) => `
+            <div class="faq-item" data-faq-index="${index}">
+                <div class="faq-question">${escapeHtml(item.q || item.question)} <i class="fas fa-chevron-down"></i></div>
+                <div class="faq-answer">${escapeHtml(item.a || item.answer)}</div>
+            </div>
+        `).join('');
+        
+        // استدعاء FAQ مرة واحدة فقط بعد إنشاء العناصر
+        setTimeout(() => initFaq(), 0);
+    } else {
+        faqList.innerHTML = '<div class="empty-text" data-key="no_data_found"><i class="fas fa-info-circle"></i> لا توجد بيانات</div>';
+    }
+}
         
         function openLightbox(src) {
             const lightbox = document.getElementById('lightbox');
